@@ -1,0 +1,4023 @@
+[
+    {
+        "id": "945b360c-0810-46bb-939d-8d13c545efa5",
+        "name": "Q版花店姐姐长裙_1761648249312",
+        "group_order": [
+            "动作",
+            "豆豆眼表情",
+            "表情"
+        ],
+        "layer_groups": {
+            "动作": [
+                {
+                    "name": "抱头",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/抱头_fe9a55.png",
+                    "hash": "fe9a559fbeac11c4bf50d4133f66e67d"
+                },
+                {
+                    "name": "抱胸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/抱胸_9d2964.png",
+                    "hash": "9d29647435f78295ed4cf64f1be31137"
+                },
+                {
+                    "name": "叉腰",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/叉腰_c4372b.png",
+                    "hash": "c4372b45fd23ca2617b0714395b594c4"
+                },
+                {
+                    "name": "出拳",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/出拳_153241.png",
+                    "hash": "153241aa2e1af104f1c8540442ad247c"
+                },
+                {
+                    "name": "打招呼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/打招呼_8da37f.png",
+                    "hash": "8da37fdb251a88938c9fc6814c82ac05"
+                },
+                {
+                    "name": "拱手",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/拱手_b0e0b4.png",
+                    "hash": "b0e0b4bac93af61f56b7b37346210e18"
+                },
+                {
+                    "name": "勾手指",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/勾手指_b8ac98.png",
+                    "hash": "b8ac98d19518223035082fa69c8eb6c9"
+                },
+                {
+                    "name": "接电话",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/接电话_5c6e8e.png",
+                    "hash": "5c6e8eaad0287c4d396996800d317c31"
+                },
+                {
+                    "name": "结印",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/结印_504e67.png",
+                    "hash": "504e67097c9de3def807e3783f6e9b7d"
+                },
+                {
+                    "name": "介绍",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/介绍_e08828.png",
+                    "hash": "e08828f3fa3573b62a5d51ed9195132e"
+                },
+                {
+                    "name": "举起拳头",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/举起拳头_87bfb5.png",
+                    "hash": "87bfb56177f4a1822cd6248593965a3f"
+                },
+                {
+                    "name": "举手",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/举手_b2665d.png",
+                    "hash": "b2665d55c99637b128789064e215b0fb"
+                },
+                {
+                    "name": "摸摸头",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/摸摸头_91aebf.png",
+                    "hash": "91aebfdf7b709c63f44afb1dcc87fb72"
+                },
+                {
+                    "name": "祈祷",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/祈祷_8219ca.png",
+                    "hash": "8219ca8d39ed703733eeff98b81906c4"
+                },
+                {
+                    "name": "请进",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/请进_f2dec3.png",
+                    "hash": "f2dec37ced092e883fa4dda37c09b481"
+                },
+                {
+                    "name": "手指向前",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/手指向前_7a61bd.png",
+                    "hash": "7a61bdece2c7f488898ec8819f0b3ddd"
+                },
+                {
+                    "name": "竖中指",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/竖中指_272805.png",
+                    "hash": "272805c7188139c7c3ca404203b85e83"
+                },
+                {
+                    "name": "摊开手",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/摊开手_0b46bc.png",
+                    "hash": "0b46bc4e07ca5d27caf1ae3b08f90486"
+                },
+                {
+                    "name": "逃跑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/逃跑_0d4d7b.png",
+                    "hash": "0d4d7b885b167bbd1dbe33e976e185f8"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/偷笑_3322e8.png",
+                    "hash": "3322e82270662461380012d81ca5fd65"
+                },
+                {
+                    "name": "捂嘴",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/捂嘴_89a99a.png",
+                    "hash": "89a99a68e13cecba37be424e03a037f3"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/疑惑_9ee524.png",
+                    "hash": "9ee524cee59c0990c42d383a1adb3176"
+                },
+                {
+                    "name": "站立",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/站立_4e39e4.png",
+                    "hash": "4e39e4028deb8e85710e8b9b5c57f54f"
+                },
+                {
+                    "name": "指责",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/指责_bb6f83.png",
+                    "hash": "bb6f83a19841175b0d4321d663b1ed2e"
+                },
+                {
+                    "name": "坐着",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/坐着_ef4438.png",
+                    "hash": "ef4438fa92270a28f3cc69ba2b5344df"
+                },
+                {
+                    "name": "坐姿看",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/坐姿看_6e2056.png",
+                    "hash": "6e20569ff3cc2456afe4478d09c605d8"
+                },
+                {
+                    "name": "坐姿思考",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/坐姿思考_74c8a8.png",
+                    "hash": "74c8a8ff2d2ea516c682d88e9a76af3b"
+                },
+                {
+                    "name": "坐姿抬手",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/动作/坐姿抬手_4ade8c.png",
+                    "hash": "4ade8c7eef5d5a7ed46fbbb3c9e4f988"
+                }
+            ],
+            "豆豆眼表情": [
+                {
+                    "name": "无表情",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/无表情_9cacea.png",
+                    "hash": "9caceae99dc4206b41f7db6881b21bec"
+                },
+                {
+                    "name": "微笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/微笑_312b5a.png",
+                    "hash": "312b5a79c0d844a5d6a097e62e5a5de5"
+                },
+                {
+                    "name": "皱眉",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/皱眉_b92c1d.png",
+                    "hash": "b92c1dd83c2f5cfaec42b4adac897ea7"
+                },
+                {
+                    "name": "自信",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/自信_d69766.png",
+                    "hash": "d69766df7778aee5610f4fd96ebba618"
+                },
+                {
+                    "name": "笑脸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/笑脸_ccf42f.png",
+                    "hash": "ccf42fbee7fd1e45bff02ba307780f17"
+                },
+                {
+                    "name": "说话",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/说话_9efd03.png",
+                    "hash": "9efd039de533c5a4d57cf27136f94595"
+                },
+                {
+                    "name": "强调",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/强调_c4bb0b.png",
+                    "hash": "c4bb0b814d1b095bd98fa683794461d0"
+                },
+                {
+                    "name": "担忧",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/担忧_e8da10.png",
+                    "hash": "e8da107ffb02adc2cf88aecad6a83035"
+                },
+                {
+                    "name": "难过",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/难过_5d47d8.png",
+                    "hash": "5d47d8c431729aad3304e05541a18b84"
+                },
+                {
+                    "name": "感动",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/感动_b82a57.png",
+                    "hash": "b82a570c1614177dcf7521e4c3c07fff"
+                },
+                {
+                    "name": "吓哭",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/吓哭_95d5f5.png",
+                    "hash": "95d5f56daea43a4d450fd30f8f7f4050"
+                },
+                {
+                    "name": "迷惑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/迷惑_59b0dd.png",
+                    "hash": "59b0ddd9cec6cb50e48bc482ce426acf"
+                },
+                {
+                    "name": "臆想",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/臆想_00a36a.png",
+                    "hash": "00a36a5692e5464de377299f3a0059e3"
+                },
+                {
+                    "name": "嫌弃",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/嫌弃_66ac11.png",
+                    "hash": "66ac11d3efdda516d61b2325c6897c23"
+                },
+                {
+                    "name": "冷漠",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/冷漠_146270.png",
+                    "hash": "14627081da75c3f65ac0e6800d84b0ea"
+                },
+                {
+                    "name": "尴尬",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/尴尬_01fdac.png",
+                    "hash": "01fdac07e514cd63ffde5fad2e60c851"
+                },
+                {
+                    "name": "舒坦",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/舒坦_93420a.png",
+                    "hash": "93420ad86ffd7726b6958f25c266bdd0"
+                },
+                {
+                    "name": "憋笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/憋笑_cd526f.png",
+                    "hash": "cd526f6e1ed154774d5b59c9be2bd175"
+                },
+                {
+                    "name": "惊吓",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/惊吓_c0499d.png",
+                    "hash": "c0499d4e9f529fd6c421ef0b180afb77"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/偷笑_1c7812.png",
+                    "hash": "1c78124493c2aab23abbeefd2dedbfe1"
+                },
+                {
+                    "name": "打哈欠",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/打哈欠_ac2bf1.png",
+                    "hash": "ac2bf1e2cee09428dcaba1a9f66614d7"
+                },
+                {
+                    "name": "吐血",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/吐血_389594.png",
+                    "hash": "389594534af1e8eb8548b3c6d7c6aaef"
+                },
+                {
+                    "name": "傲娇",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/傲娇_5a1b63.png",
+                    "hash": "5a1b6388e1d232d5bec0999b104e023c"
+                },
+                {
+                    "name": "装酷",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/装酷_344654.png",
+                    "hash": "344654ec94c6878ca7fe0809c29dd801"
+                },
+                {
+                    "name": "八卦",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/八卦_752e35.png",
+                    "hash": "752e35d75026adc58c9c40c1c4631456"
+                },
+                {
+                    "name": "生闷气",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/生闷气_f8ff1b.png",
+                    "hash": "f8ff1bb69ef12f7f0f71c2f20267beb1"
+                },
+                {
+                    "name": "鄙视",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/鄙视_414e38.png",
+                    "hash": "414e388df718ebafaf5239e4886c0c45"
+                },
+                {
+                    "name": "紧闭双眼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/紧闭双眼_05055b.png",
+                    "hash": "05055b4319590621a661591e5a622130"
+                },
+                {
+                    "name": "发呆",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/发呆_4e8175.png",
+                    "hash": "4e8175ab7f7ea0cc986800bd1ea514b5"
+                },
+                {
+                    "name": "震惊",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/震惊_58cfe9.png",
+                    "hash": "58cfe93ba7a4e6df393a2074b5421f4c"
+                },
+                {
+                    "name": "吐血",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/吐血_6fb20a.png",
+                    "hash": "6fb20a1c43a41def6d38322567892f9e"
+                },
+                {
+                    "name": "流泪",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/流泪_b54d5c.png",
+                    "hash": "b54d5c382a0e90cd4d36730425f30063"
+                },
+                {
+                    "name": "流鼻血",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/流鼻血_3282f9.png",
+                    "hash": "3282f9aedd0bb20d91142551c32d56b9"
+                },
+                {
+                    "name": "发怒",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/发怒_1cdc36.png",
+                    "hash": "1cdc3659d67cbc466213ac04041e34a2"
+                },
+                {
+                    "name": "大哭",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/大哭_5d20fd.png",
+                    "hash": "5d20fda3e71cc9010dd5281609f755e6"
+                },
+                {
+                    "name": "打脸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/打脸_52ec85.png",
+                    "hash": "52ec85b0993d8c4c674a9255c0c47b46"
+                },
+                {
+                    "name": "眼红",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/眼红_3305d3.png",
+                    "hash": "3305d39d1d3c9076168ec309807c25f1"
+                },
+                {
+                    "name": "含泪",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/含泪_b48fac.png",
+                    "hash": "b48fac379a70a13f8d05b1a744e6a3d6"
+                },
+                {
+                    "name": "嘟嘴",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/嘟嘴_53c8e5.png",
+                    "hash": "53c8e5550afa11653cb1aeec87e66534"
+                },
+                {
+                    "name": "色狼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/色狼_beeeda.png",
+                    "hash": "beeeda83307c333df459f0b4e6c90a42"
+                },
+                {
+                    "name": "睡觉",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/睡觉_90307b.png",
+                    "hash": "90307b1d83a5ca06c19621b8893ee656"
+                },
+                {
+                    "name": "大吼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/大吼_ed93aa.png",
+                    "hash": "ed93aa9bc07a303114e82fc19b0d627e"
+                },
+                {
+                    "name": "叹气",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/叹气_848ead.png",
+                    "hash": "848eadb63b8539d2939d0ce2e47620ca"
+                },
+                {
+                    "name": "无语",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/无语_58378e.png",
+                    "hash": "58378e24715f38816436c51459ffa037"
+                },
+                {
+                    "name": "咬牙",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/咬牙_105832.png",
+                    "hash": "10583203aa0c06300d119d6173acc80a"
+                },
+                {
+                    "name": "吃惊",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/吃惊_dc360e.png",
+                    "hash": "dc360efd3e247dbb45a14a19f33554aa"
+                },
+                {
+                    "name": "闭眼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/闭眼_ff7d22.png",
+                    "hash": "ff7d22a73ea3f82a8cb92da69f43d9f9"
+                },
+                {
+                    "name": "侥幸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/侥幸_301fc4.png",
+                    "hash": "301fc4f81a76f2d1953145ce2f53c87f"
+                },
+                {
+                    "name": "赌气",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/赌气_ba587b.png",
+                    "hash": "ba587b73c4c9ca3e43a647d771de21b5"
+                },
+                {
+                    "name": "好色",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/好色_13093c.png",
+                    "hash": "13093cbc4442c156342dc4dd2590c08a"
+                },
+                {
+                    "name": "崇拜",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/崇拜_18db0b.png",
+                    "hash": "18db0b8a3cca72ee6007140558144496"
+                },
+                {
+                    "name": "怒骂",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/怒骂_140e31.png",
+                    "hash": "140e31a15fe61be166b8b1eebff445bc"
+                },
+                {
+                    "name": "生气",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/生气_daeea0.png",
+                    "hash": "daeea0caabc5b5984115c51055b79308"
+                },
+                {
+                    "name": "害怕",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/害怕_2d18f8.png",
+                    "hash": "2d18f89ac083b689c33d994e89d73e57"
+                },
+                {
+                    "name": "疲倦",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/疲倦_40c4bc.png",
+                    "hash": "40c4bcc536b869dd8b6da2abe22d555c"
+                },
+                {
+                    "name": "挑眉",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/挑眉_bba0c1.png",
+                    "hash": "bba0c1a089da077fc8accf1bf51dfe50"
+                },
+                {
+                    "name": "昏迷",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/昏迷_a440ff.png",
+                    "hash": "a440ff2156c07e9883143fdcd1b3f667"
+                },
+                {
+                    "name": "大骂",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/大骂_b75576.png",
+                    "hash": "b755760fec8f42544e15fdfe09f8cfb1"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/疑惑_0d7bd8.png",
+                    "hash": "0d7bd81b7ebd476f5aa62e959c37e15b"
+                },
+                {
+                    "name": "委屈",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/委屈_3ea6c0.png",
+                    "hash": "3ea6c08dbc2b7c55adb0806b4f0835a6"
+                },
+                {
+                    "name": "呕吐",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/呕吐_da211b.png",
+                    "hash": "da211bde9ea6c56b5020f474d2394a7a"
+                },
+                {
+                    "name": "傲慢",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/傲慢_da6a64.png",
+                    "hash": "da6a64f89bc9a8ffc1fdbeb7ab7a9605"
+                },
+                {
+                    "name": "恶心",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/恶心_01e17e.png",
+                    "hash": "01e17e5d963c4e3fce6b5240ce28e745"
+                },
+                {
+                    "name": "恐吓",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/恐吓_59d02a.png",
+                    "hash": "59d02a724be49f8c0ec3d81e32d8d6cb"
+                },
+                {
+                    "name": "坏笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/坏笑_a7e15d.png",
+                    "hash": "a7e15d523561d69d2453634df802d9cb"
+                },
+                {
+                    "name": "害羞",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/害羞_655025.png",
+                    "hash": "655025d5a2e85ea61fb00cb363f969c0"
+                },
+                {
+                    "name": "小丑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/小丑_398e9b.png",
+                    "hash": "398e9b44da071a1fd7d6cadc1bdca59c"
+                },
+                {
+                    "name": "笑嘻嘻",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/笑嘻嘻_247afc.png",
+                    "hash": "247afcd707655257e1b22e766a86e710"
+                },
+                {
+                    "name": "调皮",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/调皮_495726.png",
+                    "hash": "4957263b26f200c9fbbad70a5c044456"
+                },
+                {
+                    "name": "头晕",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/头晕_cf8ed8.png",
+                    "hash": "cf8ed8e228eb94dbc0bd82bf6c855a14"
+                },
+                {
+                    "name": "咀嚼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/咀嚼_a38a64.png",
+                    "hash": "a38a64586bcc72750050b671657d54ad"
+                },
+                {
+                    "name": "难受",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/难受_861dfe.png",
+                    "hash": "861dfed58f41176542445717b9e63002"
+                },
+                {
+                    "name": "苦笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/苦笑_0204d8.png",
+                    "hash": "0204d82b87f8637a0983aaa8e80d9a59"
+                },
+                {
+                    "name": "大笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/大笑_5e31ea.png",
+                    "hash": "5e31ea959c4620a0a9ce777c05f9046a"
+                },
+                {
+                    "name": "惊讶",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/惊讶_7ea1b4.png",
+                    "hash": "7ea1b4407dc30d2af7121f6a9046d260"
+                },
+                {
+                    "name": "赔笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/赔笑_f80bab.png",
+                    "hash": "f80babbc2d1ae91a7a55b22741a1b6cb"
+                },
+                {
+                    "name": "不爽",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/不爽_74487f.png",
+                    "hash": "74487fa4047c9d4873985981e70622de"
+                },
+                {
+                    "name": "打击",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/打击_d17b94.png",
+                    "hash": "d17b94bc54d3ab06f0bafd0aeca22023"
+                },
+                {
+                    "name": "瑟瑟发抖",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/瑟瑟发抖_ace290.png",
+                    "hash": "ace29055d05067fc068a2e979dbeebce"
+                },
+                {
+                    "name": "可怕",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/可怕_5f8cf0.png",
+                    "hash": "5f8cf042f10d3bf390c9537812f74306"
+                },
+                {
+                    "name": "嘟嘴不屑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/嘟嘴不屑_7176b6.png",
+                    "hash": "7176b602a296225adaf6c05b77fd4836"
+                },
+                {
+                    "name": "装蒜",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/装蒜_5bbdea.png",
+                    "hash": "5bbdea24390d7c5d3709c3ccb620002f"
+                },
+                {
+                    "name": "为难",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/为难_26391e.png",
+                    "hash": "26391eee1c9a9ea6e26ad591e7e007fc"
+                },
+                {
+                    "name": "无奈",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/无奈_951e84.png",
+                    "hash": "951e844c5334107c2fc39f776bbe8704"
+                },
+                {
+                    "name": "不满",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/不满_418190.png",
+                    "hash": "4181904f523fcf45afa3a276efdc1cde"
+                },
+                {
+                    "name": "黑化",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/黑化_b5a1bc.png",
+                    "hash": "b5a1bcca1144284db89f500fbf76d7cd"
+                },
+                {
+                    "name": "接受无能",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/接受无能_40e18d.png",
+                    "hash": "40e18dd35e5262f64dd9f6e957b85a8d"
+                },
+                {
+                    "name": "困扰",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/困扰_0c63af.png",
+                    "hash": "0c63afd310d046884b42de9699ad68ff"
+                },
+                {
+                    "name": "冷脸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/冷脸_2d051c.png",
+                    "hash": "2d051cb5c7a4e4881603f3ad44ae48a8"
+                },
+                {
+                    "name": "挤出笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/挤出笑_1677da.png",
+                    "hash": "1677da8f9f22485fc4a8b434d299f310"
+                },
+                {
+                    "name": "闯祸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/闯祸_6320be.png",
+                    "hash": "6320bed080d4cb8ac1269bf9cf9c8f6d"
+                },
+                {
+                    "name": "瞧好了",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/瞧好了_dbc310.png",
+                    "hash": "dbc3106b25a0ef73aa51f4ce9afc65e3"
+                },
+                {
+                    "name": "不服气",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/不服气_5d98f9.png",
+                    "hash": "5d98f960c216c4cb0135597b6de8029f"
+                },
+                {
+                    "name": "灵魂出窍",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/灵魂出窍_17a42d.png",
+                    "hash": "17a42d060376a87bfe36e1b5d86c8e05"
+                },
+                {
+                    "name": "怀疑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/豆豆眼表情/怀疑_806a72.png",
+                    "hash": "806a72214814fa9ce40cea6c367903c2"
+                }
+            ],
+            "表情": [
+                {
+                    "name": "无表情",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/无表情_256d2c.png",
+                    "hash": "256d2c600a774c2a6a586ba7b93e1660"
+                },
+                {
+                    "name": "微笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/微笑_f89d6a.png",
+                    "hash": "f89d6a58051a4cc8566c5a92b158e082"
+                },
+                {
+                    "name": "皱眉",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/皱眉_188d77.png",
+                    "hash": "188d779700ae2f2bd0bd0b599a36ba8c"
+                },
+                {
+                    "name": "自信",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/自信_73ed88.png",
+                    "hash": "73ed8887f17c7ddba3d893303ccf1e37"
+                },
+                {
+                    "name": "笑脸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/笑脸_1725f6.png",
+                    "hash": "1725f6bd0294424b817fdfd2daf3384c"
+                },
+                {
+                    "name": "说话",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/说话_e973c6.png",
+                    "hash": "e973c660f728dacf8680297d80add886"
+                },
+                {
+                    "name": "强调",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/强调_5acf8c.png",
+                    "hash": "5acf8c617f2e6859fa9c40e95b84c844"
+                },
+                {
+                    "name": "担忧",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/担忧_234b3d.png",
+                    "hash": "234b3dc4a004322ecaf1a397a73a9a5c"
+                },
+                {
+                    "name": "难过",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/难过_23577a.png",
+                    "hash": "23577ac7214aa7e6d77338a89a2e7581"
+                },
+                {
+                    "name": "感动",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/感动_da607b.png",
+                    "hash": "da607b080e35df39301a20aa76c15c40"
+                },
+                {
+                    "name": "吓哭",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/吓哭_7dc9e8.png",
+                    "hash": "7dc9e8349de6eb09d4eb6b3efef21755"
+                },
+                {
+                    "name": "迷惑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/迷惑_f266f9.png",
+                    "hash": "f266f9e820fdb8e6b6a9fbbc8e8785c1"
+                },
+                {
+                    "name": "臆想",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/臆想_7a36bf.png",
+                    "hash": "7a36bf47b899b82586f948a7f2d57dae"
+                },
+                {
+                    "name": "嫌弃",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/嫌弃_4e2f83.png",
+                    "hash": "4e2f8379555b011d253c8698ffe08a42"
+                },
+                {
+                    "name": "冷漠",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/冷漠_962b4a.png",
+                    "hash": "962b4a709e611e2d90d097b16ed12f98"
+                },
+                {
+                    "name": "尴尬",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/尴尬_33b92d.png",
+                    "hash": "33b92df5bb07aedaf73df24d71787db0"
+                },
+                {
+                    "name": "舒坦",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/舒坦_b9269d.png",
+                    "hash": "b9269d614ccde4b23a6b9a833f5e10a4"
+                },
+                {
+                    "name": "憋笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/憋笑_771781.png",
+                    "hash": "77178187b33da8f285e39bdba0dd0a24"
+                },
+                {
+                    "name": "惊吓",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/惊吓_d9ec16.png",
+                    "hash": "d9ec16c925695f50d362d95dd06f9848"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/偷笑_cf02db.png",
+                    "hash": "cf02db4ce9ec219f6a7775eb1517dc54"
+                },
+                {
+                    "name": "打哈欠",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/打哈欠_760ed3.png",
+                    "hash": "760ed372d676749bb490c28a3351d5cb"
+                },
+                {
+                    "name": "吐血",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/吐血_43c05e.png",
+                    "hash": "43c05edffda1379aa1255c1d7bfb7e74"
+                },
+                {
+                    "name": "傲娇",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/傲娇_b39e55.png",
+                    "hash": "b39e559313588418af8f40958920706d"
+                },
+                {
+                    "name": "装酷",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/装酷_3a0991.png",
+                    "hash": "3a09912873c3637c9fd47857f2b9556b"
+                },
+                {
+                    "name": "八卦",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/八卦_8f447b.png",
+                    "hash": "8f447b6bfffb70e91c9a7721d8aa46ed"
+                },
+                {
+                    "name": "愤怒",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/愤怒_7e6a70.png",
+                    "hash": "7e6a70bc75529f3e29a250a7db2841bf"
+                },
+                {
+                    "name": "鄙视",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/鄙视_76182d.png",
+                    "hash": "76182da39470bdfd74b6b76f87e90b3f"
+                },
+                {
+                    "name": "紧闭双眼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/紧闭双眼_83a000.png",
+                    "hash": "83a00021062f4d4545c072db8f7ec82d"
+                },
+                {
+                    "name": "发呆",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/发呆_49b00a.png",
+                    "hash": "49b00a17fc3795bb00da008e3a6c2f6c"
+                },
+                {
+                    "name": "震惊",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/震惊_62ebba.png",
+                    "hash": "62ebba56d382a914a3914e6fa8bb134d"
+                },
+                {
+                    "name": "吐槽",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/吐槽_dfedb0.png",
+                    "hash": "dfedb08dee699336c85b4b26cdaf1cad"
+                },
+                {
+                    "name": "流泪",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/流泪_69bce1.png",
+                    "hash": "69bce13281acbe251f96a47eb5977543"
+                },
+                {
+                    "name": "流鼻血",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/流鼻血_f45f1a.png",
+                    "hash": "f45f1a1cfdfc85ea5bb5e0aab75c843d"
+                },
+                {
+                    "name": "发怒",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/发怒_5dab45.png",
+                    "hash": "5dab451ef9260c8df3231d3eb35aca3a"
+                },
+                {
+                    "name": "大哭",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/大哭_6d089f.png",
+                    "hash": "6d089f05f555676cafeaaa72fa00d984"
+                },
+                {
+                    "name": "打脸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/打脸_df9982.png",
+                    "hash": "df998298979118fb1ff7f80af02fce8f"
+                },
+                {
+                    "name": "眼红",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/眼红_8868d3.png",
+                    "hash": "8868d375d79ceecd9c0b1b52c83bd190"
+                },
+                {
+                    "name": "含泪",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/含泪_7abd6a.png",
+                    "hash": "7abd6a4f4fc1b9b002e27db4f87d3d35"
+                },
+                {
+                    "name": "嘟嘴",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/嘟嘴_8da5ea.png",
+                    "hash": "8da5ea5407a11b0a281557827d693372"
+                },
+                {
+                    "name": "色狼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/色狼_e7d049.png",
+                    "hash": "e7d049d66a13a391f0a2e40d979e82aa"
+                },
+                {
+                    "name": "睡觉",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/睡觉_bb630b.png",
+                    "hash": "bb630b82684af28b16ec51ad3d2bc07c"
+                },
+                {
+                    "name": "大吼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/大吼_d75c81.png",
+                    "hash": "d75c8163fb9c3813656000d8a2646f20"
+                },
+                {
+                    "name": "叹气",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/叹气_50ca62.png",
+                    "hash": "50ca6258cce6a06fb7b3d56421f838d9"
+                },
+                {
+                    "name": "无语",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/无语_168d6e.png",
+                    "hash": "168d6ed36909c0806d8fe649a9a31c1f"
+                },
+                {
+                    "name": "咬牙",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/咬牙_f04991.png",
+                    "hash": "f04991077ef426f1e16e8b9ba2266232"
+                },
+                {
+                    "name": "吃惊",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/吃惊_fbbb70.png",
+                    "hash": "fbbb706508a9e085e2104bee6cbc1b4f"
+                },
+                {
+                    "name": "闭眼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/闭眼_a2960a.png",
+                    "hash": "a2960aa8072f1cdcccce756407a126e0"
+                },
+                {
+                    "name": "侥幸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/侥幸_391a06.png",
+                    "hash": "391a067a7a185445751509265e37af00"
+                },
+                {
+                    "name": "赌气",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/赌气_3d7dd0.png",
+                    "hash": "3d7dd054eeb06979c719336324724632"
+                },
+                {
+                    "name": "好色",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/好色_1633d7.png",
+                    "hash": "1633d750e6bb19d7490a6ffb50cfdab7"
+                },
+                {
+                    "name": "崇拜",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/崇拜_0095a2.png",
+                    "hash": "0095a2dfb137996555c6496dbc682fd2"
+                },
+                {
+                    "name": "怒骂",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/怒骂_a5f009.png",
+                    "hash": "a5f009b7da9cf9303a1bd248657869b7"
+                },
+                {
+                    "name": "生气",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/生气_3cf88c.png",
+                    "hash": "3cf88c400700d22fe50520403c18bcea"
+                },
+                {
+                    "name": "害怕",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/害怕_75542f.png",
+                    "hash": "75542ffcb8279cd2c952921c89e65877"
+                },
+                {
+                    "name": "疲倦",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/疲倦_92c6f8.png",
+                    "hash": "92c6f87635c5d390faf93843464da0b2"
+                },
+                {
+                    "name": "挑眉",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/挑眉_084379.png",
+                    "hash": "08437933877bcd478b2f0d12745f7781"
+                },
+                {
+                    "name": "昏迷",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/昏迷_c8146b.png",
+                    "hash": "c8146b07b7f581ba96081f2730d81a8e"
+                },
+                {
+                    "name": "大骂",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/大骂_0777d0.png",
+                    "hash": "0777d02432136860a55a64fe89ef1773"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/疑惑_029ae3.png",
+                    "hash": "029ae3b65323beee65577c7bfbe6891e"
+                },
+                {
+                    "name": "委屈",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/委屈_455377.png",
+                    "hash": "45537751fde087b39fe70bbf907be65c"
+                },
+                {
+                    "name": "呕吐",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/呕吐_9cc1e5.png",
+                    "hash": "9cc1e5b8cd63a2f753038b9007ba18bb"
+                },
+                {
+                    "name": "傲慢",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/傲慢_763998.png",
+                    "hash": "76399829e441630ea5a6c25fef173400"
+                },
+                {
+                    "name": "恶心",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/恶心_509406.png",
+                    "hash": "50940652f247645e83a8ebeebb1b406b"
+                },
+                {
+                    "name": "恐吓",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/恐吓_fcf991.png",
+                    "hash": "fcf991a75b9bef5dcbb789cbd58c74a5"
+                },
+                {
+                    "name": "坏笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/坏笑_68f9c9.png",
+                    "hash": "68f9c91c651083fa830291db91cb51fd"
+                },
+                {
+                    "name": "害羞",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/害羞_cfd87c.png",
+                    "hash": "cfd87c7942b50d2d6720d26451983484"
+                },
+                {
+                    "name": "小丑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/小丑_0d0139.png",
+                    "hash": "0d013916cea644617af17cd5e290c672"
+                },
+                {
+                    "name": "笑嘻嘻",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/笑嘻嘻_4e9797.png",
+                    "hash": "4e979780f01bac3f87160f521a114e35"
+                },
+                {
+                    "name": "调皮",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/调皮_c9ca5d.png",
+                    "hash": "c9ca5d92412c5cb84db1d09d3b644e4f"
+                },
+                {
+                    "name": "头晕",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/头晕_090d9a.png",
+                    "hash": "090d9a158e90a751cfb71763d5bbe08d"
+                },
+                {
+                    "name": "咀嚼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/咀嚼_3a4b6d.png",
+                    "hash": "3a4b6d4a75e1913373e16c02b8787cb4"
+                },
+                {
+                    "name": "难受",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/难受_1ccf08.png",
+                    "hash": "1ccf089f1003ac806ec97d19c3377ecd"
+                },
+                {
+                    "name": "苦笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/苦笑_2973ae.png",
+                    "hash": "2973ae307c12ad9d6984d080a5946597"
+                },
+                {
+                    "name": "大笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/大笑_dbfe2b.png",
+                    "hash": "dbfe2b0ad8de9c11b3f259e5cf4decd6"
+                },
+                {
+                    "name": "惊讶",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/惊讶_0543ea.png",
+                    "hash": "0543ea48814699fb9c9bb8aad3b503d3"
+                },
+                {
+                    "name": "赔笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/赔笑_a2ac83.png",
+                    "hash": "a2ac831b93e91adcd489cd30598fd273"
+                },
+                {
+                    "name": "不爽",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/不爽_45608e.png",
+                    "hash": "45608e269f5c858043ab6726e52301f1"
+                },
+                {
+                    "name": "打击",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/打击_a1a41b.png",
+                    "hash": "a1a41b0fcdc825a340b13186505b4805"
+                },
+                {
+                    "name": "瑟瑟发抖",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/瑟瑟发抖_361bd6.png",
+                    "hash": "361bd6fe56ef13423d35913ff12fc0c6"
+                },
+                {
+                    "name": "可怕",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/可怕_660bfa.png",
+                    "hash": "660bfa3bde3bc38c336f1733d8e12e22"
+                },
+                {
+                    "name": "嘟嘴不屑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/嘟嘴不屑_c04fa4.png",
+                    "hash": "c04fa44885f3fb76ca96fb067608d3a8"
+                },
+                {
+                    "name": "装蒜",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/装蒜_e62652.png",
+                    "hash": "e62652a2e548e39436e4d1e4029695dd"
+                },
+                {
+                    "name": "为难",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/为难_c3813d.png",
+                    "hash": "c3813d79c2aaceec3d94159c3f4deae6"
+                },
+                {
+                    "name": "无奈",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/无奈_a196d3.png",
+                    "hash": "a196d345ac5a95cb93dd96b693714188"
+                },
+                {
+                    "name": "不满",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/不满_a6d430.png",
+                    "hash": "a6d430fb2a36efb16f227ee6517be718"
+                },
+                {
+                    "name": "黑化",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/黑化_69657f.png",
+                    "hash": "69657f1846115467e1b43eb54815ee22"
+                },
+                {
+                    "name": "翻白眼",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/翻白眼_b92735.png",
+                    "hash": "b92735c831758eea24b332b632ef10d6"
+                },
+                {
+                    "name": "困扰",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/困扰_df1e6a.png",
+                    "hash": "df1e6a0bba39d395897d4c646531e85b"
+                },
+                {
+                    "name": "冷脸",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/冷脸_9fca9d.png",
+                    "hash": "9fca9de975dc31436a22ce1cca9a0f94"
+                },
+                {
+                    "name": "强颜欢笑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/强颜欢笑_616db1.png",
+                    "hash": "616db1c59cbac107dfb468ef82c0201d"
+                },
+                {
+                    "name": "冷汗",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/冷汗_495249.png",
+                    "hash": "495249c54e608ae11200cdbcfb8ce568"
+                },
+                {
+                    "name": "瞧好了",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/瞧好了_56f059.png",
+                    "hash": "56f059554d263e1f8436a3cda23ffbce"
+                },
+                {
+                    "name": "抱怨",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/抱怨_913d7a.png",
+                    "hash": "913d7afaea3c795b031509323b7f46ab"
+                },
+                {
+                    "name": "灵魂出窍",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/灵魂出窍_d182fc.png",
+                    "hash": "d182fc22df7c61792530a5676254812c"
+                },
+                {
+                    "name": "怀疑",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/怀疑_360d45.png",
+                    "hash": "360d45d9241e46d218710a06326a9a2b"
+                },
+                {
+                    "name": "质问",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/质问_ac41da.png",
+                    "hash": "ac41daede6a718e0ffdd02c9e49dfc72"
+                },
+                {
+                    "name": "逞强",
+                    "path": "extracted_psds/Q版花店姐姐长裙_1761648249312/表情/逞强_4098d4.png",
+                    "hash": "4098d498e2fe2eb70c613606a120a33f"
+                }
+            ]
+        }
+    },
+    {
+        "id": "3e0dc05f-21f3-4315-9cac-9016edd85fbe",
+        "name": "青蛙哥_1761648323488",
+        "group_order": [
+            "动作",
+            "表情豆豆眼",
+            "表情",
+            "Root"
+        ],
+        "layer_groups": {
+            "动作": [
+                {
+                    "name": "抱头",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/抱头_71adfb.png",
+                    "hash": "71adfb0c6d474a243fdebd6ea82d351a"
+                },
+                {
+                    "name": "抱胸",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/抱胸_a1be0c.png",
+                    "hash": "a1be0c6215403c64639772162cd45a29"
+                },
+                {
+                    "name": "叉腰",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/叉腰_e05e7c.png",
+                    "hash": "e05e7cd5184b297a42cf9f6844befa9c"
+                },
+                {
+                    "name": "出拳",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/出拳_0734b7.png",
+                    "hash": "0734b7831d4713a42ec1488205129c0f"
+                },
+                {
+                    "name": "打招呼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/打招呼_da1749.png",
+                    "hash": "da1749d80df51aca7f9712a08731e464"
+                },
+                {
+                    "name": "拱手",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/拱手_23d125.png",
+                    "hash": "23d1259e37fb183e908ac2188d25c21f"
+                },
+                {
+                    "name": "勾手指",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/勾手指_c955dc.png",
+                    "hash": "c955dcd59e388b2cc6002b86ced214b2"
+                },
+                {
+                    "name": "接电话",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/接电话_31c1d2.png",
+                    "hash": "31c1d2780912ec84f18271d10420d540"
+                },
+                {
+                    "name": "结印",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/结印_f8f7ef.png",
+                    "hash": "f8f7efdea684ce2e8b52ff06414053ba"
+                },
+                {
+                    "name": "介绍",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/介绍_2f7651.png",
+                    "hash": "2f7651372af6c165b853307a63f968e8"
+                },
+                {
+                    "name": "举起拳头",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/举起拳头_9235c8.png",
+                    "hash": "9235c8d3e3ac6a23ded3b66aefa85d8f"
+                },
+                {
+                    "name": "举手",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/举手_b156ce.png",
+                    "hash": "b156ce79f152a99cee03d602d74e552a"
+                },
+                {
+                    "name": "摸摸头",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/摸摸头_efb507.png",
+                    "hash": "efb5079b568315aa27f6a52d5f52b081"
+                },
+                {
+                    "name": "祈祷",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/祈祷_63d3d1.png",
+                    "hash": "63d3d1412f41101eb96d3271a8dbbf69"
+                },
+                {
+                    "name": "请进",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/请进_7e0e6a.png",
+                    "hash": "7e0e6ae86d93c49508e3cdac280f485f"
+                },
+                {
+                    "name": "手指向前",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/手指向前_874dec.png",
+                    "hash": "874dec44e4dcb26d87501b24317931b9"
+                },
+                {
+                    "name": "竖中指",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/竖中指_fdadd1.png",
+                    "hash": "fdadd10b27d668fe27023ca6b34e9949"
+                },
+                {
+                    "name": "摊开手",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/摊开手_04c323.png",
+                    "hash": "04c3230e0feb3555d90d73036d430cf5"
+                },
+                {
+                    "name": "逃跑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/逃跑_fce69a.png",
+                    "hash": "fce69a6fd020b6789660eae6db340bb4"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/偷笑_c2c6fd.png",
+                    "hash": "c2c6fdcd663e11c7c07c82801c44e5c6"
+                },
+                {
+                    "name": "捂嘴",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/捂嘴_66cf87.png",
+                    "hash": "66cf87ea53f958f889ab002775af0826"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/疑惑_1995ac.png",
+                    "hash": "1995acca6ec6a95f4d0e6566cb21c932"
+                },
+                {
+                    "name": "站立",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/站立_4025bc.png",
+                    "hash": "4025bc0975faa16c86d1e14367bb04f4"
+                },
+                {
+                    "name": "指责",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/指责_403bd2.png",
+                    "hash": "403bd2a48751ecde277e70d2e269c5e2"
+                },
+                {
+                    "name": "坐着",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/坐着_0f8a07.png",
+                    "hash": "0f8a0767cbd2532cb8d29089f20da7c5"
+                },
+                {
+                    "name": "坐姿看",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/坐姿看_5f4818.png",
+                    "hash": "5f4818d3b68396ebb95a2b3d2648b724"
+                },
+                {
+                    "name": "坐姿思考",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/坐姿思考_398dfb.png",
+                    "hash": "398dfba0c7cd82496ed7960f0bdc3fe5"
+                },
+                {
+                    "name": "坐姿抬手",
+                    "path": "extracted_psds/青蛙哥_1761648323488/动作/坐姿抬手_57b837.png",
+                    "hash": "57b837b1ae0fc10b3df36740486066dd"
+                }
+            ],
+            "表情豆豆眼": [
+                {
+                    "name": "无表情",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/无表情_22a699.png",
+                    "hash": "22a699cd8d8f792da621e7abc9f55304"
+                },
+                {
+                    "name": "感动",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/感动_809bd1.png",
+                    "hash": "809bd13a2e1086ca535bc18c5252cf07"
+                },
+                {
+                    "name": "皱眉",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/皱眉_b57145.png",
+                    "hash": "b5714592cc3586ef72ee0193113aeecb"
+                },
+                {
+                    "name": "吓哭",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/吓哭_58180e.png",
+                    "hash": "58180e7702ea1a8397c3a3829592ad6e"
+                },
+                {
+                    "name": "迷惑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/迷惑_55b8cf.png",
+                    "hash": "55b8cfbf0c49014dc40f90cdd953a760"
+                },
+                {
+                    "name": "臆想",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/臆想_6f4172.png",
+                    "hash": "6f4172baf749beed1fcb4b9e567e3398"
+                },
+                {
+                    "name": "嫌弃",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/嫌弃_16f5b9.png",
+                    "hash": "16f5b930a4fa0bd144ff6f9339a12c68"
+                },
+                {
+                    "name": "冷漠",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/冷漠_763042.png",
+                    "hash": "7630428c63b5528a52ffc3162a3b9f22"
+                },
+                {
+                    "name": "尴尬",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/尴尬_2d8ecd.png",
+                    "hash": "2d8ecd943090093775355af84bd4bc31"
+                },
+                {
+                    "name": "舒坦",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/舒坦_20ebdb.png",
+                    "hash": "20ebdb1f1b28393de3414fb5242adfcf"
+                },
+                {
+                    "name": "憋笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/憋笑_f17ae8.png",
+                    "hash": "f17ae88d93ebcfc1b976aeb6bd484af5"
+                },
+                {
+                    "name": "惊吓",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/惊吓_ed0dfb.png",
+                    "hash": "ed0dfbd220803fc8f2131d8206eb5956"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/偷笑_94e2b8.png",
+                    "hash": "94e2b8b890c64e23ba892dbe073ee89c"
+                },
+                {
+                    "name": "打哈欠",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/打哈欠_8ae5b0.png",
+                    "hash": "8ae5b09ca5b5771455abb85e9405b0f3"
+                },
+                {
+                    "name": "吐血",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/吐血_4a8f57.png",
+                    "hash": "4a8f575b4e3b643e623a72114377574a"
+                },
+                {
+                    "name": "傲娇",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/傲娇_69bd9c.png",
+                    "hash": "69bd9c82c1c54edda5d8f3d8c34f81bf"
+                },
+                {
+                    "name": "装酷",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/装酷_3d2a56.png",
+                    "hash": "3d2a56e6d6320f534f5a5445b395ba4f"
+                },
+                {
+                    "name": "担忧",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/担忧_8437ff.png",
+                    "hash": "8437ff0e05c3d675cc013ffa3f88c86f"
+                },
+                {
+                    "name": "自信",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/自信_279967.png",
+                    "hash": "27996745511b0363bed6fd951736dcb4"
+                },
+                {
+                    "name": "八卦",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/八卦_caba9c.png",
+                    "hash": "caba9c17a1190710bd142f07aa74c786"
+                },
+                {
+                    "name": "生闷气",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/生闷气_ca0db9.png",
+                    "hash": "ca0db9f39b7b7f26f197354a4e97e89f"
+                },
+                {
+                    "name": "鄙视",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/鄙视_ae1d3b.png",
+                    "hash": "ae1d3bb90b7f2ebfa54f6561119cbd32"
+                },
+                {
+                    "name": "紧闭双眼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/紧闭双眼_63b5b3.png",
+                    "hash": "63b5b3438c26431b96f3e2cbdb5d9971"
+                },
+                {
+                    "name": "发呆",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/发呆_16469f.png",
+                    "hash": "16469fcac5ce8d0dd968822fc9e23b08"
+                },
+                {
+                    "name": "震惊",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/震惊_843a3e.png",
+                    "hash": "843a3e6189a5ed12621064a717083bbc"
+                },
+                {
+                    "name": "吐槽",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/吐槽_38051d.png",
+                    "hash": "38051d453a09ec83ac0f9b26254b3b3e"
+                },
+                {
+                    "name": "流泪",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/流泪_1ef5ad.png",
+                    "hash": "1ef5ad5479e028b74dc3bbf2dcbf3299"
+                },
+                {
+                    "name": "流鼻血",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/流鼻血_dd12c3.png",
+                    "hash": "dd12c3164370b692da190cf12e620c11"
+                },
+                {
+                    "name": "发怒",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/发怒_e54540.png",
+                    "hash": "e54540480ba7cdecfb3a86358436e6dc"
+                },
+                {
+                    "name": "大哭",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/大哭_b436d9.png",
+                    "hash": "b436d9209d64afaa268e52662ef08550"
+                },
+                {
+                    "name": "打脸",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/打脸_190683.png",
+                    "hash": "190683b924fac9af7890ba9f77faf0fd"
+                },
+                {
+                    "name": "眼红",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/眼红_0914af.png",
+                    "hash": "0914af6d4ec312a443dbf21f2d54e285"
+                },
+                {
+                    "name": "含泪",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/含泪_f2cc30.png",
+                    "hash": "f2cc300a3c96d36397390864f47c8d8b"
+                },
+                {
+                    "name": "嘟嘴",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/嘟嘴_14c8ca.png",
+                    "hash": "14c8cada848bfc84d82bf5650b3947c3"
+                },
+                {
+                    "name": "色狼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/色狼_654909.png",
+                    "hash": "654909a659b9d50eb33258282f823b94"
+                },
+                {
+                    "name": "微笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/微笑_ed3d3c.png",
+                    "hash": "ed3d3c3eb865d54176d29ad914ef723f"
+                },
+                {
+                    "name": "睡觉",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/睡觉_f532c4.png",
+                    "hash": "f532c4379e3403747d5ad78f49a71e14"
+                },
+                {
+                    "name": "大吼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/大吼_ee1d49.png",
+                    "hash": "ee1d4971f1232c863166efd7ccc29898"
+                },
+                {
+                    "name": "笑脸",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/笑脸_28da59.png",
+                    "hash": "28da5937cb584fa14ec24caf7153634f"
+                },
+                {
+                    "name": "叹气",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/叹气_7e1d20.png",
+                    "hash": "7e1d20af500fcd69b2e984c93ef77a6e"
+                },
+                {
+                    "name": "无语",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/无语_0b7334.png",
+                    "hash": "0b733427ffd12614b1280537afb60cf0"
+                },
+                {
+                    "name": "咬牙",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/咬牙_f6242c.png",
+                    "hash": "f6242c58d57534a904b61983545076e7"
+                },
+                {
+                    "name": "吃惊",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/吃惊_49cff2.png",
+                    "hash": "49cff267d76a78835ccbae3adad4778b"
+                },
+                {
+                    "name": "闭眼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/闭眼_947da6.png",
+                    "hash": "947da6068c5a9113d034f2a493a1b19f"
+                },
+                {
+                    "name": "侥幸",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/侥幸_d51e2f.png",
+                    "hash": "d51e2fd57f19dd352a919a8ad7eb7b44"
+                },
+                {
+                    "name": "赌气",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/赌气_3f00e6.png",
+                    "hash": "3f00e6c2d85fa46c849a5ac0b77582d6"
+                },
+                {
+                    "name": "好色",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/好色_55834d.png",
+                    "hash": "55834d4716f41d9e9310ef27963508f1"
+                },
+                {
+                    "name": "崇拜",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/崇拜_f3db93.png",
+                    "hash": "f3db93cd88c41831cec34ef2bc25b7e6"
+                },
+                {
+                    "name": "怒骂",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/怒骂_927b65.png",
+                    "hash": "927b6596b53da6cf875502a1b51c4979"
+                },
+                {
+                    "name": "生气",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/生气_afc3d6.png",
+                    "hash": "afc3d6b1fde7c025543dc03797785749"
+                },
+                {
+                    "name": "害怕",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/害怕_284ba9.png",
+                    "hash": "284ba948d477750f6129d9fa9604df52"
+                },
+                {
+                    "name": "疲倦",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/疲倦_b0458d.png",
+                    "hash": "b0458debe8c172770096b5abf63620a6"
+                },
+                {
+                    "name": "难过",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/难过_48cc82.png",
+                    "hash": "48cc82f5be39f5515ede57a1fe719b2d"
+                },
+                {
+                    "name": "挑眉",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/挑眉_c59586.png",
+                    "hash": "c59586e6fffe1b373e4fee69af32ff7d"
+                },
+                {
+                    "name": "昏迷",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/昏迷_c518f3.png",
+                    "hash": "c518f35da88db305660f8c6f56812212"
+                },
+                {
+                    "name": "大骂",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/大骂_b4b54f.png",
+                    "hash": "b4b54ff4338104de5be7fb2c246f19a7"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/疑惑_493707.png",
+                    "hash": "4937078a1503132dfc5b18fc2d99bdd3"
+                },
+                {
+                    "name": "委屈",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/委屈_d5e2b6.png",
+                    "hash": "d5e2b60e0556f7c741cf1760b0d4d6a3"
+                },
+                {
+                    "name": "呕吐",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/呕吐_fde8b9.png",
+                    "hash": "fde8b92223cac87e79b8f881b722865c"
+                },
+                {
+                    "name": "傲慢",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/傲慢_1f1cfc.png",
+                    "hash": "1f1cfc76f53ae50cd616281bfb677b84"
+                },
+                {
+                    "name": "恶心",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/恶心_6d4ef0.png",
+                    "hash": "6d4ef0c73b9d1ab3dc89aab381e27ff2"
+                },
+                {
+                    "name": "恐吓",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/恐吓_3103d0.png",
+                    "hash": "3103d04d74873bf57851f50e2bdde25d"
+                },
+                {
+                    "name": "坏笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/坏笑_653abd.png",
+                    "hash": "653abd34775cae06b349fb16e782a591"
+                },
+                {
+                    "name": "害羞",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/害羞_ab6e2c.png",
+                    "hash": "ab6e2c13cd4a4ce814d55aeeb8badea7"
+                },
+                {
+                    "name": "小丑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/小丑_99a56a.png",
+                    "hash": "99a56a1c42ca3f9b4618521452ff1a51"
+                },
+                {
+                    "name": "笑嘻嘻",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/笑嘻嘻_4a14c5.png",
+                    "hash": "4a14c59e8a3a9ff5207cfeefd5b6a92c"
+                },
+                {
+                    "name": "调皮",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/调皮_a24072.png",
+                    "hash": "a24072f1c8c6f82be8f6bbebcea7f6e1"
+                },
+                {
+                    "name": "头晕",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/头晕_85506d.png",
+                    "hash": "85506d9e050185923cd1018054f04990"
+                },
+                {
+                    "name": "咀嚼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/咀嚼_45063a.png",
+                    "hash": "45063ada4cc79b705a5975beaec0cdda"
+                },
+                {
+                    "name": "难受",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/难受_fd2722.png",
+                    "hash": "fd27224facf8fc4944c35583dffb19b9"
+                },
+                {
+                    "name": "苦笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/苦笑_8fd516.png",
+                    "hash": "8fd516268ec83e98892cb407b0a78f24"
+                },
+                {
+                    "name": "大笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/大笑_b9d71f.png",
+                    "hash": "b9d71f85815a356254a2c32ca9a01b21"
+                },
+                {
+                    "name": "惊讶",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情豆豆眼/惊讶_1aa2dc.png",
+                    "hash": "1aa2dc2a055f07fd42b759160d284a67"
+                }
+            ],
+            "表情": [
+                {
+                    "name": "感动",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/感动_9a5703.png",
+                    "hash": "9a570377f624305228dbb3e0c6474a01"
+                },
+                {
+                    "name": "皱眉",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/皱眉_4c709c.png",
+                    "hash": "4c709cd86697c205b9cc923cd8f1fdbe"
+                },
+                {
+                    "name": "打哈欠",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/打哈欠_175773.png",
+                    "hash": "175773062ad27681c4282a34c0b9a75a"
+                },
+                {
+                    "name": "吓哭",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/吓哭_191098.png",
+                    "hash": "191098cd72ed08ba8e1900fa662eb3a9"
+                },
+                {
+                    "name": "惊吓",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/惊吓_390de9.png",
+                    "hash": "390de9e00ba693f456b89d627826e636"
+                },
+                {
+                    "name": "迷惑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/迷惑_376deb.png",
+                    "hash": "376deb0dbf9f17328c5ae45d8dfa5e23"
+                },
+                {
+                    "name": "臆想",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/臆想_1de0ba.png",
+                    "hash": "1de0ba8475ed8fbc4b9f4a22e901e7a0"
+                },
+                {
+                    "name": "嫌弃",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/嫌弃_6919e5.png",
+                    "hash": "6919e557f70bb0dbe95a112cc45c5a60"
+                },
+                {
+                    "name": "冷漠",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/冷漠_045da9.png",
+                    "hash": "045da9e590ca7ba5cc456718f108b341"
+                },
+                {
+                    "name": "尴尬",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/尴尬_3ffe1c.png",
+                    "hash": "3ffe1ce1d6dd08e4b2543f758fc5c15d"
+                },
+                {
+                    "name": "舒坦",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/舒坦_9ff992.png",
+                    "hash": "9ff9921b7915ea74ced377d866f6f551"
+                },
+                {
+                    "name": "憋笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/憋笑_0d55b7.png",
+                    "hash": "0d55b7f239834f0dfcc00f55ed5dbd85"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/偷笑_ddb531.png",
+                    "hash": "ddb5313a979e1f2acb6bb0c9fa202149"
+                },
+                {
+                    "name": "担忧",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/担忧_bb0f7e.png",
+                    "hash": "bb0f7e8a1ad1da6a948e4a3be976c81d"
+                },
+                {
+                    "name": "自信",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/自信_d454dd.png",
+                    "hash": "d454ddc6f4f4243b6973e5d7904ba61d"
+                },
+                {
+                    "name": "生闷气",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/生闷气_62b1f3.png",
+                    "hash": "62b1f326095f61165db9d430d545761f"
+                },
+                {
+                    "name": "鄙视",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/鄙视_8e44d9.png",
+                    "hash": "8e44d9130796ba6cfeea12a5bf777d5c"
+                },
+                {
+                    "name": "流泪",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/流泪_e5c7f1.png",
+                    "hash": "e5c7f195c038e8b103321a872fc6857f"
+                },
+                {
+                    "name": "发怒",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/发怒_ab5dc7.png",
+                    "hash": "ab5dc7c9e75020ec9df9d53dfeee38d5"
+                },
+                {
+                    "name": "睡觉",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/睡觉_256a97.png",
+                    "hash": "256a973afc1fff61ab00487099c9e7b0"
+                },
+                {
+                    "name": "笑脸",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/笑脸_db418d.png",
+                    "hash": "db418d21840a6cdd0138b0377b145007"
+                },
+                {
+                    "name": "叹气",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/叹气_98561e.png",
+                    "hash": "98561ee928e8f15683fe760bc074d347"
+                },
+                {
+                    "name": "无语",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/无语_1f8d7e.png",
+                    "hash": "1f8d7e3c66597eb6f64027d9c0293093"
+                },
+                {
+                    "name": "吃惊",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/吃惊_4e1922.png",
+                    "hash": "4e1922db35943a67f12a1fffb5728083"
+                },
+                {
+                    "name": "怒骂",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/怒骂_00d422.png",
+                    "hash": "00d4229d2522a794d4107d22063d4d5c"
+                },
+                {
+                    "name": "害怕",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/害怕_259e7e.png",
+                    "hash": "259e7eba218f18bc03eeeb1d18bd7130"
+                },
+                {
+                    "name": "疲倦",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/疲倦_ceb531.png",
+                    "hash": "ceb53161be517f353c9edbbb3324084b"
+                },
+                {
+                    "name": "难过",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/难过_960053.png",
+                    "hash": "960053c209ec4311b44e4e1727a5554e"
+                },
+                {
+                    "name": "恐吓",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/恐吓_8c72a9.png",
+                    "hash": "8c72a9f0111229d50110f87d41decf92"
+                },
+                {
+                    "name": "害羞",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/害羞_8ad2cb.png",
+                    "hash": "8ad2cb697bd6e0f06cdfc6ae0d03c4e2"
+                },
+                {
+                    "name": "咀嚼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/咀嚼_323c4e.png",
+                    "hash": "323c4e90b7b00171d90f6a36db001be5"
+                },
+                {
+                    "name": "难受",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/难受_ee03af.png",
+                    "hash": "ee03afd806f1514185063d3f819f09a5"
+                },
+                {
+                    "name": "苦笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/苦笑_26cb4e.png",
+                    "hash": "26cb4e47b61028472a7d3f5f3559fcf6"
+                },
+                {
+                    "name": "大笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/大笑_a3a99e.png",
+                    "hash": "a3a99e0a49881071555fd54f06cb3f62"
+                },
+                {
+                    "name": "吐血",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/吐血_eaefaf.png",
+                    "hash": "eaefaf4567f3679c5d1f871b893fa466"
+                },
+                {
+                    "name": "赌气",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/赌气_ceeb04.png",
+                    "hash": "ceeb04e9506c2c23d9e9dbc095d5a630"
+                },
+                {
+                    "name": "傲娇",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/傲娇_e39a4d.png",
+                    "hash": "e39a4db706b060278c0230ead935ac9a"
+                },
+                {
+                    "name": "装酷",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/装酷_9e6408.png",
+                    "hash": "9e6408f5547620efd2c301cfbf95583f"
+                },
+                {
+                    "name": "八卦",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/八卦_c7373c.png",
+                    "hash": "c7373c20dd77b359ecfcc48b3bcb4a2d"
+                },
+                {
+                    "name": "紧闭双眼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/紧闭双眼_1570d7.png",
+                    "hash": "1570d73b303a68599edb7f6cff236ddc"
+                },
+                {
+                    "name": "发呆",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/发呆_29b83d.png",
+                    "hash": "29b83d401d2d1e22b1df5d206c1dce62"
+                },
+                {
+                    "name": "震惊",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/震惊_2864f0.png",
+                    "hash": "2864f066c97a73408809cb5b6bdf62ca"
+                },
+                {
+                    "name": "吐槽",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/吐槽_d333a7.png",
+                    "hash": "d333a7494b549b9f2426db4f4f1617e3"
+                },
+                {
+                    "name": "流鼻血",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/流鼻血_bc366a.png",
+                    "hash": "bc366a7d2b465b9e2dd40a02fa0b3ebf"
+                },
+                {
+                    "name": "大哭",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/大哭_1ba3b5.png",
+                    "hash": "1ba3b5dd9ab993d3fda07d6390253d3a"
+                },
+                {
+                    "name": "打脸",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/打脸_553db8.png",
+                    "hash": "553db8280db585dc769924c3009f796c"
+                },
+                {
+                    "name": "眼红",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/眼红_c30f16.png",
+                    "hash": "c30f1604f21ffc62d12e119f55e04ab1"
+                },
+                {
+                    "name": "含泪",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/含泪_4f1915.png",
+                    "hash": "4f1915af4cf911421b5ccbd0fce92b6d"
+                },
+                {
+                    "name": "嘟嘴",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/嘟嘴_97e4bf.png",
+                    "hash": "97e4bf8e8013e1309131ba7150993926"
+                },
+                {
+                    "name": "好色",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/好色_e40acc.png",
+                    "hash": "e40acc56747dd5bb8bb1d1a216581304"
+                },
+                {
+                    "name": "色狼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/色狼_2187de.png",
+                    "hash": "2187de579d9068f5df585ccdf9ece85b"
+                },
+                {
+                    "name": "大吼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/大吼_56835e.png",
+                    "hash": "56835e0c103918d42d54baf9c643c131"
+                },
+                {
+                    "name": "咬牙",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/咬牙_9c1672.png",
+                    "hash": "9c1672d2102381fb375350bffe71f407"
+                },
+                {
+                    "name": "闭眼",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/闭眼_e678e5.png",
+                    "hash": "e678e5c16749d7acffbca3b78a21ae5c"
+                },
+                {
+                    "name": "侥幸",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/侥幸_6fab06.png",
+                    "hash": "6fab0647887697b6ae9f9b33da946070"
+                },
+                {
+                    "name": "崇拜",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/崇拜_d0b499.png",
+                    "hash": "d0b49999e838f39270a0d3ebb4ef11fe"
+                },
+                {
+                    "name": "生气",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/生气_d26292.png",
+                    "hash": "d26292ed6018678aec51efc0b3df99ba"
+                },
+                {
+                    "name": "挑眉",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/挑眉_8e69fb.png",
+                    "hash": "8e69fbe6c854e88490d10cd8b927e935"
+                },
+                {
+                    "name": "昏迷",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/昏迷_9172d9.png",
+                    "hash": "9172d9e205093f14948c73e69ff9dd8f"
+                },
+                {
+                    "name": "大骂",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/大骂_90f4b1.png",
+                    "hash": "90f4b10a81bd15fe9d8c2023b6c517ef"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/疑惑_a5cd74.png",
+                    "hash": "a5cd7454cab50b5d2737dd763b891fda"
+                },
+                {
+                    "name": "委屈",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/委屈_827a2c.png",
+                    "hash": "827a2c072ee94c7d69ec64f0c44673b1"
+                },
+                {
+                    "name": "呕吐",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/呕吐_0b202c.png",
+                    "hash": "0b202c812da18f883c816eb3b422e62c"
+                },
+                {
+                    "name": "傲慢",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/傲慢_43e5a3.png",
+                    "hash": "43e5a34aaaa452115f5a3ed7b8698a74"
+                },
+                {
+                    "name": "恶心",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/恶心_1cfce0.png",
+                    "hash": "1cfce02165af88bf42bf77aedf17555a"
+                },
+                {
+                    "name": "邪笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/邪笑_6d46df.png",
+                    "hash": "6d46df243966c246c4d46998d5f3c857"
+                },
+                {
+                    "name": "坏笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/坏笑_d0c896.png",
+                    "hash": "d0c8968e599d2f53ddf41506450a0ba2"
+                },
+                {
+                    "name": "惊讶",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/惊讶_06277d.png",
+                    "hash": "06277deca76887eb790b9d48c1a4f6ea"
+                },
+                {
+                    "name": "小丑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/小丑_734333.png",
+                    "hash": "7343335ab1b7b4cd375fadf930785d4f"
+                },
+                {
+                    "name": "笑嘻嘻",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/笑嘻嘻_f9f250.png",
+                    "hash": "f9f2502e67355682844267289af5b879"
+                },
+                {
+                    "name": "调皮",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/调皮_97ec42.png",
+                    "hash": "97ec425e07573f0bfe85a10f28b346de"
+                },
+                {
+                    "name": "头晕",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/头晕_442c27.png",
+                    "hash": "442c2734f17f7dcfd035e3f546f79ecf"
+                },
+                {
+                    "name": "微笑",
+                    "path": "extracted_psds/青蛙哥_1761648323488/表情/微笑_d0e1d2.png",
+                    "hash": "d0e1d2e12faa524e7edef73c0a14ed52"
+                }
+            ],
+            "Root": [
+                {
+                    "name": "青蛙头套",
+                    "path": "extracted_psds/青蛙哥_1761648323488/青蛙头套_dab012.png",
+                    "hash": "dab0125b2b92945ab8aad058614b2a1f"
+                }
+            ]
+        }
+    },
+    {
+        "id": "c3bf973a-6edf-4ad7-b7b8-cc0100216809",
+        "name": "Q版蓝色挑染男_1761648268637",
+        "group_order": [
+            "动作",
+            "豆豆眼表情",
+            "表情"
+        ],
+        "layer_groups": {
+            "动作": [
+                {
+                    "name": "抱头",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/抱头_df72fe.png",
+                    "hash": "df72fe418003173d87eb220b5c089503"
+                },
+                {
+                    "name": "抱胸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/抱胸_751c62.png",
+                    "hash": "751c62ef135d94b3adbdd204a21129e1"
+                },
+                {
+                    "name": "叉腰",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/叉腰_7b6f5a.png",
+                    "hash": "7b6f5ac598d32435dbc1cc516a10b5d9"
+                },
+                {
+                    "name": "出拳",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/出拳_5b56b9.png",
+                    "hash": "5b56b95dbd8f345018e076ef495f0171"
+                },
+                {
+                    "name": "打招呼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/打招呼_0e6328.png",
+                    "hash": "0e6328b572142e7e59e4341c5c35cd3d"
+                },
+                {
+                    "name": "拱手",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/拱手_4e6e76.png",
+                    "hash": "4e6e7676788d4a62675607097ae237fd"
+                },
+                {
+                    "name": "勾手指",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/勾手指_854918.png",
+                    "hash": "8549183021414bbafadc65a39bfae783"
+                },
+                {
+                    "name": "接电话",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/接电话_b2b41f.png",
+                    "hash": "b2b41f029e2b56b1a5ae3e7e1f97e5f9"
+                },
+                {
+                    "name": "结印",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/结印_429094.png",
+                    "hash": "4290944ab385f0bee1efe9b86e0ddc24"
+                },
+                {
+                    "name": "介绍",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/介绍_d32092.png",
+                    "hash": "d320923bd326174f7e8a660c850973ff"
+                },
+                {
+                    "name": "举起拳头",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/举起拳头_30cac3.png",
+                    "hash": "30cac35b389b49e3f93af4f7c2f3eedb"
+                },
+                {
+                    "name": "举手",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/举手_cb39b0.png",
+                    "hash": "cb39b0cfb03243ba725e4a48118e4eba"
+                },
+                {
+                    "name": "摸摸头",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/摸摸头_4442cb.png",
+                    "hash": "4442cb038462a6023476488494b4de25"
+                },
+                {
+                    "name": "祈祷",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/祈祷_938b13.png",
+                    "hash": "938b13e0787f0635f414e06aaf8b83f2"
+                },
+                {
+                    "name": "请进",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/请进_fe273a.png",
+                    "hash": "fe273a6a43d98092663dda34891b7de7"
+                },
+                {
+                    "name": "手指向前",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/手指向前_d6d3e0.png",
+                    "hash": "d6d3e04380a443f644a48dc3537d1385"
+                },
+                {
+                    "name": "竖中指",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/竖中指_b2c97e.png",
+                    "hash": "b2c97e1e2644d9c689b87f80e7805186"
+                },
+                {
+                    "name": "摊开手",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/摊开手_32329a.png",
+                    "hash": "32329a56e6381f7460a15540deaf31ab"
+                },
+                {
+                    "name": "逃跑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/逃跑_b0da1e.png",
+                    "hash": "b0da1e2f7e715f289449bec25b4b8eff"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/偷笑_719359.png",
+                    "hash": "719359ba12b1c1a4ef1b978560251e56"
+                },
+                {
+                    "name": "捂嘴",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/捂嘴_8b7915.png",
+                    "hash": "8b7915af9a7c0d19b1efde0f3beee452"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/疑惑_70e391.png",
+                    "hash": "70e3912ccb74e3bb772386f5f4f6823c"
+                },
+                {
+                    "name": "站立",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/站立_75f0a5.png",
+                    "hash": "75f0a578299e2db17ef5f04077b475c1"
+                },
+                {
+                    "name": "指责",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/指责_161042.png",
+                    "hash": "16104272633dcd67a84448c5f738b259"
+                },
+                {
+                    "name": "坐着",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/坐着_f59198.png",
+                    "hash": "f59198799f9bec48dc44c753de3fdd79"
+                },
+                {
+                    "name": "坐姿看",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/坐姿看_c57c11.png",
+                    "hash": "c57c1198ca2e00283fb1e6b7ff6af44c"
+                },
+                {
+                    "name": "坐姿思考",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/坐姿思考_f716cc.png",
+                    "hash": "f716cc8a3733ef335c9ab3f8f1e7e58c"
+                },
+                {
+                    "name": "坐姿抬手",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/动作/坐姿抬手_70d5dd.png",
+                    "hash": "70d5dd566de2445fdfbf1f0b1028a9e8"
+                }
+            ],
+            "豆豆眼表情": [
+                {
+                    "name": "无表情",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/无表情_a8b362.png",
+                    "hash": "a8b362e4aff7f79615515baa861e0b4d"
+                },
+                {
+                    "name": "微笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/微笑_901340.png",
+                    "hash": "901340672a3bce73937e4c1e80f89091"
+                },
+                {
+                    "name": "皱眉",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/皱眉_f03025.png",
+                    "hash": "f03025d23b34a68ca55b80734275bdb7"
+                },
+                {
+                    "name": "自信",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/自信_7e7c46.png",
+                    "hash": "7e7c461be11290e6de98b8b5769dfd9a"
+                },
+                {
+                    "name": "笑脸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/笑脸_69bf0c.png",
+                    "hash": "69bf0cd82a2f2e9657985ac82f901640"
+                },
+                {
+                    "name": "说话",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/说话_c94750.png",
+                    "hash": "c947507f913a5e12471d957f3fe25ce2"
+                },
+                {
+                    "name": "强调",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/强调_a945ff.png",
+                    "hash": "a945ff364a84a80c4f31b54657c9d6e8"
+                },
+                {
+                    "name": "担忧",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/担忧_f84ee4.png",
+                    "hash": "f84ee42643242be01906f54a40d235ab"
+                },
+                {
+                    "name": "难过",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/难过_02df6c.png",
+                    "hash": "02df6ccd04e3455b82373a3ce7657961"
+                },
+                {
+                    "name": "感动",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/感动_5d8842.png",
+                    "hash": "5d88426980908da41543dfa5aeb1d1af"
+                },
+                {
+                    "name": "吓哭",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/吓哭_436d20.png",
+                    "hash": "436d20bff3ae71091af0f2dc4d989f4c"
+                },
+                {
+                    "name": "迷惑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/迷惑_1bc6c2.png",
+                    "hash": "1bc6c2f789e59a4be9014e3a5c6f3eb5"
+                },
+                {
+                    "name": "臆想",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/臆想_d4fa0b.png",
+                    "hash": "d4fa0bfb65220db7f64dc4cfe476abe6"
+                },
+                {
+                    "name": "嫌弃",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/嫌弃_c1a42d.png",
+                    "hash": "c1a42dc46e904ff2a48b8fb6df38b410"
+                },
+                {
+                    "name": "冷漠",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/冷漠_8e6fd6.png",
+                    "hash": "8e6fd6a54e3c74361e7794e8113909b7"
+                },
+                {
+                    "name": "尴尬",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/尴尬_20e962.png",
+                    "hash": "20e962db7ac28ab6504b56c69e80b4ce"
+                },
+                {
+                    "name": "舒坦",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/舒坦_65c673.png",
+                    "hash": "65c6737b431191043d6ae4d4ffd25ad7"
+                },
+                {
+                    "name": "憋笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/憋笑_656ab9.png",
+                    "hash": "656ab97e185fdd68fb320770843337e8"
+                },
+                {
+                    "name": "惊吓",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/惊吓_e7c5c1.png",
+                    "hash": "e7c5c144d646f89a02b4386d986fc9c6"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/偷笑_90bd4d.png",
+                    "hash": "90bd4da7b517163355e19944d1a478e1"
+                },
+                {
+                    "name": "打哈欠",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/打哈欠_195cb7.png",
+                    "hash": "195cb7a4a206baed962809a4292555e1"
+                },
+                {
+                    "name": "吐血",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/吐血_b2e791.png",
+                    "hash": "b2e791118073caa540205a7a4844f97b"
+                },
+                {
+                    "name": "傲娇",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/傲娇_8546b6.png",
+                    "hash": "8546b69222b30ce4db92d0767894540c"
+                },
+                {
+                    "name": "装酷",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/装酷_22f929.png",
+                    "hash": "22f9294586f672581931e34770f24499"
+                },
+                {
+                    "name": "八卦",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/八卦_527750.png",
+                    "hash": "527750238c2468fc377fa3f3767770b9"
+                },
+                {
+                    "name": "生闷气",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/生闷气_3f8775.png",
+                    "hash": "3f877541418b014db54ffcbd9f379561"
+                },
+                {
+                    "name": "鄙视",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/鄙视_4ea48f.png",
+                    "hash": "4ea48f82c4290eaeff911cf6ada4a04a"
+                },
+                {
+                    "name": "紧闭双眼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/紧闭双眼_a6e72b.png",
+                    "hash": "a6e72baecf3583cc6292719b2d6b4490"
+                },
+                {
+                    "name": "发呆",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/发呆_1353b2.png",
+                    "hash": "1353b284555080b977f8d75ea7cc04ce"
+                },
+                {
+                    "name": "震惊",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/震惊_dc6a7a.png",
+                    "hash": "dc6a7aef020368c9282695d8b69d2e29"
+                },
+                {
+                    "name": "吐血",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/吐血_e6b415.png",
+                    "hash": "e6b415713814a3a5a27409d7fc803590"
+                },
+                {
+                    "name": "流泪",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/流泪_6c10bb.png",
+                    "hash": "6c10bbe6587d36cab9f7d798c3e8b9fe"
+                },
+                {
+                    "name": "流鼻血",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/流鼻血_a11187.png",
+                    "hash": "a11187e5013ba6a7c8483e857d4b960f"
+                },
+                {
+                    "name": "发怒",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/发怒_47c196.png",
+                    "hash": "47c1964bfa012a5a831851e8f354ae59"
+                },
+                {
+                    "name": "大哭",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/大哭_eecc6f.png",
+                    "hash": "eecc6f25deb2ad5f389a759468bf0c42"
+                },
+                {
+                    "name": "打脸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/打脸_647ce4.png",
+                    "hash": "647ce464089030e9fe7eb21235a0fedf"
+                },
+                {
+                    "name": "眼红",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/眼红_56554d.png",
+                    "hash": "56554d0aa83f853314a80c002de27ac4"
+                },
+                {
+                    "name": "含泪",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/含泪_64715a.png",
+                    "hash": "64715ab8566508b04bbe7cbc93a1b714"
+                },
+                {
+                    "name": "嘟嘴",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/嘟嘴_a7b227.png",
+                    "hash": "a7b227799d29e508c5bfdc02eb85c5d2"
+                },
+                {
+                    "name": "色狼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/色狼_b60871.png",
+                    "hash": "b6087100a2c2ae8c79e021794746542a"
+                },
+                {
+                    "name": "睡觉",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/睡觉_22ff9b.png",
+                    "hash": "22ff9bc559cdbe28f24ca4a5559d7279"
+                },
+                {
+                    "name": "大吼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/大吼_c55591.png",
+                    "hash": "c555910de2ccd01ab0d5bef64410c138"
+                },
+                {
+                    "name": "叹气",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/叹气_623149.png",
+                    "hash": "6231498fdbfc1efe81f406d0e831aa4f"
+                },
+                {
+                    "name": "无语",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/无语_25f8b8.png",
+                    "hash": "25f8b810cb894888a4d2f98d52d68dd4"
+                },
+                {
+                    "name": "咬牙",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/咬牙_c583a2.png",
+                    "hash": "c583a2dadb3cd30127c382e00df165a7"
+                },
+                {
+                    "name": "吃惊",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/吃惊_43fd2f.png",
+                    "hash": "43fd2fbdfa2d9f2858368f5f1eab39be"
+                },
+                {
+                    "name": "闭眼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/闭眼_39c7e7.png",
+                    "hash": "39c7e71942853e256306416f50de9913"
+                },
+                {
+                    "name": "侥幸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/侥幸_35a312.png",
+                    "hash": "35a312b3943f50012006528ba2f1fb9d"
+                },
+                {
+                    "name": "赌气",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/赌气_16d999.png",
+                    "hash": "16d999b63510f55a03671caf117ab0ee"
+                },
+                {
+                    "name": "好色",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/好色_ec2b6c.png",
+                    "hash": "ec2b6c9decba61f938650213db38f754"
+                },
+                {
+                    "name": "崇拜",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/崇拜_b784dc.png",
+                    "hash": "b784dcc1b158d03e7a7f5275c5785094"
+                },
+                {
+                    "name": "怒骂",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/怒骂_717e61.png",
+                    "hash": "717e613606150d6b26737ce324516da6"
+                },
+                {
+                    "name": "生气",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/生气_b7f5c6.png",
+                    "hash": "b7f5c65e7d22e4ee19d04816d53a3973"
+                },
+                {
+                    "name": "害怕",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/害怕_ec7967.png",
+                    "hash": "ec7967812e73124602581df1db1e6040"
+                },
+                {
+                    "name": "疲倦",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/疲倦_1e51ad.png",
+                    "hash": "1e51ad96d056a1533ff60630fc96475f"
+                },
+                {
+                    "name": "挑眉",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/挑眉_391f52.png",
+                    "hash": "391f5223487219ec86ca8f3835441c54"
+                },
+                {
+                    "name": "昏迷",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/昏迷_b83144.png",
+                    "hash": "b83144bb75f8ec10890c9b0439d1040e"
+                },
+                {
+                    "name": "大骂",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/大骂_3dea8f.png",
+                    "hash": "3dea8f4979b5464bcc7f801bac1761ff"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/疑惑_c216ec.png",
+                    "hash": "c216ec9c37a6bec22f58bfff4a267e5a"
+                },
+                {
+                    "name": "委屈",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/委屈_69fbbc.png",
+                    "hash": "69fbbcbf5a9014bf13ddeba1e1861edd"
+                },
+                {
+                    "name": "呕吐",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/呕吐_9795b2.png",
+                    "hash": "9795b2c76b5a6097f21bcb4c070bca1a"
+                },
+                {
+                    "name": "傲慢",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/傲慢_be6101.png",
+                    "hash": "be6101763bd35bb202970599befccaa0"
+                },
+                {
+                    "name": "恶心",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/恶心_d22f7f.png",
+                    "hash": "d22f7ff868ddee8e5c4e6e4ca5dca750"
+                },
+                {
+                    "name": "恐吓",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/恐吓_ed8f16.png",
+                    "hash": "ed8f164d106c153151956e8769ae5c90"
+                },
+                {
+                    "name": "坏笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/坏笑_a3bca3.png",
+                    "hash": "a3bca330038b0417bb5be7240792cee6"
+                },
+                {
+                    "name": "害羞",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/害羞_41a066.png",
+                    "hash": "41a06659f1ab944af27bba709b5fdd90"
+                },
+                {
+                    "name": "小丑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/小丑_cad056.png",
+                    "hash": "cad0563aff936450191cca7f7e3a8d6b"
+                },
+                {
+                    "name": "笑嘻嘻",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/笑嘻嘻_6be6a9.png",
+                    "hash": "6be6a9307885e82eafa10807f1dbae62"
+                },
+                {
+                    "name": "调皮",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/调皮_190152.png",
+                    "hash": "190152029e5161bcd8368bc8bf6d9ced"
+                },
+                {
+                    "name": "头晕",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/头晕_2165e5.png",
+                    "hash": "2165e5f6c4232961008d59b7c81ee55d"
+                },
+                {
+                    "name": "咀嚼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/咀嚼_223249.png",
+                    "hash": "2232490f97a4b371d32a35c693828b7b"
+                },
+                {
+                    "name": "难受",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/难受_d05582.png",
+                    "hash": "d0558234a5507ad0bbaf8817be06a25b"
+                },
+                {
+                    "name": "苦笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/苦笑_4d4dfc.png",
+                    "hash": "4d4dfce3a9df2252dcd44f37a6ef13b4"
+                },
+                {
+                    "name": "大笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/大笑_4a9450.png",
+                    "hash": "4a9450f4c5212f3b0b4201cf20e6717b"
+                },
+                {
+                    "name": "惊讶",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/惊讶_f60ba0.png",
+                    "hash": "f60ba0ddc470daf097ad959156c931a6"
+                },
+                {
+                    "name": "赔笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/赔笑_342e7b.png",
+                    "hash": "342e7b8ecdf58e452335c6f94c4c9fa8"
+                },
+                {
+                    "name": "不爽",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/不爽_967704.png",
+                    "hash": "967704f04321eed92adf3f2e6cd29c05"
+                },
+                {
+                    "name": "打击",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/打击_ee820a.png",
+                    "hash": "ee820a73221a164c0f2e04ba25b9b4d8"
+                },
+                {
+                    "name": "瑟瑟发抖",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/瑟瑟发抖_d51052.png",
+                    "hash": "d510521e1c5c3c554abe7573828b3430"
+                },
+                {
+                    "name": "可怕",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/可怕_369ced.png",
+                    "hash": "369ced15cad0b085456f90da3708260e"
+                },
+                {
+                    "name": "嘟嘴不屑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/嘟嘴不屑_b83ede.png",
+                    "hash": "b83ededeadbb239f2114241626f6cef5"
+                },
+                {
+                    "name": "装蒜",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/装蒜_bc93f3.png",
+                    "hash": "bc93f3b3b4ad62c61109db6be82cb72b"
+                },
+                {
+                    "name": "为难",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/为难_eabd84.png",
+                    "hash": "eabd844e25c0a674e8a994a33c890660"
+                },
+                {
+                    "name": "无奈",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/无奈_7b6fe5.png",
+                    "hash": "7b6fe5b9ab1d07721b3bd4ff535e6a7b"
+                },
+                {
+                    "name": "不满",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/不满_0c6186.png",
+                    "hash": "0c618670cc29776f3673a134bdc96b5f"
+                },
+                {
+                    "name": "黑化",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/黑化_e031e3.png",
+                    "hash": "e031e31bc0692c9b261f2532bd079dfd"
+                },
+                {
+                    "name": "接受无能",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/接受无能_a5c2dc.png",
+                    "hash": "a5c2dc0d7413cafc3c90d9a8d1d1e5ba"
+                },
+                {
+                    "name": "困扰",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/困扰_d660cf.png",
+                    "hash": "d660cf1989aac31f90c2f6e0bce33e08"
+                },
+                {
+                    "name": "冷脸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/冷脸_82b585.png",
+                    "hash": "82b585f0a4880bae060eaf2d20d6138c"
+                },
+                {
+                    "name": "挤出笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/挤出笑_a797bd.png",
+                    "hash": "a797bdf4243a9a4bab24aa86685de5e3"
+                },
+                {
+                    "name": "闯祸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/闯祸_8edf81.png",
+                    "hash": "8edf8129904e165d6b46fc6bde02a6e7"
+                },
+                {
+                    "name": "瞧好了",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/瞧好了_08883f.png",
+                    "hash": "08883f695e641b375f945064483d2412"
+                },
+                {
+                    "name": "不服气",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/不服气_b0f3aa.png",
+                    "hash": "b0f3aa8e2e37ed1db316ca5dc97b821c"
+                },
+                {
+                    "name": "灵魂出窍",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/灵魂出窍_c7914b.png",
+                    "hash": "c7914b79bb56d0534afe105da7e0bb38"
+                },
+                {
+                    "name": "怀疑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/豆豆眼表情/怀疑_7b6909.png",
+                    "hash": "7b6909070674c9e41a90834ea61b3f7c"
+                }
+            ],
+            "表情": [
+                {
+                    "name": "无表情",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/无表情_389ee3.png",
+                    "hash": "389ee3a6a590a42fa300adefc0fc15c2"
+                },
+                {
+                    "name": "微笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/微笑_d60561.png",
+                    "hash": "d60561e2d6b97e31f05d43d871a07faa"
+                },
+                {
+                    "name": "皱眉",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/皱眉_f69984.png",
+                    "hash": "f69984dbed089c529ee029119f255edf"
+                },
+                {
+                    "name": "自信",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/自信_5e55eb.png",
+                    "hash": "5e55eb3b2b0bd8fbb19883ab68ccdaf7"
+                },
+                {
+                    "name": "笑脸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/笑脸_8fc5ec.png",
+                    "hash": "8fc5ec1f3754fe946fc617a548daa4df"
+                },
+                {
+                    "name": "说话",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/说话_7f1a28.png",
+                    "hash": "7f1a285d8f955c6801d348b9e020657d"
+                },
+                {
+                    "name": "强调",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/强调_469dd3.png",
+                    "hash": "469dd38e166b21a47458b16f84719f1b"
+                },
+                {
+                    "name": "担忧",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/担忧_0e644e.png",
+                    "hash": "0e644e96dd452c4801953ad0096d15bd"
+                },
+                {
+                    "name": "难过",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/难过_20257f.png",
+                    "hash": "20257f75ed3529e986ed3be406ef6b62"
+                },
+                {
+                    "name": "感动",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/感动_fbd1d2.png",
+                    "hash": "fbd1d2fbb02ae87a73d0bfdae85b9d1a"
+                },
+                {
+                    "name": "吓哭",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/吓哭_e96b07.png",
+                    "hash": "e96b075bb1e799ed00fb3092cb455579"
+                },
+                {
+                    "name": "迷惑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/迷惑_8d90c1.png",
+                    "hash": "8d90c1ef4647af667ad6beab26dcfa47"
+                },
+                {
+                    "name": "臆想",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/臆想_285aa7.png",
+                    "hash": "285aa7c5d5cee13c4dfc219d230b84c9"
+                },
+                {
+                    "name": "嫌弃",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/嫌弃_3521f0.png",
+                    "hash": "3521f06abb6fbe957e627e2b8f1150b6"
+                },
+                {
+                    "name": "冷漠",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/冷漠_0216e3.png",
+                    "hash": "0216e3616455b7ffdabb8119304dae61"
+                },
+                {
+                    "name": "尴尬",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/尴尬_da2bc8.png",
+                    "hash": "da2bc8365a9002949bb746d7b7419585"
+                },
+                {
+                    "name": "舒坦",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/舒坦_861f77.png",
+                    "hash": "861f77b52d5a74431429e09b7ce0ca7f"
+                },
+                {
+                    "name": "憋笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/憋笑_ba1345.png",
+                    "hash": "ba1345eccf7c570a2869ef5d104c35bc"
+                },
+                {
+                    "name": "惊吓",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/惊吓_7b271c.png",
+                    "hash": "7b271c1110d1408b60b7b8cad8a341fa"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/偷笑_698bbf.png",
+                    "hash": "698bbf9825cb83fe14f32eab299d99c2"
+                },
+                {
+                    "name": "打哈欠",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/打哈欠_35c7c4.png",
+                    "hash": "35c7c48d1aade3773d61fb986e82a5fc"
+                },
+                {
+                    "name": "吐血",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/吐血_82cffa.png",
+                    "hash": "82cffaa744f99d8d24615c03d6048e3a"
+                },
+                {
+                    "name": "傲娇",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/傲娇_7860f9.png",
+                    "hash": "7860f9ad887849029de8c97f25e8818d"
+                },
+                {
+                    "name": "装酷",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/装酷_101a19.png",
+                    "hash": "101a19679096bd81b473653626f1085f"
+                },
+                {
+                    "name": "八卦",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/八卦_e1c081.png",
+                    "hash": "e1c0814be3db0ee03ab408e6d33d6aaf"
+                },
+                {
+                    "name": "愤怒",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/愤怒_a8060b.png",
+                    "hash": "a8060bf7ea11b3e436c2ef64bf106a4f"
+                },
+                {
+                    "name": "鄙视",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/鄙视_6d2b72.png",
+                    "hash": "6d2b726074bfc1708a1aabc27709f8ab"
+                },
+                {
+                    "name": "紧闭双眼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/紧闭双眼_6dfb58.png",
+                    "hash": "6dfb588c9c5f9fc74cc69ef9d0bba814"
+                },
+                {
+                    "name": "发呆",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/发呆_7f1e03.png",
+                    "hash": "7f1e03ee7d61952ee0ff58261d820fe3"
+                },
+                {
+                    "name": "震惊",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/震惊_c51644.png",
+                    "hash": "c51644e0eef94321677f4d510946e587"
+                },
+                {
+                    "name": "吐槽",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/吐槽_2abbae.png",
+                    "hash": "2abbaebbcf8feaff4f4d9bf9833cc685"
+                },
+                {
+                    "name": "流泪",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/流泪_75153e.png",
+                    "hash": "75153e5cf150497b233efa328878b1a1"
+                },
+                {
+                    "name": "流鼻血",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/流鼻血_baaeb7.png",
+                    "hash": "baaeb71cb7214692290b3c055d4206de"
+                },
+                {
+                    "name": "发怒",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/发怒_a4612f.png",
+                    "hash": "a4612f8d752490f222e509a4a78bdabc"
+                },
+                {
+                    "name": "大哭",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/大哭_839c39.png",
+                    "hash": "839c39b8c3498cb801592257ecf195f2"
+                },
+                {
+                    "name": "打脸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/打脸_4b5784.png",
+                    "hash": "4b5784dfdcd7740fffae053cd487297a"
+                },
+                {
+                    "name": "眼红",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/眼红_62c1a0.png",
+                    "hash": "62c1a07ba138022fcc33504379f58374"
+                },
+                {
+                    "name": "含泪",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/含泪_8c7f3f.png",
+                    "hash": "8c7f3f767ab9b85825f9d656c6ac3819"
+                },
+                {
+                    "name": "嘟嘴",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/嘟嘴_b48a66.png",
+                    "hash": "b48a66a99a400425951e976023d80c9e"
+                },
+                {
+                    "name": "色狼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/色狼_9395de.png",
+                    "hash": "9395deb932585402494089d3c07adcd7"
+                },
+                {
+                    "name": "睡觉",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/睡觉_af05e6.png",
+                    "hash": "af05e6bb72e19bc64d6df022ca04aa38"
+                },
+                {
+                    "name": "大吼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/大吼_9e2a90.png",
+                    "hash": "9e2a9054d3f93130f6b1db52544cfd7a"
+                },
+                {
+                    "name": "叹气",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/叹气_1189c6.png",
+                    "hash": "1189c687d52c81d3426c8d7be5b02467"
+                },
+                {
+                    "name": "无语",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/无语_2dc2e5.png",
+                    "hash": "2dc2e519469e23f6623d1777544731f8"
+                },
+                {
+                    "name": "咬牙",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/咬牙_96ee7a.png",
+                    "hash": "96ee7a5c917aea1f545a257a699ff473"
+                },
+                {
+                    "name": "吃惊",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/吃惊_9ac6c7.png",
+                    "hash": "9ac6c7d656bdd9b998efa49dbba18332"
+                },
+                {
+                    "name": "闭眼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/闭眼_d4af4a.png",
+                    "hash": "d4af4a15b50f93325492dc9fe2a59b5b"
+                },
+                {
+                    "name": "侥幸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/侥幸_0be411.png",
+                    "hash": "0be411572e0c311e2626f1c3c3d739ef"
+                },
+                {
+                    "name": "赌气",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/赌气_ed9911.png",
+                    "hash": "ed9911959e629c3c1a0eade4f3f568ce"
+                },
+                {
+                    "name": "好色",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/好色_9c6dd8.png",
+                    "hash": "9c6dd86e171b868e56a92eb64d136df6"
+                },
+                {
+                    "name": "崇拜",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/崇拜_6e78e2.png",
+                    "hash": "6e78e277a8dff3eb73ff91131a40d8ae"
+                },
+                {
+                    "name": "怒骂",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/怒骂_f6cf1c.png",
+                    "hash": "f6cf1c87a7c933f430b720b85f58d983"
+                },
+                {
+                    "name": "生气",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/生气_8ad63a.png",
+                    "hash": "8ad63ac95df5c467a2d4ee6c262cee96"
+                },
+                {
+                    "name": "害怕",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/害怕_d145e2.png",
+                    "hash": "d145e2691ba333d90a891a2e12857c31"
+                },
+                {
+                    "name": "疲倦",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/疲倦_8e4808.png",
+                    "hash": "8e4808c34737bf8b9f02b09aad058ab8"
+                },
+                {
+                    "name": "挑眉",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/挑眉_39926f.png",
+                    "hash": "39926fa798e8fa5dfe75b215206b9666"
+                },
+                {
+                    "name": "昏迷",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/昏迷_c98926.png",
+                    "hash": "c989269fbfd290ed4a9add5b8f59e74f"
+                },
+                {
+                    "name": "大骂",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/大骂_fcfd20.png",
+                    "hash": "fcfd20ee296807238e3f65c91def4d18"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/疑惑_7cb65b.png",
+                    "hash": "7cb65bccf34d378cbdce3119550ac5dd"
+                },
+                {
+                    "name": "委屈",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/委屈_6caa81.png",
+                    "hash": "6caa81f806930ac37313a698227ff090"
+                },
+                {
+                    "name": "呕吐",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/呕吐_883a31.png",
+                    "hash": "883a31f6b6b8e70cccb76bb92a2f3938"
+                },
+                {
+                    "name": "傲慢",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/傲慢_ee4f73.png",
+                    "hash": "ee4f73a24fcb990348c639aee72562fe"
+                },
+                {
+                    "name": "恶心",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/恶心_98f4fe.png",
+                    "hash": "98f4fe0bdfa7924c72ccb97e7313fd11"
+                },
+                {
+                    "name": "恐吓",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/恐吓_3b3167.png",
+                    "hash": "3b316738017d00a5ad569196285eb5f9"
+                },
+                {
+                    "name": "坏笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/坏笑_3bc816.png",
+                    "hash": "3bc8165b865ca563f182b897102a702b"
+                },
+                {
+                    "name": "害羞",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/害羞_0e1820.png",
+                    "hash": "0e18201733cb5b36e1c642046aac35e1"
+                },
+                {
+                    "name": "小丑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/小丑_f2d345.png",
+                    "hash": "f2d34550b7ba94a6f3c45b00675e5c15"
+                },
+                {
+                    "name": "笑嘻嘻",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/笑嘻嘻_f79a98.png",
+                    "hash": "f79a98aa73e81ac26b6b40bb4bc3a7d3"
+                },
+                {
+                    "name": "调皮",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/调皮_f42daf.png",
+                    "hash": "f42daf9c591479b5e171864f399c150a"
+                },
+                {
+                    "name": "头晕",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/头晕_88bcc4.png",
+                    "hash": "88bcc4307102b9060b523dc92290c3fb"
+                },
+                {
+                    "name": "咀嚼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/咀嚼_53db68.png",
+                    "hash": "53db6879f595d03571ee3c36d84801e6"
+                },
+                {
+                    "name": "难受",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/难受_e2f66f.png",
+                    "hash": "e2f66f7aa3c61e2f4074f311d473cb55"
+                },
+                {
+                    "name": "苦笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/苦笑_3b86bb.png",
+                    "hash": "3b86bb0611d352f2182609c0fa0975c4"
+                },
+                {
+                    "name": "大笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/大笑_2ec591.png",
+                    "hash": "2ec591b39c42c2dfbdb021d529510e0c"
+                },
+                {
+                    "name": "惊讶",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/惊讶_2013f3.png",
+                    "hash": "2013f3563fa04fd4b719a492ec3925f6"
+                },
+                {
+                    "name": "赔笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/赔笑_6459f5.png",
+                    "hash": "6459f52b1ce0043e32977eefea930618"
+                },
+                {
+                    "name": "不爽",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/不爽_b6b87a.png",
+                    "hash": "b6b87aeb86ffc958f7c11d1b7b5a425e"
+                },
+                {
+                    "name": "打击",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/打击_87c28e.png",
+                    "hash": "87c28e6168c6a8098079b084aad07114"
+                },
+                {
+                    "name": "瑟瑟发抖",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/瑟瑟发抖_3816b2.png",
+                    "hash": "3816b208c8ecf1677adb12fbe824b4c9"
+                },
+                {
+                    "name": "可怕",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/可怕_791bb6.png",
+                    "hash": "791bb67057cea4355d5b667995879409"
+                },
+                {
+                    "name": "嘟嘴不屑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/嘟嘴不屑_fdd54f.png",
+                    "hash": "fdd54f4b76f22b5d717827ba06dfd4cc"
+                },
+                {
+                    "name": "装蒜",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/装蒜_c2fa97.png",
+                    "hash": "c2fa97d2e0519a6573f9976022b7d893"
+                },
+                {
+                    "name": "为难",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/为难_27f02e.png",
+                    "hash": "27f02eed4ee6121c79d3a3ddd60da5cd"
+                },
+                {
+                    "name": "无奈",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/无奈_b46b80.png",
+                    "hash": "b46b805d9a05d21ef68865378d90d37a"
+                },
+                {
+                    "name": "不满",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/不满_0bbe0d.png",
+                    "hash": "0bbe0d8eb71449d01f2325ea7723add0"
+                },
+                {
+                    "name": "黑化",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/黑化_bb13f3.png",
+                    "hash": "bb13f3f172874e45f70b3abcff925575"
+                },
+                {
+                    "name": "翻白眼",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/翻白眼_61bdf3.png",
+                    "hash": "61bdf372848b10638934a54c0da59899"
+                },
+                {
+                    "name": "困扰",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/困扰_b56840.png",
+                    "hash": "b56840edf927a83928f6199539034154"
+                },
+                {
+                    "name": "冷脸",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/冷脸_5fd43a.png",
+                    "hash": "5fd43a6a769dd04cd5e3534a70c4d93e"
+                },
+                {
+                    "name": "强颜欢笑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/强颜欢笑_712222.png",
+                    "hash": "7122225f259d04c7aa1dfc393fd47ce4"
+                },
+                {
+                    "name": "冷汗",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/冷汗_d0d6fa.png",
+                    "hash": "d0d6fa09e074d8ee7e2b9c77e5165e54"
+                },
+                {
+                    "name": "瞧好了",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/瞧好了_c43bf4.png",
+                    "hash": "c43bf482a142e913a3df6978edc1ec91"
+                },
+                {
+                    "name": "抱怨",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/抱怨_4d6f5c.png",
+                    "hash": "4d6f5c78a82723bcc98ee3dc071489c8"
+                },
+                {
+                    "name": "灵魂出窍",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/灵魂出窍_672654.png",
+                    "hash": "67265441b7b71c37bf5dc371ecfb6355"
+                },
+                {
+                    "name": "怀疑",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/怀疑_811ab3.png",
+                    "hash": "811ab342d8663b2f247dbee59a57accd"
+                },
+                {
+                    "name": "质问",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/质问_eb6b0c.png",
+                    "hash": "eb6b0c18c41302dcc422419ab36247ce"
+                },
+                {
+                    "name": "逞强",
+                    "path": "extracted_psds/Q版蓝色挑染男_1761648268637/表情/逞强_6b1b57.png",
+                    "hash": "6b1b5732113b9993fa4e861af10d5585"
+                }
+            ]
+        }
+    },
+    {
+        "id": "63b7f05d-6efe-4e5d-80ea-ea26b167a1af",
+        "name": "宇智波光_1761648398847",
+        "group_order": [
+            "动作",
+            "表情豆豆眼",
+            "表情"
+        ],
+        "layer_groups": {
+            "动作": [
+                {
+                    "name": "抱头",
+                    "path": "assets/5133287b147f0544323678ec4495f898.png",
+                    "hash": "5133287b147f0544323678ec4495f898"
+                },
+                {
+                    "name": "抱胸",
+                    "path": "assets/dffb79b971ab488878fde1a666c562bf.png",
+                    "hash": "dffb79b971ab488878fde1a666c562bf"
+                },
+                {
+                    "name": "叉腰",
+                    "path": "assets/7e0607fdfb8032ea8f45ac5f44af2918.png",
+                    "hash": "7e0607fdfb8032ea8f45ac5f44af2918"
+                },
+                {
+                    "name": "出拳",
+                    "path": "assets/64f58f6832432e99edda5148676bc807.png",
+                    "hash": "64f58f6832432e99edda5148676bc807"
+                },
+                {
+                    "name": "打招呼",
+                    "path": "assets/870e965819668ab457d04f4c511e7778.png",
+                    "hash": "870e965819668ab457d04f4c511e7778"
+                },
+                {
+                    "name": "拱手",
+                    "path": "assets/c94ac88abce992348eb07538eee4f062.png",
+                    "hash": "c94ac88abce992348eb07538eee4f062"
+                },
+                {
+                    "name": "勾手指",
+                    "path": "assets/75f67aa446f20ce9c8e32fa1bcce9437.png",
+                    "hash": "75f67aa446f20ce9c8e32fa1bcce9437"
+                },
+                {
+                    "name": "接电话",
+                    "path": "assets/01de798200376c46d88179f025b7d307.png",
+                    "hash": "01de798200376c46d88179f025b7d307"
+                },
+                {
+                    "name": "结印",
+                    "path": "assets/1560fe8aca5b29dc0d8f3944fbf960ac.png",
+                    "hash": "1560fe8aca5b29dc0d8f3944fbf960ac"
+                },
+                {
+                    "name": "介绍",
+                    "path": "assets/a0b5ab21912c20b4cb64f49bbde50431.png",
+                    "hash": "a0b5ab21912c20b4cb64f49bbde50431"
+                },
+                {
+                    "name": "举起拳头",
+                    "path": "assets/fd9a24ee27a4c25c722fee7e09ad586f.png",
+                    "hash": "fd9a24ee27a4c25c722fee7e09ad586f"
+                },
+                {
+                    "name": "举手",
+                    "path": "assets/410371f5586eebcb65f86e484ec143eb.png",
+                    "hash": "410371f5586eebcb65f86e484ec143eb"
+                },
+                {
+                    "name": "摸摸头",
+                    "path": "assets/fa16402b0d7768eb3097c032da2debe4.png",
+                    "hash": "fa16402b0d7768eb3097c032da2debe4"
+                },
+                {
+                    "name": "祈祷",
+                    "path": "assets/9ba0967bca1cb67374cc80919932bc45.png",
+                    "hash": "9ba0967bca1cb67374cc80919932bc45"
+                },
+                {
+                    "name": "请进",
+                    "path": "assets/a56824058417f28565b82508ab6ac0a3.png",
+                    "hash": "a56824058417f28565b82508ab6ac0a3"
+                },
+                {
+                    "name": "手指向前",
+                    "path": "assets/bc7835cc5081d4b6e9d1372769f2b746.png",
+                    "hash": "bc7835cc5081d4b6e9d1372769f2b746"
+                },
+                {
+                    "name": "竖中指",
+                    "path": "assets/fdc45b492142a17f5ad03bf1afed6520.png",
+                    "hash": "fdc45b492142a17f5ad03bf1afed6520"
+                },
+                {
+                    "name": "摊开手",
+                    "path": "assets/1224742b558fd9b0b1db40a7e1d654b3.png",
+                    "hash": "1224742b558fd9b0b1db40a7e1d654b3"
+                },
+                {
+                    "name": "逃跑",
+                    "path": "assets/5acb4327251ea3431b0cc8a09049e430.png",
+                    "hash": "5acb4327251ea3431b0cc8a09049e430"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "assets/610eaf4e78c84c852f7942662b30c28f.png",
+                    "hash": "610eaf4e78c84c852f7942662b30c28f"
+                },
+                {
+                    "name": "捂嘴",
+                    "path": "assets/2802185bcbe46c6d353c16e016d9a156.png",
+                    "hash": "2802185bcbe46c6d353c16e016d9a156"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "assets/fe8fad139fdd0a6d83001376361cc701.png",
+                    "hash": "fe8fad139fdd0a6d83001376361cc701"
+                },
+                {
+                    "name": "站立",
+                    "path": "assets/7a1d58a244b03ddcfadb2fd0ee2faddb.png",
+                    "hash": "7a1d58a244b03ddcfadb2fd0ee2faddb"
+                },
+                {
+                    "name": "指责",
+                    "path": "assets/87e1260b49541e75b547a8085a20c656.png",
+                    "hash": "87e1260b49541e75b547a8085a20c656"
+                },
+                {
+                    "name": "坐着",
+                    "path": "assets/ed8574e5885ba6b1d06ac4bc5f22f06b.png",
+                    "hash": "ed8574e5885ba6b1d06ac4bc5f22f06b"
+                },
+                {
+                    "name": "坐姿看",
+                    "path": "assets/fd74c3077b289ae5b9ba0ec858763af1.png",
+                    "hash": "fd74c3077b289ae5b9ba0ec858763af1"
+                },
+                {
+                    "name": "坐姿思考",
+                    "path": "assets/f5cc24cff4e22ff2ed9aaa3239e01848.png",
+                    "hash": "f5cc24cff4e22ff2ed9aaa3239e01848"
+                },
+                {
+                    "name": "坐姿抬手",
+                    "path": "assets/287418b907855e693414f9e8f5ec3b57.png",
+                    "hash": "287418b907855e693414f9e8f5ec3b57"
+                }
+            ],
+            "表情豆豆眼": [
+                {
+                    "name": "无表情",
+                    "path": "assets/56777af64364cd5ad2addd8b58b610d0.png",
+                    "hash": "56777af64364cd5ad2addd8b58b610d0"
+                },
+                {
+                    "name": "感动",
+                    "path": "assets/00861a751140092fc6b70a14e0e1be0c.png",
+                    "hash": "00861a751140092fc6b70a14e0e1be0c"
+                },
+                {
+                    "name": "皱眉",
+                    "path": "assets/1b2b4d747bfdf43fe538a10c05d8a2a1.png",
+                    "hash": "1b2b4d747bfdf43fe538a10c05d8a2a1"
+                },
+                {
+                    "name": "吓哭",
+                    "path": "assets/ef36da453f7b6a0e2bff18b83f928c49.png",
+                    "hash": "ef36da453f7b6a0e2bff18b83f928c49"
+                },
+                {
+                    "name": "迷惑",
+                    "path": "assets/59b5aab016d6a91857000c949b0e2f01.png",
+                    "hash": "59b5aab016d6a91857000c949b0e2f01"
+                },
+                {
+                    "name": "臆想",
+                    "path": "assets/8d9f7669630c610589f5417593e67a92.png",
+                    "hash": "8d9f7669630c610589f5417593e67a92"
+                },
+                {
+                    "name": "嫌弃",
+                    "path": "assets/015c3f47b42cd535d018bda6f5edabc8.png",
+                    "hash": "015c3f47b42cd535d018bda6f5edabc8"
+                },
+                {
+                    "name": "冷漠",
+                    "path": "assets/cbc608f21c6efd68feb80c23fb0083e4.png",
+                    "hash": "cbc608f21c6efd68feb80c23fb0083e4"
+                },
+                {
+                    "name": "尴尬",
+                    "path": "assets/ce6e0514e0d920af17eea495a9f90372.png",
+                    "hash": "ce6e0514e0d920af17eea495a9f90372"
+                },
+                {
+                    "name": "舒坦",
+                    "path": "assets/a6f3d953ae29c55da596eed4826296ed.png",
+                    "hash": "a6f3d953ae29c55da596eed4826296ed"
+                },
+                {
+                    "name": "憋笑",
+                    "path": "assets/f878df6041fa78f4cb9faec8a51e9a8c.png",
+                    "hash": "f878df6041fa78f4cb9faec8a51e9a8c"
+                },
+                {
+                    "name": "惊吓",
+                    "path": "assets/b9e3ed7bf7582c5f442747d35a2805a0.png",
+                    "hash": "b9e3ed7bf7582c5f442747d35a2805a0"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "assets/7bddd988c3dea17d5d01b789a332138d.png",
+                    "hash": "7bddd988c3dea17d5d01b789a332138d"
+                },
+                {
+                    "name": "打哈欠",
+                    "path": "assets/a2becf5662a3a04b048725da38911b7a.png",
+                    "hash": "a2becf5662a3a04b048725da38911b7a"
+                },
+                {
+                    "name": "吐血",
+                    "path": "assets/a8bf7c843b143c1148519c6019857563.png",
+                    "hash": "a8bf7c843b143c1148519c6019857563"
+                },
+                {
+                    "name": "傲娇",
+                    "path": "assets/84bc46f04c8115ceffaf42882345fe1f.png",
+                    "hash": "84bc46f04c8115ceffaf42882345fe1f"
+                },
+                {
+                    "name": "装酷",
+                    "path": "assets/408202e6fb29142aca2699ae8aa8949f.png",
+                    "hash": "408202e6fb29142aca2699ae8aa8949f"
+                },
+                {
+                    "name": "担忧",
+                    "path": "assets/edd7a2889b5513e3c12e414ca5517d93.png",
+                    "hash": "edd7a2889b5513e3c12e414ca5517d93"
+                },
+                {
+                    "name": "自信",
+                    "path": "assets/5f4dbcc9e1bc940c86e99bd99c32a0b4.png",
+                    "hash": "5f4dbcc9e1bc940c86e99bd99c32a0b4"
+                },
+                {
+                    "name": "八卦",
+                    "path": "assets/52ba51bd3cee5cdf87ba6009e939c0a4.png",
+                    "hash": "52ba51bd3cee5cdf87ba6009e939c0a4"
+                },
+                {
+                    "name": "生闷气",
+                    "path": "assets/94402fe322cb0673d6b86da4d888e3a5.png",
+                    "hash": "94402fe322cb0673d6b86da4d888e3a5"
+                },
+                {
+                    "name": "鄙视",
+                    "path": "assets/802f03461d552cd79e8c9b012e015088.png",
+                    "hash": "802f03461d552cd79e8c9b012e015088"
+                },
+                {
+                    "name": "紧闭双眼",
+                    "path": "assets/5ce2ff7db8e97c34d4f4f111b0347189.png",
+                    "hash": "5ce2ff7db8e97c34d4f4f111b0347189"
+                },
+                {
+                    "name": "发呆",
+                    "path": "assets/630759188cad14c193cfe940f37fb8f2.png",
+                    "hash": "630759188cad14c193cfe940f37fb8f2"
+                },
+                {
+                    "name": "震惊",
+                    "path": "assets/5bedc6456d7d0ec7f06e9ff7659f023e.png",
+                    "hash": "5bedc6456d7d0ec7f06e9ff7659f023e"
+                },
+                {
+                    "name": "吐槽",
+                    "path": "assets/99ae6a433b06846829bdd84104b46518.png",
+                    "hash": "99ae6a433b06846829bdd84104b46518"
+                },
+                {
+                    "name": "流泪",
+                    "path": "assets/a138c4c39f4019b5439d813a2e26b7d5.png",
+                    "hash": "a138c4c39f4019b5439d813a2e26b7d5"
+                },
+                {
+                    "name": "流鼻血",
+                    "path": "assets/1adb8a183e3c0f91e3c089cd1a3922f7.png",
+                    "hash": "1adb8a183e3c0f91e3c089cd1a3922f7"
+                },
+                {
+                    "name": "发怒",
+                    "path": "assets/f9fe5bf74f3b6ee905ffac6e174f591b.png",
+                    "hash": "f9fe5bf74f3b6ee905ffac6e174f591b"
+                },
+                {
+                    "name": "大哭",
+                    "path": "assets/a95b74bcf8ea37e8d36e9fab5b1635fc.png",
+                    "hash": "a95b74bcf8ea37e8d36e9fab5b1635fc"
+                },
+                {
+                    "name": "打脸",
+                    "path": "assets/356d85d4f1fb42f3c7ee93adf90ba2f2.png",
+                    "hash": "356d85d4f1fb42f3c7ee93adf90ba2f2"
+                },
+                {
+                    "name": "眼红",
+                    "path": "assets/faa6157b5313f92b145f53595b86c5af.png",
+                    "hash": "faa6157b5313f92b145f53595b86c5af"
+                },
+                {
+                    "name": "含泪",
+                    "path": "assets/066ec845b9e01e9329913add375c5238.png",
+                    "hash": "066ec845b9e01e9329913add375c5238"
+                },
+                {
+                    "name": "嘟嘴",
+                    "path": "assets/d1073f9b79e70d59af93441ab21d7ba6.png",
+                    "hash": "d1073f9b79e70d59af93441ab21d7ba6"
+                },
+                {
+                    "name": "色狼",
+                    "path": "assets/5e4c222747d2645530367feef31ef06a.png",
+                    "hash": "5e4c222747d2645530367feef31ef06a"
+                },
+                {
+                    "name": "微笑",
+                    "path": "assets/24c5b3e8967bb77efac72bf7188e83fe.png",
+                    "hash": "24c5b3e8967bb77efac72bf7188e83fe"
+                },
+                {
+                    "name": "睡觉",
+                    "path": "assets/fd153cf433c1e8b4a677f21e2275e043.png",
+                    "hash": "fd153cf433c1e8b4a677f21e2275e043"
+                },
+                {
+                    "name": "大吼",
+                    "path": "assets/c22830b340c024d0e8057324e6a085f1.png",
+                    "hash": "c22830b340c024d0e8057324e6a085f1"
+                },
+                {
+                    "name": "笑脸",
+                    "path": "assets/aca9a3327efc3f88090ae5e655dd25b4.png",
+                    "hash": "aca9a3327efc3f88090ae5e655dd25b4"
+                },
+                {
+                    "name": "叹气",
+                    "path": "assets/2af3881e8687398cbc33a6979a585b36.png",
+                    "hash": "2af3881e8687398cbc33a6979a585b36"
+                },
+                {
+                    "name": "无语",
+                    "path": "assets/b690551711558ec8df09559363fc6897.png",
+                    "hash": "b690551711558ec8df09559363fc6897"
+                },
+                {
+                    "name": "咬牙",
+                    "path": "assets/3814b1b600a327f30c01aaed93328ad2.png",
+                    "hash": "3814b1b600a327f30c01aaed93328ad2"
+                },
+                {
+                    "name": "吃惊",
+                    "path": "assets/ea73794b531d16eef6a1ada0e3adcdf9.png",
+                    "hash": "ea73794b531d16eef6a1ada0e3adcdf9"
+                },
+                {
+                    "name": "闭眼",
+                    "path": "assets/d298d50375c11c45d9983c29ad884e31.png",
+                    "hash": "d298d50375c11c45d9983c29ad884e31"
+                },
+                {
+                    "name": "侥幸",
+                    "path": "assets/811c3fb64dfd4b27d3bc2ebfaee939ef.png",
+                    "hash": "811c3fb64dfd4b27d3bc2ebfaee939ef"
+                },
+                {
+                    "name": "赌气",
+                    "path": "assets/8f27935d28043d7b4a4bf5864b635894.png",
+                    "hash": "8f27935d28043d7b4a4bf5864b635894"
+                },
+                {
+                    "name": "好色",
+                    "path": "assets/3d32cc3e6d8bc4c8d81ee7529e8b42f5.png",
+                    "hash": "3d32cc3e6d8bc4c8d81ee7529e8b42f5"
+                },
+                {
+                    "name": "崇拜",
+                    "path": "assets/b6060239d3952370d02d3ae6a57f99ea.png",
+                    "hash": "b6060239d3952370d02d3ae6a57f99ea"
+                },
+                {
+                    "name": "怒骂",
+                    "path": "assets/1446ff4da20b45545152bcca6c29d794.png",
+                    "hash": "1446ff4da20b45545152bcca6c29d794"
+                },
+                {
+                    "name": "生气",
+                    "path": "assets/cbda431c59b0e0bc9ca21a2c3a82cf6e.png",
+                    "hash": "cbda431c59b0e0bc9ca21a2c3a82cf6e"
+                },
+                {
+                    "name": "害怕",
+                    "path": "assets/2b08115b8029a5d251bae239f33645de.png",
+                    "hash": "2b08115b8029a5d251bae239f33645de"
+                },
+                {
+                    "name": "疲倦",
+                    "path": "assets/aeb79396826b6538a23c569a6cb64d21.png",
+                    "hash": "aeb79396826b6538a23c569a6cb64d21"
+                },
+                {
+                    "name": "难过",
+                    "path": "assets/ef1611a48380f4ec4993d66298a1b7e8.png",
+                    "hash": "ef1611a48380f4ec4993d66298a1b7e8"
+                },
+                {
+                    "name": "挑眉",
+                    "path": "assets/fcfc6a82b84112a53897ad6602bfcb82.png",
+                    "hash": "fcfc6a82b84112a53897ad6602bfcb82"
+                },
+                {
+                    "name": "昏迷",
+                    "path": "assets/6e58c19e74799320975bed00fbfe9bcc.png",
+                    "hash": "6e58c19e74799320975bed00fbfe9bcc"
+                },
+                {
+                    "name": "大骂",
+                    "path": "assets/d9abfc15580f883b50228d9b5b0c0082.png",
+                    "hash": "d9abfc15580f883b50228d9b5b0c0082"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "assets/f0dd64a79b65e41fecf4c3c1caff94e7.png",
+                    "hash": "f0dd64a79b65e41fecf4c3c1caff94e7"
+                },
+                {
+                    "name": "委屈",
+                    "path": "assets/493b13fb479bad0037e6ec1d55a4b9d6.png",
+                    "hash": "493b13fb479bad0037e6ec1d55a4b9d6"
+                },
+                {
+                    "name": "呕吐",
+                    "path": "assets/1542b55339fbe82a7980777b0aa97198.png",
+                    "hash": "1542b55339fbe82a7980777b0aa97198"
+                },
+                {
+                    "name": "傲慢",
+                    "path": "assets/c4e85e1f75f1f7be4a1fba1f7ba8278f.png",
+                    "hash": "c4e85e1f75f1f7be4a1fba1f7ba8278f"
+                },
+                {
+                    "name": "恶心",
+                    "path": "assets/b7b735bf7e7a74b5f13b473182658526.png",
+                    "hash": "b7b735bf7e7a74b5f13b473182658526"
+                },
+                {
+                    "name": "恐吓",
+                    "path": "assets/7334764659ed22c4098db95220f3ac94.png",
+                    "hash": "7334764659ed22c4098db95220f3ac94"
+                },
+                {
+                    "name": "坏笑",
+                    "path": "assets/67fa0d1fc0aa534b984e6c3e9e65a9cf.png",
+                    "hash": "67fa0d1fc0aa534b984e6c3e9e65a9cf"
+                },
+                {
+                    "name": "害羞",
+                    "path": "assets/6ef12e54b2c4c5c2a5df2c2de12962e3.png",
+                    "hash": "6ef12e54b2c4c5c2a5df2c2de12962e3"
+                },
+                {
+                    "name": "小丑",
+                    "path": "assets/72147ae7b27a4696b19ef8ec6e1be5e8.png",
+                    "hash": "72147ae7b27a4696b19ef8ec6e1be5e8"
+                },
+                {
+                    "name": "笑嘻嘻",
+                    "path": "assets/21f06635d4f3c6b31f1a58da78b4765d.png",
+                    "hash": "21f06635d4f3c6b31f1a58da78b4765d"
+                },
+                {
+                    "name": "调皮",
+                    "path": "assets/0d0c909af48b5ea34f603a53bf7c52fb.png",
+                    "hash": "0d0c909af48b5ea34f603a53bf7c52fb"
+                },
+                {
+                    "name": "头晕",
+                    "path": "assets/2125208725744f3da1a0fb3a87b85156.png",
+                    "hash": "2125208725744f3da1a0fb3a87b85156"
+                },
+                {
+                    "name": "咀嚼",
+                    "path": "assets/5d89ebf4816b242d27901e9fd6b5f07c.png",
+                    "hash": "5d89ebf4816b242d27901e9fd6b5f07c"
+                },
+                {
+                    "name": "难受",
+                    "path": "assets/5fd40ad5b1f65cab43476f405f24b9ad.png",
+                    "hash": "5fd40ad5b1f65cab43476f405f24b9ad"
+                },
+                {
+                    "name": "苦笑",
+                    "path": "assets/111d7cf433533f33d11dc807a976436d.png",
+                    "hash": "111d7cf433533f33d11dc807a976436d"
+                },
+                {
+                    "name": "大笑",
+                    "path": "assets/eacd0f47692eb3cb53d1f088cd5ce403.png",
+                    "hash": "eacd0f47692eb3cb53d1f088cd5ce403"
+                },
+                {
+                    "name": "惊讶",
+                    "path": "assets/dc72aa388cf44b84268cfa44a9f027ac.png",
+                    "hash": "dc72aa388cf44b84268cfa44a9f027ac"
+                }
+            ],
+            "表情": [
+                {
+                    "name": "感动",
+                    "path": "assets/4e859b01ca88dc4dcb3ad30e62450015.png",
+                    "hash": "4e859b01ca88dc4dcb3ad30e62450015"
+                },
+                {
+                    "name": "皱眉",
+                    "path": "assets/db8ce4d5de3a46eaaf6b3f13a8fe7f3b.png",
+                    "hash": "db8ce4d5de3a46eaaf6b3f13a8fe7f3b"
+                },
+                {
+                    "name": "打哈欠",
+                    "path": "assets/3b6b9773f8ef4ca20ecbba8af5fcbf2d.png",
+                    "hash": "3b6b9773f8ef4ca20ecbba8af5fcbf2d"
+                },
+                {
+                    "name": "吓哭",
+                    "path": "assets/22684ba412762fdf2b7db60148bf8c8c.png",
+                    "hash": "22684ba412762fdf2b7db60148bf8c8c"
+                },
+                {
+                    "name": "惊吓",
+                    "path": "assets/77893fa3a2712785e0f968acdbdcd3ac.png",
+                    "hash": "77893fa3a2712785e0f968acdbdcd3ac"
+                },
+                {
+                    "name": "迷惑",
+                    "path": "assets/eee52700bcc6a6cf67904c0a3c38a56d.png",
+                    "hash": "eee52700bcc6a6cf67904c0a3c38a56d"
+                },
+                {
+                    "name": "臆想",
+                    "path": "assets/6a6fc955de0e6f75608c9bb65785aba0.png",
+                    "hash": "6a6fc955de0e6f75608c9bb65785aba0"
+                },
+                {
+                    "name": "嫌弃",
+                    "path": "assets/1be71a54db834a898a700b13f6d842da.png",
+                    "hash": "1be71a54db834a898a700b13f6d842da"
+                },
+                {
+                    "name": "冷漠",
+                    "path": "assets/5c3fa0dbf6c75901bec52b2fe8604b05.png",
+                    "hash": "5c3fa0dbf6c75901bec52b2fe8604b05"
+                },
+                {
+                    "name": "舒坦",
+                    "path": "assets/adc5c6ddf971269acaa78940e3a618bb.png",
+                    "hash": "adc5c6ddf971269acaa78940e3a618bb"
+                },
+                {
+                    "name": "憋笑",
+                    "path": "assets/1c78ca8d0d66a4ff74a1988da14a5964.png",
+                    "hash": "1c78ca8d0d66a4ff74a1988da14a5964"
+                },
+                {
+                    "name": "偷笑",
+                    "path": "assets/eb1a6e6a538fba3bf08a835e885f5636.png",
+                    "hash": "eb1a6e6a538fba3bf08a835e885f5636"
+                },
+                {
+                    "name": "担忧",
+                    "path": "assets/359df6f0104e8684fe97342e36036077.png",
+                    "hash": "359df6f0104e8684fe97342e36036077"
+                },
+                {
+                    "name": "自信",
+                    "path": "assets/eed1c22193db14e0bf63cbd2a30f74f2.png",
+                    "hash": "eed1c22193db14e0bf63cbd2a30f74f2"
+                },
+                {
+                    "name": "生闷气",
+                    "path": "assets/f113b2a6be527f08787eda3c203aec6c.png",
+                    "hash": "f113b2a6be527f08787eda3c203aec6c"
+                },
+                {
+                    "name": "鄙视",
+                    "path": "assets/5fcd999a6b34ccd597674708c076c0ef.png",
+                    "hash": "5fcd999a6b34ccd597674708c076c0ef"
+                },
+                {
+                    "name": "流泪",
+                    "path": "assets/cf1693f87cfa347660e83f9422a943a6.png",
+                    "hash": "cf1693f87cfa347660e83f9422a943a6"
+                },
+                {
+                    "name": "发怒",
+                    "path": "assets/6884e26754d56c32a0d94aa25f0168b8.png",
+                    "hash": "6884e26754d56c32a0d94aa25f0168b8"
+                },
+                {
+                    "name": "睡觉",
+                    "path": "assets/d115559faaf411315158241320c2056d.png",
+                    "hash": "d115559faaf411315158241320c2056d"
+                },
+                {
+                    "name": "尴尬",
+                    "path": "assets/dac227e37deb0520fa2c7f5366331c69.png",
+                    "hash": "dac227e37deb0520fa2c7f5366331c69"
+                },
+                {
+                    "name": "笑脸",
+                    "path": "assets/c4a274e61313c943e97266ae31d7452c.png",
+                    "hash": "c4a274e61313c943e97266ae31d7452c"
+                },
+                {
+                    "name": "叹气",
+                    "path": "assets/4485c3e7f49dc7bf3ef481977a2649cb.png",
+                    "hash": "4485c3e7f49dc7bf3ef481977a2649cb"
+                },
+                {
+                    "name": "无语",
+                    "path": "assets/1193df8ea82077ffc3faf001311d0ac4.png",
+                    "hash": "1193df8ea82077ffc3faf001311d0ac4"
+                },
+                {
+                    "name": "吃惊",
+                    "path": "assets/e60005e97fcf78a8167f432636f19689.png",
+                    "hash": "e60005e97fcf78a8167f432636f19689"
+                },
+                {
+                    "name": "怒骂",
+                    "path": "assets/0e9277a25f352121d345ad14ffac454d.png",
+                    "hash": "0e9277a25f352121d345ad14ffac454d"
+                },
+                {
+                    "name": "无表情",
+                    "path": "assets/ebe1864c1804502afc3ef1e26c1419ce.png",
+                    "hash": "ebe1864c1804502afc3ef1e26c1419ce"
+                },
+                {
+                    "name": "害怕",
+                    "path": "assets/f321b9c5f3e97090c3ee901fed737785.png",
+                    "hash": "f321b9c5f3e97090c3ee901fed737785"
+                },
+                {
+                    "name": "疲倦",
+                    "path": "assets/738fd2b1095a65dc3d10e100ecc26e3c.png",
+                    "hash": "738fd2b1095a65dc3d10e100ecc26e3c"
+                },
+                {
+                    "name": "难过",
+                    "path": "assets/48306cfecc19fd4d2aac6cde0102ada0.png",
+                    "hash": "48306cfecc19fd4d2aac6cde0102ada0"
+                },
+                {
+                    "name": "恐吓",
+                    "path": "assets/73ef8b33e8ec1db4da15ff827bbe7aec.png",
+                    "hash": "73ef8b33e8ec1db4da15ff827bbe7aec"
+                },
+                {
+                    "name": "害羞",
+                    "path": "assets/7a3b281db4bd839a564c98fc7e32aefa.png",
+                    "hash": "7a3b281db4bd839a564c98fc7e32aefa"
+                },
+                {
+                    "name": "咀嚼",
+                    "path": "assets/f6e2e1d131eeb6b0798ceac04609e364.png",
+                    "hash": "f6e2e1d131eeb6b0798ceac04609e364"
+                },
+                {
+                    "name": "难受",
+                    "path": "assets/5961e9514f17bd1302f7a871c91c2cca.png",
+                    "hash": "5961e9514f17bd1302f7a871c91c2cca"
+                },
+                {
+                    "name": "苦笑",
+                    "path": "assets/8781b63fd7b6643446de4fc923aa6560.png",
+                    "hash": "8781b63fd7b6643446de4fc923aa6560"
+                },
+                {
+                    "name": "大笑",
+                    "path": "assets/5bdfd8adce7e139113a2f58f4d874027.png",
+                    "hash": "5bdfd8adce7e139113a2f58f4d874027"
+                },
+                {
+                    "name": "吐血",
+                    "path": "assets/c9a497b4f3bbd7967cc0b6159d207726.png",
+                    "hash": "c9a497b4f3bbd7967cc0b6159d207726"
+                },
+                {
+                    "name": "赌气",
+                    "path": "assets/63fb25e441adc98058f9c608a7630b2f.png",
+                    "hash": "63fb25e441adc98058f9c608a7630b2f"
+                },
+                {
+                    "name": "傲娇",
+                    "path": "assets/9531a886874bb018ff652bb503857f30.png",
+                    "hash": "9531a886874bb018ff652bb503857f30"
+                },
+                {
+                    "name": "装酷",
+                    "path": "assets/358df9182e0cc63b9066c38f8eeec49e.png",
+                    "hash": "358df9182e0cc63b9066c38f8eeec49e"
+                },
+                {
+                    "name": "八卦",
+                    "path": "assets/ad187283f08e9a6fd6fa562a9fb7621e.png",
+                    "hash": "ad187283f08e9a6fd6fa562a9fb7621e"
+                },
+                {
+                    "name": "紧闭双眼",
+                    "path": "assets/85f6ed794a60eb04a67ef1f698f743c5.png",
+                    "hash": "85f6ed794a60eb04a67ef1f698f743c5"
+                },
+                {
+                    "name": "发呆",
+                    "path": "assets/7ba6882356e0c0c7a2ac672b328076ec.png",
+                    "hash": "7ba6882356e0c0c7a2ac672b328076ec"
+                },
+                {
+                    "name": "震惊",
+                    "path": "assets/517ff081c8dd68de79e8fe263b0988be.png",
+                    "hash": "517ff081c8dd68de79e8fe263b0988be"
+                },
+                {
+                    "name": "吐槽",
+                    "path": "assets/5c5f8dfe839a91ee9fd5e56977440a32.png",
+                    "hash": "5c5f8dfe839a91ee9fd5e56977440a32"
+                },
+                {
+                    "name": "流鼻血",
+                    "path": "assets/7015e350e1f29ca6fffd3344b24c11df.png",
+                    "hash": "7015e350e1f29ca6fffd3344b24c11df"
+                },
+                {
+                    "name": "大哭",
+                    "path": "assets/e87bd57d8be9952fbb240b83fc08dd4f.png",
+                    "hash": "e87bd57d8be9952fbb240b83fc08dd4f"
+                },
+                {
+                    "name": "打脸",
+                    "path": "assets/5c30679f2a3803e8a621b68c0d93d383.png",
+                    "hash": "5c30679f2a3803e8a621b68c0d93d383"
+                },
+                {
+                    "name": "眼红",
+                    "path": "assets/ab85a567954b88ea5c7785b7d57cb1a8.png",
+                    "hash": "ab85a567954b88ea5c7785b7d57cb1a8"
+                },
+                {
+                    "name": "含泪",
+                    "path": "assets/613466a23e4acf4a79818aad9f59dea3.png",
+                    "hash": "613466a23e4acf4a79818aad9f59dea3"
+                },
+                {
+                    "name": "嘟嘴",
+                    "path": "assets/abd7e4bba0f300772a080381771d32ea.png",
+                    "hash": "abd7e4bba0f300772a080381771d32ea"
+                },
+                {
+                    "name": "好色",
+                    "path": "assets/498a45481492083a632b1e0912962bdf.png",
+                    "hash": "498a45481492083a632b1e0912962bdf"
+                },
+                {
+                    "name": "色狼",
+                    "path": "assets/3890af5a4cdee39f2bd9e32b3c5d5b91.png",
+                    "hash": "3890af5a4cdee39f2bd9e32b3c5d5b91"
+                },
+                {
+                    "name": "大吼",
+                    "path": "assets/07cd5b288f4dfdb0341a0d087cfc3e87.png",
+                    "hash": "07cd5b288f4dfdb0341a0d087cfc3e87"
+                },
+                {
+                    "name": "咬牙",
+                    "path": "assets/f96a76f3e81e113152057ce5d299d662.png",
+                    "hash": "f96a76f3e81e113152057ce5d299d662"
+                },
+                {
+                    "name": "闭眼",
+                    "path": "assets/400257a6b6059e56ab1c418da5809eb1.png",
+                    "hash": "400257a6b6059e56ab1c418da5809eb1"
+                },
+                {
+                    "name": "侥幸",
+                    "path": "assets/e33980291300e2117a49c46efc4af3e7.png",
+                    "hash": "e33980291300e2117a49c46efc4af3e7"
+                },
+                {
+                    "name": "崇拜",
+                    "path": "assets/c127e95bea46c8a0beab5518db26eea0.png",
+                    "hash": "c127e95bea46c8a0beab5518db26eea0"
+                },
+                {
+                    "name": "生气",
+                    "path": "assets/8fcf3d070898c0f2b1f96408c16d8b0f.png",
+                    "hash": "8fcf3d070898c0f2b1f96408c16d8b0f"
+                },
+                {
+                    "name": "挑眉",
+                    "path": "assets/32372aef6dd5a70f09a98e77a485ec52.png",
+                    "hash": "32372aef6dd5a70f09a98e77a485ec52"
+                },
+                {
+                    "name": "昏迷",
+                    "path": "assets/99c2977b2e852f8cc4d2bdd2af9ad85f.png",
+                    "hash": "99c2977b2e852f8cc4d2bdd2af9ad85f"
+                },
+                {
+                    "name": "大骂",
+                    "path": "assets/9395e194c60ad85ae0866491f459c103.png",
+                    "hash": "9395e194c60ad85ae0866491f459c103"
+                },
+                {
+                    "name": "疑惑",
+                    "path": "assets/df216e30022aa2406ebe69bc4b870272.png",
+                    "hash": "df216e30022aa2406ebe69bc4b870272"
+                },
+                {
+                    "name": "委屈",
+                    "path": "assets/0dbb230ff22b90c276c2f74945fbfb54.png",
+                    "hash": "0dbb230ff22b90c276c2f74945fbfb54"
+                },
+                {
+                    "name": "呕吐",
+                    "path": "assets/facd219a5a25871d16cc0429aa0e322c.png",
+                    "hash": "facd219a5a25871d16cc0429aa0e322c"
+                },
+                {
+                    "name": "傲慢",
+                    "path": "assets/cd1211face94218774592355605c3f24.png",
+                    "hash": "cd1211face94218774592355605c3f24"
+                },
+                {
+                    "name": "恶心",
+                    "path": "assets/506738e6f1d4e961620adb2a4269dfe0.png",
+                    "hash": "506738e6f1d4e961620adb2a4269dfe0"
+                },
+                {
+                    "name": "邪笑",
+                    "path": "assets/763543232ca074bf6bdee5a73ddffe78.png",
+                    "hash": "763543232ca074bf6bdee5a73ddffe78"
+                },
+                {
+                    "name": "坏笑",
+                    "path": "assets/92494d79ca5cce452f3cc48369714b03.png",
+                    "hash": "92494d79ca5cce452f3cc48369714b03"
+                },
+                {
+                    "name": "惊讶",
+                    "path": "assets/46ddaf5eaffd4a736d7637c03488eeaf.png",
+                    "hash": "46ddaf5eaffd4a736d7637c03488eeaf"
+                },
+                {
+                    "name": "小丑",
+                    "path": "assets/d259e7d52da0344072441ccda834864f.png",
+                    "hash": "d259e7d52da0344072441ccda834864f"
+                },
+                {
+                    "name": "笑嘻嘻",
+                    "path": "assets/97a0665f471f63e0d55f68d4d01c7388.png",
+                    "hash": "97a0665f471f63e0d55f68d4d01c7388"
+                },
+                {
+                    "name": "调皮",
+                    "path": "assets/c350d6d1e650c7279d09b74972df26c7.png",
+                    "hash": "c350d6d1e650c7279d09b74972df26c7"
+                },
+                {
+                    "name": "头晕",
+                    "path": "assets/b443bd80d2150d81cfbc20a30096f157.png",
+                    "hash": "b443bd80d2150d81cfbc20a30096f157"
+                },
+                {
+                    "name": "微笑",
+                    "path": "assets/9effc34907e467321fec1830f09b84c7.png",
+                    "hash": "9effc34907e467321fec1830f09b84c7"
+                }
+            ]
+        }
+    }
+]

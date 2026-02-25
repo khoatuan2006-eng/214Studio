@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+.env
+
+# Anime Studio Project Specifics
+backend/storage/
+backend/data/app.log
+backend/uploads/
+*.psd
+
+# IDEs
+.vscode/
+.idea/
