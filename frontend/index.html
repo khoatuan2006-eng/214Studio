@@ -22,17 +22,42 @@
                 <p>2D Character Builder</p>
             </div>
 
-            <div class="control-group">
-                <label for="characterSelect">1. Choose Character</label>
-                <div class="custom-select">
-                    <select id="characterSelect">
-                        <option value="" disabled selected>Select a Character...</option>
-                    </select>
+            <!-- Mode Switcher Tabs -->
+            <div class="mode-tabs">
+                <button class="tab-btn active" id="tabBaseChar" title="Base Characters"><i class="fa-solid fa-user"></i>
+                    Base</button>
+                <button class="tab-btn" id="tabDressingRoom" title="Dressing Room"><i class="fa-solid fa-shirt"></i>
+                    Dressing Room</button>
+            </div>
+
+            <!-- Base Character Mode Controls -->
+            <div id="baseModeControls" class="mode-panel active">
+                <div class="control-group">
+                    <label for="characterSelect">1. Choose Character</label>
+                    <div class="custom-select">
+                        <select id="characterSelect">
+                            <option value="" disabled selected>Select a Character...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="dynamicControls">
+                    <!-- Dynamically populated select dropdowns -->
                 </div>
             </div>
 
-            <div id="dynamicControls">
-                <!-- Dynamically populated select dropdowns -->
+            <!-- Dressing Room Mode Controls -->
+            <div id="dressingRoomControls" class="mode-panel hidden">
+                <div class="control-group">
+                    <label>Custom Organization</label>
+                    <button class="btn secondary-btn" id="openOrganizerBtn" style="width: 100%; margin-bottom: 10px;">
+                        <i class="fa-solid fa-layer-group"></i> Library Organizer
+                    </button>
+                </div>
+
+                <div id="drCategoriesContainer">
+                    <!-- Render custom categories (e.g. Body, Face, Hair) here -->
+                </div>
             </div>
 
             <div class="divider"></div>
@@ -69,6 +94,62 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Library Organizer Modal -->
+    <div id="organizerModal" class="modal hidden">
+        <div class="modal-content organizer-modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-layer-group"></i> Library Organizer</h2>
+                <button class="icon-btn close-modal-btn" id="closeOrganizerBtn"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body organizer-layout">
+                <!-- Left: Unorganized Assets -->
+                <div class="organizer-panel">
+                    <h3>Base PSD Assets</h3>
+                    <div class="filter-bar">
+                        <select id="orgBaseCharSelect" class="form-select">
+                            <option value="">Select Base Character...</option>
+                        </select>
+                    </div>
+                    <div id="orgSourceLayers" class="layer-drop-zone source-zone">
+                        <!-- Source thumbnails render here -->
+                    </div>
+                </div>
+
+                <!-- Right: Custom Taxonomy -->
+                <div class="organizer-panel">
+                    <div class="panel-header">
+                        <h3>Custom Categories</h3>
+                        <button class="icon-btn add-btn" id="btnAddCategory" title="Add New Category"><i
+                                class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div id="orgCategoriesContainer" class="categories-accordion">
+                        <!-- Category/Subfolder containers render here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Small Dialog -->
+    <div id="addCategoryModal" class="modal hidden">
+        <div class="modal-content mini-modal">
+            <h3>Add New Category</h3>
+            <div class="form-group">
+                <label>Category Name (e.g., Hair, Eyes)</label>
+                <input type="text" id="newCatName" class="form-input" placeholder="Name">
+            </div>
+            <div class="form-group">
+                <label>Z-Index (Higher numbers draw on top)</label>
+                <input type="number" id="newCatZIndex" class="form-input" value="0">
+            </div>
+            <div class="modal-actions">
+                <button class="btn secondary-btn" id="cancelAddCatBtn">Cancel</button>
+                <button class="btn primary-btn" id="confirmAddCatBtn">Save</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/app.js"></script>
