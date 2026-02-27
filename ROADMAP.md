@@ -766,6 +766,30 @@ export(scene, format="mp4", fps=24, resolution=(1920, 1080), output="ep1_intro.m
 
 ---
 
+## 🦅 [TECH LEAD REVIEW] Đánh giá & Bổ sung (Tập trung UX & Tối ưu Hệ thống)
+
+> **Nhận xét từ Tech Lead:** "Các chú làm tính năng thì bay bổng lắm, nhưng quên mất phần cốt lõi của một hệ thống Production: **Trải nghiệm người dùng cực đoan (UX)** và **Hiệu năng vắt kiệt phần cứng (System Optimization)**. Tôi đã review snapshot hiện tại và bổ sung ngay các mục sống còn sau vào Roadmap. Đừng có mải vẽ core feature mà để user trải nghiệm như đồ án sinh viên!"
+
+### 17. Trải nghiệm người dùng (UX - Bắt buộc phải mượt)
+
+| # | Việc cần làm (UX Cốt lõi) | Độ phức tạp |
+|---|---|---|
+| 17.1 | **Context Menu Toàn cục**: Click chuột phải mọi nơi (track, keyframe, canvas) phải ra menu ngữ cảnh thay vì bắt user nhớ phím tắt. Đừng bắt user học thuộc lòng! | 🟡 Trung bình |
+| 17.2 | **Error Handling & Toast Notifications**: Lỗi API hay crash render không được chết lặng im. Phải có Toast mượt mà báo chính xác lỗi gì, cách khắc phục. | 🟢 Thấp |
+| 17.3 | **Interactive Onboarding**: Người mới vào nhìn Studio ngợp, cần có tour guide (như React Joyride) hướng dẫn flow cơ bản (kéo thả character -> set keyframe -> play). | 🟡 Trung bình |
+| 17.4 | **Visual Feedback tức thì**: Click, kéo thả, hay loading... mọi thao tác phải có micro-animations phản hồi. Đã làm tool Creator thì phải có cảm giác "premium" như Figma. | 🟡 Trung bình |
+
+### 18. Tối ưu hóa Hệ thống (System Optimization)
+
+| # | Việc cần làm (Performance x10) | Độ phức tạp |
+|---|---|---|
+| 18.1 | **Canvas Virtualization & Frustum Culling**: Canvas/Timeline chỉ render những gì nằm trong viewport. Asset lọt ra ngoài, hoặc track ẩn phải bị loại trừ khỏi render loop ngay lập tức. | 🔴 Cao |
+| 18.2 | **Web Workers cho Heavy Lifting**: Tính toán Hash, tạo Thumbnail client-side, hay tính toán keyframe logic phức tạp phải đẩy ra Web Worker. Main thread (UI) không bao giờ được nghẽn! | 🔴 Cao |
+| 18.3 | **Memory Leak Prevention**: Dọn dẹp cực đoan event listeners của Konva, unsubscribe Zustand khi component unmount. Tích hợp React strict bounds. Đừng để user chạy 1 tiếng mở file to là RAM giật lên 2GB rồi ăn Out-of-Memory (OOM). | 🔴 Cực cao |
+| 18.4 | **Lazy Loading & Code Splitting đỉnh cao**: Đừng tống FFmpeg.wasm hay thư viện nặng vào bundle chính. Chỉ load chunk khi user bấm "Export". Chia nhỏ chunks để bundle đầu vào cực nhẹ, FCP (First Contentful Paint) < 1s. | 🟡 Trung bình |
+
+---
+
 ## 📋 Script Reference Index
 
 File tất cả script kế hoạch nằm trong `scripts/`:
