@@ -48,6 +48,7 @@ export interface ActionBlock {
     end: number;
     zIndex: number;
     hidden?: boolean;
+    locked?: boolean;
 }
 
 export type EasingType = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';

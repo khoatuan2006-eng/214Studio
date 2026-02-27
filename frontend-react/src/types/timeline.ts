@@ -89,6 +89,7 @@ interface BaseTimelineElement {
 	startTime: number;
 	trimStart: number;
 	trimEnd: number;
+	keyframes?: { time: number }[];
 }
 
 export interface VideoElement extends BaseTimelineElement {

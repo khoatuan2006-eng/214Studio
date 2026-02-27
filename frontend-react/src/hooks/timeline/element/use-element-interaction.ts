@@ -167,6 +167,7 @@ export function useElementInteraction({
 	const {
 		isElementSelected,
 		selectElement,
+		clearElementSelection,
 		handleElementClick: handleSelectionClick,
 	} = useElementSelection();
 
@@ -592,9 +593,11 @@ export function useElementInteraction({
 			});
 			if (!alreadySelected) {
 				selectElement({ trackId: track.id, elementId: element.id });
+			} else {
+				clearElementSelection();
 			}
 		},
-		[isElementSelected, selectElement],
+		[isElementSelected, selectElement, clearElementSelection],
 	);
 
 	return {

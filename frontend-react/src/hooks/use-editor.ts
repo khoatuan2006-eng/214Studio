@@ -1,5 +1,6 @@
 import { useAppStore } from "@/store/useAppStore";
 import { useCallback, useMemo } from "react";
+import { useTimelineStore } from "@/stores/timeline-store";
 import type { TimelineTrack, VideoElement, TimelineElement } from "../types/timeline";
 
 // Selection mock state globally
@@ -20,28 +21,90 @@ export function useEditor() {
             // Nested Composition Context ("Chia để trị")
             const character = editorData.find(c => c.id === activeEditTargetId);
             if (character) {
-                character.actions.forEach((action, index) => {
-                    tracks.push({
-                        id: `nested_${action.id}`,
-                        name: action.assetHash.split('/').pop() || `Layer ${index}`,
-                        type: "video",
-                        hidden: false,
-                        isMain: false,
-                        muted: false,
-                        keyframes: [], // Associated keyframes can be displayed in future
-                        elements: [{
-                            id: action.id,
-                            name: action.assetHash.split('/').pop() || `Layer ${index}`,
+                const baseCharacter = useAppStore.getState().characters.find(c => c.id === character.characterId);
+
+                // Unify keyframes for the entire character
+                const uniqueTimes = new Set<number>();
+                (['x', 'y', 'scale', 'rotation', 'opacity'] as const).forEach(prop => {
+                    character.transform[prop].forEach(k => uniqueTimes.add(k.time));
+                });
+                const unifiedKeyframes = Array.from(uniqueTimes)
+                    .sort((a, b) => a - b)
+                    .map(time => ({ time }));
+
+                const groupedActions = character.actions.map((action, index) => {
+                    let groupName = "Other";
+                    if (baseCharacter && baseCharacter.layer_groups) {
+                        for (const [gName, assets] of Object.entries(baseCharacter.layer_groups)) {
+                            if ((assets as any[]).some(a => a.hash === action.assetHash || a.path === action.assetHash)) {
+                                groupName = gName;
+                                break;
+                            }
+                        }
+                    }
+                    return { action, index, groupName, zIndex: action.zIndex || 0 };
+                });
+
+                // Group by zIndex
+                const actionsByZIndex = new Map<number, typeof groupedActions>();
+                groupedActions.forEach(item => {
+                    const z = item.zIndex;
+                    if (!actionsByZIndex.has(z)) actionsByZIndex.set(z, []);
+                    actionsByZIndex.get(z)!.push(item);
+                });
+
+                // Sort z-indices descending (foreground to background)
+                const sortedZIndices = Array.from(actionsByZIndex.keys()).sort((a, b) => b - a);
+
+                let trackCounter = 0;
+                sortedZIndices.forEach(z => {
+                    const items = actionsByZIndex.get(z)!;
+                    // Sort items by start time to pack them left-to-right
+                    items.sort((a, b) => a.action.start - b.action.start);
+
+                    // Pack into horizontal tracks
+                    const packedTracks: (typeof items)[] = [];
+                    items.forEach(item => {
+                        let placed = false;
+                        for (const track of packedTracks) {
+                            const lastItem = track[track.length - 1];
+                            if (lastItem.action.end <= item.action.start) {
+                                track.push(item);
+                                placed = true;
+                                break;
+                            }
+                        }
+                        if (!placed) {
+                            packedTracks.push([item]);
+                        }
+                    });
+
+                    packedTracks.forEach((trackItems, trackIndex) => {
+                        const groupName = trackItems[0].groupName; // Typically all share the same groupName
+                        tracks.push({
+                            id: `nested_z${z}_t${trackCounter++}`,
+                            name: `[${groupName}]${packedTracks.length > 1 ? ` Track ${trackIndex + 1}` : ''}`,
                             type: "video",
-                            duration: action.end - action.start,
-                            startTime: action.start,
-                            trimStart: 0,
-                            trimEnd: action.end - action.start,
-                            mediaId: action.assetHash,
-                            transform: { x: 0, y: 0, scale: 1, rotation: 0 },
-                            opacity: 100,
-                            hidden: action.hidden
-                        }] as VideoElement[]
+                            hidden: false,
+                            isMain: false,
+                            muted: false,
+                            keyframes: [],
+                            elements: trackItems.map(({ action, index }) => ({
+                                id: action.id,
+                                name: action.assetHash.split('/').pop() || `Layer ${index}`,
+                                type: "video",
+                                duration: action.end - action.start,
+                                startTime: action.start,
+                                trimStart: 0,
+                                trimEnd: action.end - action.start,
+                                mediaId: action.assetHash,
+                                transform: { x: 0, y: 0, scale: 1, rotation: 0 },
+                                opacity: 100,
+                                hidden: action.hidden,
+                                locked: action.locked,
+                                keyframes: unifiedKeyframes.filter(k => k.time >= action.start && k.time <= action.end)
+                            })) as VideoElement[]
+                        });
                     });
                 });
             }
@@ -84,7 +147,8 @@ export function useEditor() {
                         mediaId: row.actions[0]?.assetHash || "compound",
                         transform: { x: 0, y: 0, scale: 1, rotation: 0 },
                         opacity: 100,
-                        hidden: false
+                        hidden: false,
+                        keyframes: unifiedKeyframes
                     }] as VideoElement[],
                 };
                 tracks.push(parentTrack);
@@ -190,6 +254,53 @@ export function useEditor() {
                     };
                 }));
             },
+            splitElement: (elementId: string) => {
+                const state = useAppStore.getState();
+                const time = state.cursorTime;
+
+                state.setEditorData(prev => prev.map(row => {
+                    if (elementId.endsWith('_compound')) return row; // Compound split not supported yet
+
+                    const actionIndex = row.actions.findIndex(a => a.id === elementId);
+                    if (actionIndex > -1) {
+                        const action = row.actions[actionIndex];
+                        if (time > action.start && time < action.end) {
+                            const newActions = [...row.actions];
+                            // Right half (new)
+                            newActions.push({
+                                ...action,
+                                id: `action_split_${Date.now()}`,
+                                start: time
+                            });
+                            // Left half (shorten original)
+                            newActions[actionIndex] = { ...action, end: time };
+                            return { ...row, actions: newActions };
+                        }
+                    }
+                    return row;
+                }));
+            },
+            duplicateElement: (elementId: string) => {
+                useAppStore.getState().setEditorData(prev => prev.map(row => {
+                    if (elementId.endsWith('_compound')) return row;
+                    const actionIndex = row.actions.findIndex(a => a.id === elementId);
+                    if (actionIndex > -1) {
+                        const action = row.actions[actionIndex];
+                        return {
+                            ...row,
+                            actions: [
+                                ...row.actions,
+                                {
+                                    ...action,
+                                    id: `action_copy_${Date.now()}`,
+                                    zIndex: action.zIndex + 1
+                                }
+                            ]
+                        };
+                    }
+                    return row;
+                }));
+            },
             addTrack: (_args: { type: string, index?: number }) => "mock-track-id", // we don't dynamically create character tracks from timeline dropping
             insertElement: ({ placement, element }: { placement: { mode: string; trackId?: string }, element: TimelineElement | any }) => {
                 if (placement.mode === "explicit" && placement.trackId) {
@@ -265,6 +376,8 @@ export function useEditor() {
             updateElementStartTime: ({ elements, startTime }: { elements: { trackId: string; elementId: string }[], startTime: number }) => {
                 const element = elements[0];
                 if (!element) return;
+                const isRippleEnabled = useTimelineStore.getState().rippleEditingEnabled;
+
                 useAppStore.getState().setEditorData(prev => prev.map(row => {
                     const isCompound = element.elementId.endsWith('_compound');
 
@@ -282,12 +395,19 @@ export function useEditor() {
                             }))
                         };
                     } else if (row.actions.some(a => a.id === element.elementId)) {
+                        const targetAction = row.actions.find(a => a.id === element.elementId)!;
+                        const delta = startTime - targetAction.start;
+                        const oldStart = targetAction.start;
+
                         return {
                             ...row,
                             actions: row.actions.map(a => {
                                 if (a.id === element.elementId) {
                                     const duration = a.end - a.start;
                                     return { ...a, start: startTime, end: startTime + duration };
+                                }
+                                if (isRippleEnabled && a.start > oldStart) {
+                                    return { ...a, start: a.start + delta, end: a.end + delta };
                                 }
                                 return a;
                             })
@@ -297,6 +417,8 @@ export function useEditor() {
                 }));
             },
             updateElementDuration: ({ trackId, elementId, duration }: { trackId: string, elementId: string, duration: number }) => {
+                const isRippleEnabled = useTimelineStore.getState().rippleEditingEnabled;
+
                 useAppStore.getState().setEditorData(prev => prev.map(row => {
                     const isCompound = elementId.endsWith('_compound');
 
@@ -317,11 +439,25 @@ export function useEditor() {
                                 }
                                 return a;
                             })
+
                         };
                     } else if (row.actions.some(a => a.id === elementId)) {
+                        const targetAction = row.actions.find(a => a.id === elementId)!;
+                        const oldDuration = targetAction.end - targetAction.start;
+                        const oldEnd = targetAction.end;
+                        const delta = duration - oldDuration;
+
                         return {
                             ...row,
-                            actions: row.actions.map(a => a.id === elementId ? { ...a, end: a.start + duration } : a)
+                            actions: row.actions.map(a => {
+                                if (a.id === elementId) {
+                                    return { ...a, end: a.start + duration };
+                                }
+                                if (isRippleEnabled && a.start >= oldEnd - 0.05) {
+                                    return { ...a, start: a.start + delta, end: a.end + delta };
+                                }
+                                return a;
+                            })
                         }
                     }
                     return row;

@@ -5,7 +5,7 @@ import { setDragData } from '../lib/drag-data';
 import type { ActionBlock, TimelineKeyframe, EasingType, CharacterTrack } from '../store/useAppStore';
 import { Timeline as TimelinePanel } from './timeline';
 import { Stage, Layer, Image as KonvaImageRect, Rect, Group, Text, Transformer, Circle, Line } from 'react-konva';
-import { Play, Pause, Plus, MousePointer2, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Play, Pause, Plus, MousePointer2, Eye, EyeOff, Trash2, Edit, ChevronLeft, Lock, Unlock } from 'lucide-react';
 
 // Custom hook to load images for Konva
 const useKonvaImage = (url: string) => {
@@ -108,7 +108,7 @@ const PropertyInput = ({ label, value, onChange, hasKeyframe, onToggleKeyframe, 
 };
 
 // Component to render a Canvas Image
-const CanvasAsset = React.forwardRef<any, { assetHash: string; zIndex: number }>(({ assetHash }, ref) => {
+const CanvasAsset = React.forwardRef<any, { assetHash: string; zIndex: number; onClick?: (e: any) => void; onTap?: (e: any) => void; locked?: boolean; hidden?: boolean }>(({ assetHash, onClick, onTap, locked, hidden }, ref) => {
     const characters = useAppStore(s => s.characters);
     const url = `${STATIC_BASE}/${getAssetPath(characters, assetHash)}`;
     const image = useKonvaImage(url);
@@ -122,6 +122,10 @@ const CanvasAsset = React.forwardRef<any, { assetHash: string; zIndex: number }>
             y={0}
             offset={{ x: image.width / 2, y: image.height / 2 }}
             draggable={false}
+            listening={!locked}
+            visible={!hidden}
+            onClick={onClick}
+            onTap={onTap}
         />
     );
 });
@@ -172,6 +176,11 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
     const setEditorData = useAppStore(s => s.setEditorData);
     const cursorTime = useAppStore(s => s.cursorTime);
     const [inspectorTab, setInspectorTab] = useState<'keyframes' | 'settings'>('keyframes');
+    const setActiveEditTargetId = useAppStore(s => s.setActiveEditTargetId);
+
+    const toggleCharacterEditMode = (rowId: string) => {
+        setActiveEditTargetId(rowId);
+    };
 
     const handlePropertyChange = (property: 'x' | 'y' | 'scale' | 'rotation' | 'opacity' | 'easing' | 'anchorX' | 'anchorY', value: number | EasingType) => {
         setEditorData(prev => prev.map(row => {
@@ -246,6 +255,13 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
         } : r));
     };
 
+    const toggleLayerLock = (rowId: string, actionId: string) => {
+        setEditorData(prev => prev.map(r => r.id === rowId ? {
+            ...r,
+            actions: r.actions.map(a => a.id === actionId ? { ...a, locked: !a.locked } : a)
+        } : r));
+    };
+
     const deleteLayer = (rowId: string, actionId: string) => {
         setEditorData(prev => prev.map(r => r.id === rowId ? {
             ...r,
@@ -273,8 +289,18 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 {selectedRow ? (
                     <div className="space-y-4">
-                        <div className="text-sm font-semibold text-indigo-400 truncate mb-4 border-b border-neutral-800 pb-2">
-                            {selectedRow.name || selectedRow.id}
+                        <div className="flex border-b border-neutral-800 mb-4 pb-2 items-center justify-between">
+                            <div className="text-sm font-semibold text-indigo-400 truncate">
+                                {selectedRow.name || selectedRow.id}
+                            </div>
+                            {selectedRow.characterId && (
+                                <button
+                                    onClick={() => toggleCharacterEditMode(selectedRowId)}
+                                    className="p-1 px-2 text-xs bg-indigo-600 hover:bg-indigo-500 rounded text-white flex items-center gap-1 transition"
+                                >
+                                    <Edit className="w-3 h-3" /> Edit Character
+                                </button>
+                            )}
                         </div>
 
                         {inspectorTab === 'keyframes' && (
@@ -356,13 +382,21 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                                     <div className="space-y-2">
                                         {[...selectedRow.actions].sort((a, b) => b.zIndex - a.zIndex).map(action => {
                                             const isHidden = action.hidden;
+                                            const isLocked = action.locked;
                                             const assetName = action.assetHash.split('/').pop() || "Layer";
                                             return (
                                                 <div key={action.id} className="flex items-center justify-between p-2 bg-neutral-800 border border-neutral-700 rounded text-sm hover:border-neutral-500 transition-colors">
-                                                    <span className={`truncate mr-2 ${isHidden ? 'text-neutral-500 line-through' : 'text-neutral-200'}`} title={action.assetHash}>
+                                                    <span className={`truncate mr-2 ${isHidden ? 'text-neutral-500 line-through' : 'text-neutral-200'} ${isLocked ? 'opacity-50' : ''}`} title={action.assetHash}>
                                                         Z:{action.zIndex} - {assetName}
                                                     </span>
                                                     <div className="flex items-center gap-1">
+                                                        <button
+                                                            onClick={() => toggleLayerLock(selectedRow.id, action.id)}
+                                                            className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-indigo-400 transition-colors"
+                                                            title={isLocked ? "Unlock Layer" : "Lock Layer"}
+                                                        >
+                                                            {isLocked ? <Lock className="w-4 h-4 text-indigo-400" /> : <Unlock className="w-4 h-4" />}
+                                                        </button>
                                                         <button
                                                             onClick={() => toggleLayerVisibility(selectedRow.id, action.id)}
                                                             className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-neutral-200 transition-colors"
@@ -424,6 +458,16 @@ const StudioMode = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [selectedRowId, setSelectedRowId] = useState<string>("");
     const [sidebarTab, setSidebarTab] = useState<'characters' | 'library'>('characters');
+    const setActiveEditTargetId = useAppStore(s => s.setActiveEditTargetId);
+    const cursorTime = useAppStore(s => s.cursorTime);
+
+    useEffect(() => {
+        if (activeEditTargetId) {
+            setSidebarTab('library'); // Reset sidebar to library
+            editor.selection.clearSelection(); // Clear timeline selection
+            setSelectedRowId("");
+        }
+    }, [activeEditTargetId, editor.selection]);
 
     // Sync OpenCut Timeline selection with our React StudioMode local selection
     useEffect(() => {
@@ -632,16 +676,16 @@ const StudioMode = () => {
         return unsub;
     }, []);
 
-    // Handlers
     const handleAddAsset = (assetHash: string, zIndex: number) => {
-        if (!selectedRowId) {
+        const targetId = activeEditTargetId || selectedRowId;
+        if (!targetId) {
             alert("Please select a character track first.");
             return;
         }
 
         const cursorTime = useAppStore.getState().cursorTime;
         setEditorData(prev => prev.map(row => {
-            if (row.id === selectedRowId) {
+            if (row.id === targetId) {
                 return {
                     ...row,
                     actions: [
@@ -655,6 +699,21 @@ const StudioMode = () => {
                         }
                     ]
                 };
+            }
+            return row;
+        }));
+    };
+
+    const handleRemoveAsset = (assetHash: string) => {
+        const targetId = activeEditTargetId || selectedRowId;
+        if (!targetId) return;
+        const cursorTime = useAppStore.getState().cursorTime;
+        setEditorData(prev => prev.map(row => {
+            if (row.id === targetId) {
+                return {
+                    ...row,
+                    actions: row.actions.filter(a => !(a.assetHash === assetHash && cursorTime >= a.start && cursorTime <= a.end))
+                }
             }
             return row;
         }));
@@ -707,6 +766,35 @@ const StudioMode = () => {
         setSidebarTab('library');
     };
 
+    const handleTransformEnd = (charId: string, node: any) => {
+        const cursorTime = useAppStore.getState().cursorTime;
+        setEditorData(prev => prev.map(row => {
+            if (row.id !== charId) return row;
+            const newTransform = { ...row.transform };
+
+            const updates = [
+                { prop: 'x', value: node.x() },
+                { prop: 'y', value: node.y() },
+                { prop: 'scale', value: node.scaleX() || 1 },
+                { prop: 'rotation', value: node.rotation() || 0 }
+            ];
+
+            updates.forEach(({ prop, value }) => {
+                const keys = [...newTransform[prop as keyof typeof newTransform]];
+                const existingIdx = keys.findIndex(k => Math.abs(k.time - cursorTime) < 0.05);
+                if (existingIdx >= 0) {
+                    keys[existingIdx] = { ...keys[existingIdx], value };
+                } else {
+                    keys.push({ time: cursorTime, value, easing: 'linear' });
+                }
+                keys.sort((a, b) => a.time - b.time);
+                newTransform[prop as keyof typeof newTransform] = keys;
+            });
+
+            return { ...row, transform: newTransform };
+        }));
+    };
+
     const transientHandlePropertyChange = (property: 'x' | 'y' | 'scale' | 'rotation' | 'opacity' | 'anchorX' | 'anchorY', value: number) => {
         if (!selectedRowId) return;
         const cursorTime = useAppStore.getState().cursorTime;
@@ -720,7 +808,7 @@ const StudioMode = () => {
             const existingIdx = keys.findIndex(k => Math.abs(k.time - cursorTime) < 0.05);
 
             if (existingIdx >= 0) {
-                keys[existingIdx].value = value;
+                keys[existingIdx] = { ...keys[existingIdx], value };
             } else {
                 keys.push({ time: cursorTime, value, easing: 'linear' });
             }
@@ -733,6 +821,9 @@ const StudioMode = () => {
 
     const sortedCategories = [...customLibrary.categories].sort((a, b) => b.z_index - a.z_index);
 
+    const characterBeingEdited = activeEditTargetId ? editorData.find(r => r.id === activeEditTargetId) : null;
+    const baseCharacterForEdit = characterBeingEdited ? characters.find(c => c.id === characterBeingEdited.characterId) : null;
+
     return (
         <div className="h-full flex flex-col bg-neutral-900 overflow-hidden text-neutral-100">
 
@@ -740,30 +831,45 @@ const StudioMode = () => {
             <div className="flex-1 flex overflow-hidden">
 
                 {/* Left Sidebar: Asset / Character Library */}
-                <div className="w-72 bg-neutral-900 border-r border-neutral-700 flex flex-col shrink-0">
-                    <div className="flex border-b border-neutral-700 bg-neutral-800">
-                        <button
-                            className={`flex-1 py-3 text-sm font-semibold transition-colors ${sidebarTab === 'characters' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-neutral-400 hover:text-neutral-300'}`}
-                            onClick={() => setSidebarTab('characters')}
-                        >
-                            Characters
-                        </button>
-                        <button
-                            className={`flex-1 py-3 text-sm font-semibold transition-colors ${sidebarTab === 'library' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-neutral-400 hover:text-neutral-300'}`}
-                            onClick={() => setSidebarTab('library')}
-                        >
-                            Accessories
-                        </button>
-                    </div>
+                <div className={`transition-all duration-[600ms] cubic-bezier(0.16, 1, 0.3, 1) bg-neutral-900 border-r border-neutral-700 flex flex-col shrink-0 overflow-hidden ${!activeEditTargetId ? 'w-72' : 'flex-[2] min-w-[500px] p-6'}`}>
+                    {!activeEditTargetId ? (
+                        <>
+                            <div className="flex border-b border-neutral-700 bg-neutral-800">
+                                <button
+                                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${sidebarTab === 'characters' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-neutral-400 hover:text-neutral-300'}`}
+                                    onClick={() => setSidebarTab('characters')}
+                                >
+                                    Characters
+                                </button>
+                                <button
+                                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${sidebarTab === 'library' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-neutral-400 hover:text-neutral-300'}`}
+                                    onClick={() => setSidebarTab('library')}
+                                >
+                                    Accessories
+                                </button>
+                            </div>
+                            <div className="p-3 bg-neutral-900 border-b border-neutral-800 text-xs text-neutral-500 italic">
+                                {sidebarTab === 'characters'
+                                    ? "Click a character to spawn a new Timeline Track."
+                                    : "Click accessories to attach them to the selected Track."}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex justify-between items-center mb-6">
+                            <button
+                                onClick={() => setActiveEditTargetId(null)}
+                                className="text-[#a4b0be] hover:text-white flex items-center gap-2 transition-colors font-semibold text-[0.9rem]"
+                            >
+                                <ChevronLeft className="w-5 h-5" /> Back to Studio
+                            </button>
+                            <span className="text-[#f5f6fa] font-bold px-3 py-1 bg-[#202438] rounded-md border border-white/5 truncate max-w-[200px]">
+                                {characterBeingEdited?.name}
+                            </span>
+                        </div>
+                    )}
 
-                    <div className="p-3 bg-neutral-900 border-b border-neutral-800 text-xs text-neutral-500 italic">
-                        {sidebarTab === 'characters'
-                            ? "Click a character to spawn a new Timeline Track."
-                            : "Click accessories to attach them to the selected Track."}
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                        {sidebarTab === 'characters' && (
+                    <div className={`flex-1 overflow-y-auto ${!activeEditTargetId ? 'p-4 space-y-6' : 'pr-2'}`}>
+                        {!activeEditTargetId && sidebarTab === 'characters' && (
                             <div className="grid grid-cols-2 gap-3">
                                 {characters.map(char => {
                                     let previewUrl = "";
@@ -802,7 +908,7 @@ const StudioMode = () => {
                             </div>
                         )}
 
-                        {sidebarTab === 'library' && sortedCategories.map(cat => (
+                        {!activeEditTargetId && sidebarTab === 'library' && sortedCategories.map(cat => (
                             <div key={cat.id}>
                                 <div className="text-xs uppercase tracking-wider text-neutral-500 mb-2 font-semibold flex items-center gap-2">
                                     <span className="w-3 h-3 rounded-full bg-neutral-700 inline-block"></span> {cat.name} (Z: {cat.z_index})
@@ -843,186 +949,302 @@ const StudioMode = () => {
                                 {cat.subfolders.flatMap(s => s.assets).length === 0 && <span className="text-xs text-neutral-600 block pl-5 py-2">Empty folder</span>}
                             </div>
                         ))}
+
+                        {/* Character Edit Mode Accessories */}
+                        {activeEditTargetId && baseCharacterForEdit && (
+                            <div className="flex flex-wrap gap-5 mb-5 w-full">
+                                {Object.entries(baseCharacterForEdit.layer_groups).map(([groupName, assets]: [string, any]) => {
+                                    if (!assets || assets.length === 0) return null;
+                                    const groupZIndex = baseCharacterForEdit.group_order.length - baseCharacterForEdit.group_order.findIndex((g: string) => g === groupName);
+
+                                    return (
+                                        <div key={groupName} className="flex-1 min-w-[200px] flex flex-col gap-2">
+                                            <div className="block mb-[0.2rem]">
+                                                <label className="block text-[0.85rem] font-semibold text-[#a4b0be]">
+                                                    {groupName} <span className="float-right bg-[#6c5ce7] px-1.5 py-0.5 rounded text-[0.7rem] ml-1 text-white opacity-50">Z: {groupZIndex}</span>
+                                                </label>
+                                            </div>
+                                            <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-1.5 w-full">
+                                                {assets.map((asset: any) => {
+                                                    const identifier = asset.hash || asset.path;
+                                                    if (!identifier) return null;
+
+                                                    const isActive = characterBeingEdited?.actions.some(a => a.assetHash === identifier && cursorTime >= a.start && cursorTime <= a.end && !a.hidden);
+
+                                                    return (
+                                                        <div
+                                                            key={identifier}
+                                                            className={`relative w-[80px] h-[80px] rounded-md bg-black/40 border-[2px] transition-all group p-[2px] hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(0,0,0,0.3)] cursor-pointer overflow-hidden ${isActive
+                                                                ? 'border-[#00b894] shadow-[0_0_15px_rgba(0,184,148,0.5),inset_0_0_10px_rgba(0,184,148,0.3)]'
+                                                                : 'border-transparent hover:border-[#5b4bc4]'
+                                                                }`}
+                                                            onClick={() => {
+                                                                if (isActive) {
+                                                                    handleRemoveAsset(identifier);
+                                                                } else {
+                                                                    handleAddAsset(identifier, groupZIndex >= 0 ? groupZIndex : 0);
+                                                                }
+                                                            }}
+                                                            title={asset.name || identifier}
+                                                            draggable
+                                                            onDragStart={(e) => {
+                                                                setDragData({
+                                                                    dataTransfer: e.dataTransfer,
+                                                                    data: {
+                                                                        id: identifier,
+                                                                        name: asset.name || identifier,
+                                                                        type: "media",
+                                                                        mediaType: "image",
+                                                                        customZIndex: groupZIndex >= 0 ? groupZIndex : 0
+                                                                    }
+                                                                });
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src={`${STATIC_BASE}/${getAssetPath(characters, identifier)}`}
+                                                                crossOrigin="anonymous"
+                                                                className="w-full h-full object-contain"
+                                                            />
+                                                            <div className="absolute inset-0 bg-indigo-500/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                                <Plus className="w-5 h-5 text-white drop-shadow" />
+                                                            </div>
+                                                            {isActive && (
+                                                                <div className="absolute top-1 left-1 bg-[#00b894] text-white text-[9px] font-bold px-1 py-0.5 rounded-sm shadow-sm opacity-90 backdrop-blur-sm pointer-events-none">
+                                                                    IN USE
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Center: 16:9 Canvas Workarea */}
-                <div className="flex-1 bg-neutral-950 flex flex-col relative overflow-hidden">
-                    <div className="h-12 border-b border-neutral-800 bg-neutral-900 flex items-center px-4 justify-between">
-                        <div className="flex gap-2">
-                            <button className="p-1.5 bg-neutral-800 rounded hover:bg-neutral-700 text-indigo-400"><MousePointer2 className="w-4 h-4" /></button>
-                            <button
-                                onClick={() => {
-                                    setZoomScale(1);
-                                    setStagePos({ x: 0, y: 0 });
-                                }}
-                                className="p-1.5 bg-neutral-800 rounded hover:bg-neutral-700 text-neutral-400 text-xs font-semibold px-3"
-                            >
-                                Reset View
-                            </button>
+                {/* Center: 16:9 Canvas Workarea */}
+                <div className={`transition-all duration-[600ms] cubic-bezier(0.16, 1, 0.3, 1) bg-neutral-950 flex flex-col relative overflow-hidden ${!activeEditTargetId ? 'flex-1' : 'w-1/3 min-w-[300px] shrink-0 p-8 pt-0'}`}>
+                    {(!activeEditTargetId) && (
+                        <div className="h-12 border-b border-neutral-800 bg-neutral-900 flex items-center px-4 justify-between">
+                            <div className="flex gap-2">
+                                <button className="p-1.5 bg-neutral-800 rounded hover:bg-neutral-700 text-indigo-400"><MousePointer2 className="w-4 h-4" /></button>
+                                <button
+                                    onClick={() => {
+                                        setZoomScale(1);
+                                        setStagePos({ x: 0, y: 0 });
+                                    }}
+                                    className="p-1.5 bg-neutral-800 rounded hover:bg-neutral-700 text-neutral-400 text-xs font-semibold px-3"
+                                >
+                                    Reset View
+                                </button>
+                            </div>
+                            <div className="text-sm text-neutral-400 font-mono">
+                                Logical: 1920x1080 | Zoom: {(zoomScale * 100).toFixed(0)}%
+                            </div>
                         </div>
-                        <div className="text-sm text-neutral-400 font-mono">
-                            Logical: 1920x1080 | Zoom: {(zoomScale * 100).toFixed(0)}%
-                        </div>
-                    </div>
+                    )}
 
                     <div ref={containerRef} className="flex-1 flex items-center justify-center p-4">
-                        <div
-                            className="bg-black shadow-2xl relative overflow-hidden ring-1 ring-neutral-800"
-                            style={{
-                                width: LOGICAL_WIDTH * canvasScale,
-                                height: LOGICAL_HEIGHT * canvasScale,
-                                cursor: isSpacePressed ? (isPanning ? 'grabbing' : 'grab') : 'default'
-                            }}
-                        >
-                            <Stage
-                                width={LOGICAL_WIDTH * canvasScale}
-                                height={LOGICAL_HEIGHT * canvasScale}
-                                onWheel={(e: any) => {
-                                    e.evt.preventDefault();
-                                    const scaleBy = 1.05;
-                                    const stage = e.target.getStage();
-                                    if (!stage) return;
-
-                                    const oldScale = zoomScale;
-                                    const pointer = stage.getPointerPosition();
-                                    if (!pointer) return;
-
-                                    const mousePointTo = {
-                                        x: (pointer.x - stagePos.x) / (canvasScale * oldScale),
-                                        y: (pointer.y - stagePos.y) / (canvasScale * oldScale),
-                                    };
-
-                                    const newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
-                                    setZoomScale(newScale);
-
-                                    setStagePos({
-                                        x: pointer.x - mousePointTo.x * (canvasScale * newScale),
-                                        y: pointer.y - mousePointTo.y * (canvasScale * newScale),
-                                    });
+                        {!activeEditTargetId ? (
+                            <div
+                                className="relative overflow-hidden bg-black shadow-2xl ring-1 ring-neutral-800"
+                                style={{
+                                    width: LOGICAL_WIDTH * canvasScale,
+                                    height: LOGICAL_HEIGHT * canvasScale,
+                                    cursor: isSpacePressed ? (isPanning ? 'grabbing' : 'grab') : 'default'
                                 }}
-                                onPointerDown={(e: any) => {
-                                    if (e.evt.button === 1 || e.evt.button === 2 || e.evt.altKey || isSpacePressed) {
-                                        setIsPanning(true);
-                                        if (isSpacePressed) isDraggingRef.current = true;
-                                    } else if (e.target === e.target.getStage() || e.target.name() === 'background-rect') {
-                                        setSelectedRowId("");
-                                        if (editor.selection.clearSelection) {
-                                            editor.selection.clearSelection();
-                                        }
-                                    }
-                                }}
-                                onPointerMove={(e: any) => {
-                                    if (isPanning) {
-                                        setStagePos(prev => ({
-                                            x: prev.x + e.evt.movementX,
-                                            y: prev.y + e.evt.movementY
-                                        }));
-                                    }
-                                }}
-                                onPointerUp={() => setIsPanning(false)}
-                                onMouseLeave={() => setIsPanning(false)}
                             >
-                                <Layer
-                                    x={stagePos.x}
-                                    y={stagePos.y}
-                                    scaleX={canvasScale * zoomScale}
-                                    scaleY={canvasScale * zoomScale}
+                                <Stage
+                                    width={LOGICAL_WIDTH * canvasScale}
+                                    height={LOGICAL_HEIGHT * canvasScale}
+                                    onWheel={(e: any) => {
+                                        e.evt.preventDefault();
+                                        const scaleBy = 1.05;
+                                        const stage = e.target.getStage();
+                                        if (!stage) return;
+
+                                        const oldScale = zoomScale;
+                                        const pointer = stage.getPointerPosition();
+                                        if (!pointer) return;
+
+                                        const mousePointTo = {
+                                            x: (pointer.x - stagePos.x) / (canvasScale * oldScale),
+                                            y: (pointer.y - stagePos.y) / (canvasScale * oldScale),
+                                        };
+
+                                        const newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+                                        setZoomScale(newScale);
+
+                                        setStagePos({
+                                            x: pointer.x - mousePointTo.x * (canvasScale * newScale),
+                                            y: pointer.y - mousePointTo.y * (canvasScale * newScale),
+                                        });
+                                    }}
+                                    onPointerDown={(e: any) => {
+                                        if (e.evt.button === 1 || e.evt.button === 2 || e.evt.altKey || isSpacePressed) {
+                                            setIsPanning(true);
+                                            if (isSpacePressed) isDraggingRef.current = true;
+                                        } else if (e.target === e.target.getStage() || e.target.name() === 'background-rect') {
+                                            setSelectedRowId("");
+                                            if (editor.selection.clearSelection) {
+                                                editor.selection.clearSelection();
+                                            }
+                                        }
+                                    }}
+                                    onPointerMove={(e: any) => {
+                                        if (isPanning) {
+                                            setStagePos(prev => ({
+                                                x: prev.x + e.evt.movementX,
+                                                y: prev.y + e.evt.movementY
+                                            }));
+                                        }
+                                    }}
+                                    onPointerUp={() => setIsPanning(false)}
+                                    onMouseLeave={() => setIsPanning(false)}
                                 >
-                                    <Rect name="background-rect" width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill="#111" />
+                                    <Layer
+                                        x={stagePos.x}
+                                        y={stagePos.y}
+                                        scaleX={canvasScale * zoomScale}
+                                        scaleY={canvasScale * zoomScale}
+                                    >
+                                        {!activeEditTargetId && <Rect name="background-rect" width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill="#111" />}
 
-                                    {editorData.length === 0 && (
-                                        <Text
-                                            text="👈 Click a Character on the left to start animating"
-                                            fontSize={32}
-                                            fontFamily="sans-serif"
-                                            fill="#555"
-                                            width={LOGICAL_WIDTH}
-                                            align="center"
-                                            y={LOGICAL_HEIGHT / 2 - 16}
+                                        {!activeEditTargetId && editorData.length === 0 && (
+                                            <Text
+                                                text="👈 Click a Character on the left to start animating"
+                                                fontSize={32}
+                                                fontFamily="sans-serif"
+                                                fill="#555"
+                                                width={LOGICAL_WIDTH}
+                                                align="center"
+                                                y={LOGICAL_HEIGHT / 2 - 16}
+                                            />
+                                        )}
+
+                                        {(!activeEditTargetId ? renderCharacters : (characterBeingEdited ? [{ ...characterBeingEdited, sortedAssets: [...characterBeingEdited.actions].sort((a, b) => a.zIndex - b.zIndex) }] : [])).map(char => (
+                                            <Group
+                                                key={char.id}
+                                                ref={(node) => { if (node) groupRefs.current[char.id] = node; }}
+                                                name="character-group"
+                                                draggable={true}
+                                                onClick={(e) => {
+                                                    e.cancelBubble = true;
+                                                    setSelectedRowId(char.id);
+                                                    if (char.sortedAssets.length > 0) {
+                                                        editor.selection.setSelectedElements({ elements: [{ trackId: char.id, elementId: char.sortedAssets[0].id }] });
+                                                    }
+                                                }}
+                                                onTap={(e) => {
+                                                    e.cancelBubble = true;
+                                                    setSelectedRowId(char.id);
+                                                    if (char.sortedAssets.length > 0) {
+                                                        editor.selection.setSelectedElements({ elements: [{ trackId: char.id, elementId: char.sortedAssets[0].id }] });
+                                                    }
+                                                }}
+                                                onDragStart={() => {
+                                                    setSelectedRowId(char.id);
+                                                    if (char.sortedAssets.length > 0) {
+                                                        editor.selection.setSelectedElements({ elements: [{ trackId: char.id, elementId: char.sortedAssets[0].id }] });
+                                                    }
+                                                }}
+                                                onDragEnd={(e) => {
+                                                    handleTransformEnd(char.id, e.target);
+                                                }}
+                                                onTransformEnd={(e) => {
+                                                    handleTransformEnd(char.id, e.target);
+                                                }}
+                                            >
+                                                {char.sortedAssets.map(asset => (
+                                                    <CanvasAsset
+                                                        key={asset.id}
+                                                        ref={(node) => { if (node) assetRefs.current[asset.id] = node; }}
+                                                        assetHash={asset.assetHash}
+                                                        zIndex={asset.zIndex}
+                                                        locked={asset.locked}
+                                                        hidden={asset.hidden}
+                                                        onClick={(e) => {
+                                                            e.cancelBubble = true;
+                                                            setSelectedRowId(char.id);
+                                                            editor.selection.setSelectedElements({ elements: [{ trackId: activeEditTargetId ? activeEditTargetId : char.id, elementId: asset.id }] });
+                                                        }}
+                                                        onTap={(e) => {
+                                                            e.cancelBubble = true;
+                                                            setSelectedRowId(char.id);
+                                                            editor.selection.setSelectedElements({ elements: [{ trackId: activeEditTargetId ? activeEditTargetId : char.id, elementId: asset.id }] });
+                                                        }}
+                                                    />
+                                                ))}
+
+                                                {/* Visual Anchor Crosshair */}
+                                                {selectedRowId === char.id && (
+                                                    <Group
+                                                        ref={(node) => { if (node) anchorRefs.current[char.id] = node; }}
+                                                        draggable
+                                                        onDragStart={e => e.cancelBubble = true}
+                                                        onDragMove={e => e.cancelBubble = true}
+                                                        onDragEnd={e => {
+                                                            e.cancelBubble = true;
+                                                            transientHandlePropertyChange('anchorX', e.target.x());
+                                                            transientHandlePropertyChange('anchorY', e.target.y());
+                                                        }}
+                                                    >
+                                                        <Circle radius={12} fill="rgba(255, 0, 85, 0.1)" stroke="#ff0055" strokeWidth={1.5} />
+                                                        <Line points={[-16, 0, 16, 0]} stroke="#ff0055" strokeWidth={1.5} />
+                                                        <Line points={[0, -16, 0, 16]} stroke="#ff0055" strokeWidth={1.5} />
+                                                        <Circle radius={2.5} fill="#ff0055" />
+                                                    </Group>
+                                                )}
+                                            </Group>
+                                        ))}
+
+                                        <Transformer
+                                            ref={transformerRef}
+                                            boundBoxFunc={(oldBox, newBox) => {
+                                                if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) return oldBox;
+                                                return newBox;
+                                            }}
+                                            padding={10}
+                                            borderStroke="#6366f1"
+                                            anchorStroke="#6366f1"
+                                            anchorFill="#ffffff"
+                                            anchorSize={10}
+                                            rotateAnchorOffset={30}
                                         />
-                                    )}
-
-                                    {renderCharacters.map(char => (
-                                        <Group
-                                            key={char.id}
-                                            ref={(node) => { if (node) groupRefs.current[char.id] = node; }}
-                                            name="character-group"
-                                            draggable={true}
-                                            onClick={(e) => {
-                                                e.cancelBubble = true;
-                                                setSelectedRowId(char.id);
-                                                if (char.sortedAssets.length > 0) {
-                                                    editor.selection.setSelectedElements({ elements: [{ trackId: char.id, elementId: char.sortedAssets[0].id }] });
-                                                }
-                                            }}
-                                            onTap={(e) => {
-                                                e.cancelBubble = true;
-                                                setSelectedRowId(char.id);
-                                                if (char.sortedAssets.length > 0) {
-                                                    editor.selection.setSelectedElements({ elements: [{ trackId: char.id, elementId: char.sortedAssets[0].id }] });
-                                                }
-                                            }}
-                                            onDragStart={() => {
-                                                setSelectedRowId(char.id);
-                                                if (char.sortedAssets.length > 0) {
-                                                    editor.selection.setSelectedElements({ elements: [{ trackId: char.id, elementId: char.sortedAssets[0].id }] });
-                                                }
-                                            }}
-                                            onDragEnd={(e) => {
-                                                transientHandlePropertyChange('x', e.target.x());
-                                                transientHandlePropertyChange('y', e.target.y());
-                                            }}
-                                            onTransformEnd={(e) => {
-                                                const node = e.target;
-                                                transientHandlePropertyChange('scale', node.scaleX());
-                                                transientHandlePropertyChange('rotation', node.rotation());
-                                                transientHandlePropertyChange('x', node.x());
-                                                transientHandlePropertyChange('y', node.y());
-                                            }}
-                                        >
-                                            {char.sortedAssets.map(asset => (
-                                                <CanvasAsset key={asset.id} ref={(node) => { if (node) assetRefs.current[asset.id] = node; }} assetHash={asset.assetHash} zIndex={asset.zIndex} />
-                                            ))}
-
-                                            {/* Visual Anchor Crosshair */}
-                                            {selectedRowId === char.id && (
-                                                <Group
-                                                    ref={(node) => { if (node) anchorRefs.current[char.id] = node; }}
-                                                    draggable
-                                                    onDragStart={e => e.cancelBubble = true}
-                                                    onDragMove={e => e.cancelBubble = true}
-                                                    onDragEnd={e => {
-                                                        e.cancelBubble = true;
-                                                        transientHandlePropertyChange('anchorX', e.target.x());
-                                                        transientHandlePropertyChange('anchorY', e.target.y());
-                                                    }}
-                                                >
-                                                    <Circle radius={12} fill="rgba(255, 0, 85, 0.1)" stroke="#ff0055" strokeWidth={1.5} />
-                                                    <Line points={[-16, 0, 16, 0]} stroke="#ff0055" strokeWidth={1.5} />
-                                                    <Line points={[0, -16, 0, 16]} stroke="#ff0055" strokeWidth={1.5} />
-                                                    <Circle radius={2.5} fill="#ff0055" />
-                                                </Group>
-                                            )}
-                                        </Group>
-                                    ))}
-
-                                    <Transformer
-                                        ref={transformerRef}
-                                        boundBoxFunc={(oldBox, newBox) => {
-                                            if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) return oldBox;
-                                            return newBox;
-                                        }}
-                                        padding={10}
-                                        borderStroke="#6366f1"
-                                        anchorStroke="#6366f1"
-                                        anchorFill="#ffffff"
-                                        anchorSize={10}
-                                        rotateAnchorOffset={30}
-                                    />
-                                </Layer>
-                            </Stage>
-                        </div>
+                                    </Layer>
+                                </Stage>
+                            </div>
+                        ) : (
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                {characterBeingEdited?.actions
+                                    .filter(a => cursorTime >= a.start && cursorTime <= a.end && !a.hidden)
+                                    .sort((a, b) => a.zIndex - b.zIndex)
+                                    .map(action => {
+                                        const url = `${STATIC_BASE}/${getAssetPath(characters, action.assetHash)}`;
+                                        return (
+                                            <img
+                                                key={action.id}
+                                                src={url}
+                                                className={`absolute w-full h-full object-contain drop-shadow-sm ${action.locked ? 'pointer-events-none' : 'cursor-pointer'}`}
+                                                style={{ zIndex: action.zIndex }}
+                                                crossOrigin="anonymous"
+                                                onClick={(e) => {
+                                                    if (!action.locked) {
+                                                        e.stopPropagation();
+                                                        setSelectedRowId(characterBeingEdited.id);
+                                                        editor.selection.setSelectedElements({ elements: [{ trackId: characterBeingEdited.id, elementId: action.id }] });
+                                                    }
+                                                }}
+                                            />
+                                        )
+                                    })
+                                }
+                            </div>
+                        )}
                     </div>
                 </div>
 

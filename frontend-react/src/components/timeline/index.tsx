@@ -22,7 +22,7 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { useTimelineZoom } from "@/hooks/timeline/use-timeline-zoom";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { TimelineTrackContent } from "./timeline-track";
 import { TimelinePlayhead } from "./timeline-playhead";
 import { SelectionBox } from "./selection-box";
@@ -97,6 +97,54 @@ export function Timeline() {
 		},
 		[],
 	);
+
+	// Global Keyboard Shortcuts
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// Don't trigger if user is typing in an input
+			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+			const selected = editor.selection.getSelectedElements();
+			if (!selected || selected.length === 0) return;
+
+			if (e.key === "Delete" || e.key === "Backspace") {
+				e.preventDefault();
+				editor.timeline.deleteElements(selected);
+				editor.selection.clearSelection();
+			}
+
+			if (e.key.toLowerCase() === "b" && (e.ctrlKey || e.metaKey)) {
+				e.preventDefault();
+				const cursorTime = editor.playback.getCurrentTime();
+				useAppStore.getState().setEditorData(prev => prev.map(row => {
+					let newActions = [...row.actions];
+					let modified = false;
+
+					selected.forEach(sel => {
+						if (sel.elementId.endsWith("_compound")) return;
+						const actionIdx = newActions.findIndex(a => a.id === sel.elementId);
+						if (actionIdx > -1) {
+							const targetAction = newActions[actionIdx];
+							if (cursorTime > targetAction.start && cursorTime < targetAction.end) {
+								const leftHalf = { ...targetAction, end: cursorTime };
+								const rightHalf = {
+									...targetAction,
+									id: `action_${Date.now()}_${Math.random()}`,
+									start: cursorTime
+								};
+								newActions.splice(actionIdx, 1, leftHalf, rightHalf);
+								modified = true;
+							}
+						}
+					});
+					return modified ? { ...row, actions: newActions } : row;
+				}));
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [editor]);
 
 	const timelineDuration = timeline.getTotalDuration() || 0;
 	const minZoomLevel = getTimelineZoomMin({
