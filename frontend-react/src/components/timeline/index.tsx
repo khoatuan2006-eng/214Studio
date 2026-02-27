@@ -2,14 +2,19 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-	Delete02Icon,
-	TaskAdd02Icon,
 	ViewIcon,
 	ViewOffSlashIcon,
 	VolumeHighIcon,
 	VolumeOffIcon,
+	TaskAdd02Icon,
+	Delete02Icon,
+	Edit02Icon,
+	ArrowLeft01Icon,
+	ArrowUp01Icon,
+	ArrowDown01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { useAppStore } from "@/store/useAppStore";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -219,6 +224,30 @@ export function Timeline() {
 	const timelineHeaderHeight =
 		timelineHeaderRef.current?.getBoundingClientRect().height ?? 0;
 
+	// Access global edit context
+	const activeEditTargetId = useAppStore(state => state.activeEditTargetId);
+	const setActiveEditTargetId = useAppStore(state => state.setActiveEditTargetId);
+	const editorData = useAppStore(state => state.editorData);
+	const setEditorData = useAppStore(state => state.setEditorData);
+	const activeCharacterName = activeEditTargetId
+		? editorData.find(c => c.id === activeEditTargetId)?.name
+		: null;
+
+	const moveLayer = (trackId: string, direction: number) => {
+		const actionId = trackId.replace('nested_', '');
+		setEditorData(prev => prev.map(row => {
+			if (row.id === activeEditTargetId) {
+				const actions = [...row.actions];
+				const idx = actions.findIndex(a => a.id === actionId);
+				if (idx > -1) {
+					actions[idx] = { ...actions[idx], zIndex: actions[idx].zIndex + direction };
+				}
+				return { ...row, actions };
+			}
+			return row;
+		}));
+	};
+
 	return (
 		<section
 			className={
@@ -232,6 +261,22 @@ export function Timeline() {
 				minZoom={minZoomLevel}
 				setZoomLevel={({ zoom }) => setZoomLevel(zoom)}
 			/>
+
+			{/* Chia để trị: Edit Mode Banner */}
+			{activeEditTargetId && (
+				<div className="bg-indigo-900/40 border-b border-indigo-500/50 px-4 py-1.5 flex items-center gap-3">
+					<button
+						onClick={() => setActiveEditTargetId(null)}
+						className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium bg-black/20 px-2 py-1 rounded"
+					>
+						<HugeiconsIcon icon={ArrowLeft01Icon} className="w-3.5 h-3.5" />
+						Back to Main Scene
+					</button>
+					<span className="text-xs text-indigo-200">
+						Editing Character: <strong className="text-white">{activeCharacterName || 'Unknown'}</strong>
+					</span>
+				</div>
+			)}
 
 			<div
 				className="relative flex flex-1 flex-col overflow-hidden"
@@ -257,21 +302,27 @@ export function Timeline() {
 						{tracks.length > 0 && (
 							<div
 								ref={trackLabelsRef}
-								className="bg-background flex-1 overflow-y-auto"
-								style={{ paddingTop: TIMELINE_CONSTANTS.PADDING_TOP_PX }}
+								className="bg-background flex-1"
+								style={{ height: '100%', paddingTop: TIMELINE_CONSTANTS.PADDING_TOP_PX }}
 							>
-								<ScrollArea className="size-full" ref={trackLabelsScrollRef}>
-									<div className="flex flex-col gap-1">
+								<ScrollArea className="h-full w-full" ref={trackLabelsScrollRef}>
+									<div className="flex flex-col gap-1 w-full">
 										{tracks.map((track) => (
 											<div
 												key={track.id}
-												className="group flex items-center px-3"
+												className={`group flex items-center px-3 ${track.type === "property" ? "bg-black/20 border-l-2 border-indigo-500/50" : ""}`}
 												style={{
 													height: `${getTrackHeight({ type: track.type })}px`,
 												}}
 											>
 												<div className="flex min-w-0 flex-1 items-center justify-end gap-2">
-													{process.env.NODE_ENV === "development" &&
+
+
+													<span className={`text-xs text-muted-foreground font-medium truncate flex-1 text-left ${track.type === "property" ? "pl-5" : ""}`}>
+														{track.name}
+													</span>
+
+													{import.meta.env?.DEV &&
 														isMainTrack(track) && (
 															<div className="bg-red-500 size-1.5 rounded-full" />
 														)}
@@ -336,7 +387,7 @@ export function Timeline() {
 							headerHeight={timelineHeaderHeight}
 						/>
 						<ScrollArea
-							className="size-full"
+							className="h-full w-full"
 							ref={tracksScrollRef}
 							onMouseDown={(event) => {
 								const isDirectTarget = event.target === event.currentTarget;
@@ -493,12 +544,47 @@ export function Timeline() {
 																: "Hide track"}
 														</span>
 													</ContextMenuItem>
+
+													{/* Feature: Dive Into Character */}
+													{!activeEditTargetId && track.elements.length > 0 && !track.id.startsWith("nested_") && (
+														<ContextMenuItem
+															onClick={(e) => {
+																e.stopPropagation();
+																setActiveEditTargetId(track.id);
+															}}
+														>
+															<HugeiconsIcon icon={Edit02Icon} />
+															<span>Edit Character Scene</span>
+														</ContextMenuItem>
+													)}
+
+													{/* Feature: Z-Index Reordering for Dressing Room Mode */}
+													{activeEditTargetId && track.id.startsWith("nested_") && (
+														<>
+															<ContextMenuItem
+																onClick={(e) => {
+																	e.stopPropagation();
+																	moveLayer(track.id, 1);
+																}}
+															>
+																<HugeiconsIcon icon={ArrowUp01Icon} />
+																<span>Bring Forward</span>
+															</ContextMenuItem>
+															<ContextMenuItem
+																onClick={(e) => {
+																	e.stopPropagation();
+																	moveLayer(track.id, -1);
+																}}
+															>
+																<HugeiconsIcon icon={ArrowDown01Icon} />
+																<span>Send Backward</span>
+															</ContextMenuItem>
+														</>
+													)}
 													<ContextMenuItem
 														onClick={(e) => {
 															e.stopPropagation();
-															timeline.removeTrack({
-																trackId: track.id,
-															});
+															timeline.removeTrack(track.id);
 														}}
 														variant="destructive"
 													>

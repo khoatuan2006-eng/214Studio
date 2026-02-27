@@ -7,7 +7,7 @@ import {
 	TextIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Video } from "lucide-react";
+import { Video, ChevronRight } from "lucide-react";
 
 export const DEFAULT_TRANSFORM: Transform = {
 	scale: 1,
@@ -32,6 +32,9 @@ export const TRACK_COLORS: Record<TrackType, { background: string }> = {
 	sticker: {
 		background: "bg-amber-500",
 	},
+	property: {
+		background: "transparent",
+	}
 } as const;
 
 export const TRACK_HEIGHTS: Record<TrackType, number> = {
@@ -39,6 +42,7 @@ export const TRACK_HEIGHTS: Record<TrackType, number> = {
 	text: 25,
 	audio: 50,
 	sticker: 50,
+	property: 32,
 } as const;
 
 export const TRACK_GAP = 4;
@@ -81,4 +85,5 @@ export const TRACK_ICONS: Record<TrackType, React.ReactNode> = {
 			className="text-muted-foreground size-4 shrink-0"
 		/>
 	),
+	property: <ChevronRight className="text-indigo-500 size-4 shrink-0 ml-4" />,
 } as const;

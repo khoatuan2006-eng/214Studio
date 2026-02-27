@@ -1,9 +1,6 @@
 import { useState, useCallback, type RefObject } from "react";
 import { useEditor } from "@/hooks/use-editor";
-const processMediaAssets = async ({ files }: { files: File[] }): Promise<any[]> => {
-	console.log("Mock processMediaAssets", files);
-	return [];
-};
+
 import { toast } from "sonner";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import { snapTimeToFrame } from "@/lib/time";
@@ -295,8 +292,8 @@ export function useTimelineDragDrop({
 	const executeFileDrop = useCallback(
 		async ({
 			files,
-			mouseX,
-			mouseY,
+			mouseX: _mouseX,
+			mouseY: _mouseY,
 		}: {
 			files: File[];
 			mouseX: number;

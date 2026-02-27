@@ -18,11 +18,12 @@ export interface TScene {
 	updatedAt: Date;
 }
 
-export type TrackType = "video" | "text" | "audio" | "sticker";
+export type TrackType = "video" | "text" | "audio" | "sticker" | "property";
 
 interface BaseTrack {
 	id: string;
 	name: string;
+	keyframes?: { time: number }[];
 }
 
 export interface VideoTrack extends BaseTrack {
@@ -51,7 +52,14 @@ export interface StickerTrack extends BaseTrack {
 	hidden: boolean;
 }
 
-export type TimelineTrack = VideoTrack | TextTrack | AudioTrack | StickerTrack;
+export interface PropertyTrack extends BaseTrack {
+	type: "property";
+	elements: never[];
+	targetProperty: "x" | "y" | "scale" | "rotation" | "opacity";
+	parentId: string;
+}
+
+export type TimelineTrack = VideoTrack | TextTrack | AudioTrack | StickerTrack | PropertyTrack;
 
 // export removed
 

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { temporal } from 'zundo';
 import axios from 'axios';
 
 export const API_BASE = 'http://localhost:8001/api';
@@ -46,6 +47,7 @@ export interface ActionBlock {
     start: number; // in seconds
     end: number;
     zIndex: number;
+    hidden?: boolean;
 }
 
 export type EasingType = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';
@@ -62,6 +64,8 @@ export interface TransformData {
     scale: TimelineKeyframe[];
     rotation: TimelineKeyframe[];
     opacity: TimelineKeyframe[];
+    anchorX: TimelineKeyframe[];
+    anchorY: TimelineKeyframe[];
 }
 
 export interface CharacterTrack {
@@ -70,6 +74,7 @@ export interface CharacterTrack {
     characterId?: string;
     transform: TransformData;
     actions: ActionBlock[];
+    isExpanded?: boolean;
 }
 
 interface AppState {
@@ -87,44 +92,58 @@ interface AppState {
     setCursorTime: (time: number | ((prev: number) => number)) => void;
     isScrubbing: boolean;
     setIsScrubbing: (isScrubbing: boolean) => void;
+
+    // "Chia để trị" - Character Edit Mode Context
+    activeEditTargetId: string | null;
+    setActiveEditTargetId: (id: string | null) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-    characters: [],
-    customLibrary: { categories: [] },
-    isLoading: false,
-    error: null,
-    editorData: [],
-    setEditorData: (data) => set((state) => ({
-        editorData: typeof data === 'function' ? data(state.editorData) : data
-    })),
-    cursorTime: 0,
-    setCursorTime: (time) => set((state) => ({
-        cursorTime: typeof time === 'function' ? time(state.cursorTime) : time
-    })),
-    isScrubbing: false,
-    setIsScrubbing: (isScrubbing) => set({ isScrubbing }),
+export const useAppStore = create<AppState>()(
+    temporal(
+        (set) => ({
+            characters: [],
+            customLibrary: { categories: [] },
+            isLoading: false,
+            error: null,
+            editorData: [],
+            setEditorData: (data) => set((state) => ({
+                editorData: typeof data === 'function' ? data(state.editorData) : data
+            })),
+            cursorTime: 0,
+            setCursorTime: (time) => set((state) => ({
+                cursorTime: typeof time === 'function' ? time(state.cursorTime) : time
+            })),
+            isScrubbing: false,
+            setIsScrubbing: (isScrubbing) => set({ isScrubbing }),
+            activeEditTargetId: null,
+            setActiveEditTargetId: (id) => set({ activeEditTargetId: id }),
 
-    fetchCharacters: async () => {
-        set({ isLoading: true, error: null });
-        try {
-            const res = await axios.get(`${API_BASE}/characters/`);
-            set({ characters: res.data, isLoading: false });
-        } catch (error: any) {
-            set({ error: error.message, isLoading: false });
-        }
-    },
+            fetchCharacters: async () => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await axios.get(`${API_BASE}/characters/`);
+                    set({ characters: res.data, isLoading: false });
+                } catch (error: any) {
+                    set({ error: error.message, isLoading: false });
+                }
+            },
 
-    fetchCustomLibrary: async () => {
-        set({ isLoading: true, error: null });
-        try {
-            const res = await axios.get(`${API_BASE}/library/`);
-            set({ customLibrary: res.data, isLoading: false });
-        } catch (error: any) {
-            set({ error: error.message, isLoading: false });
+            fetchCustomLibrary: async () => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await axios.get(`${API_BASE}/library/`);
+                    set({ customLibrary: res.data, isLoading: false });
+                } catch (error: any) {
+                    set({ error: error.message, isLoading: false });
+                }
+            }
+        }),
+        {
+            partialize: (state) => ({ editorData: state.editorData }),
+            limit: 100,
         }
-    }
-}));
+    )
+);
 
 // Helper function to resolve asset paths like the old JS did (Fallback check via hash)
 export const getAssetPath = (characters: Character[], hash: string): string => {

@@ -20,6 +20,7 @@ import { sliderToZoom, zoomToSlider } from "@/lib/timeline/zoom-utils";
 import { type TAction, invokeAction } from "@/lib/actions";
 import { cn } from "@/utils/ui";
 import { useTimelineStore } from "@/stores/timeline-store";
+import { useAppStore } from "@/store/useAppStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	Bookmark02Icon,
@@ -88,12 +89,92 @@ function ToolbarLeftSection() {
 		event: React.MouseEvent;
 	}) => {
 		event.stopPropagation();
+		const selected = editor.selection.getSelectedElements();
+
 		if (action === "delete-selected") {
-			const selected = editor.selection.getSelectedElements();
 			if (selected.length > 0) {
 				editor.timeline.deleteElements(selected);
 				editor.selection.clearSelection();
 			}
+		} else if (action === "split") {
+			const cursorTime = editor.playback.getCurrentTime();
+			useAppStore.getState().setEditorData(prev => prev.map(row => {
+				let newActions = [...row.actions];
+				let modified = false;
+
+				selected.forEach(sel => {
+					if (sel.elementId.endsWith("_compound")) return;
+					const actionIdx = newActions.findIndex(a => a.id === sel.elementId);
+					if (actionIdx > -1) {
+						const targetAction = newActions[actionIdx];
+						if (cursorTime > targetAction.start && cursorTime < targetAction.end) {
+							const leftHalf = { ...targetAction, end: cursorTime };
+							const rightHalf = {
+								...targetAction,
+								id: `action_${Date.now()}_${Math.random()}`,
+								start: cursorTime
+							};
+							newActions.splice(actionIdx, 1, leftHalf, rightHalf);
+							modified = true;
+						}
+					}
+				});
+				return modified ? { ...row, actions: newActions } : row;
+			}));
+		} else if (action === "split-left") {
+			const cursorTime = editor.playback.getCurrentTime();
+			useAppStore.getState().setEditorData(prev => prev.map(row => {
+				let newActions = [...row.actions];
+				let modified = false;
+				selected.forEach(sel => {
+					if (sel.elementId.endsWith("_compound")) return;
+					const actionIdx = newActions.findIndex(a => a.id === sel.elementId);
+					if (actionIdx > -1) {
+						const targetAction = newActions[actionIdx];
+						if (cursorTime > targetAction.start && cursorTime < targetAction.end) {
+							newActions[actionIdx] = { ...targetAction, start: cursorTime };
+							modified = true;
+						}
+					}
+				});
+				return modified ? { ...row, actions: newActions } : row;
+			}));
+		} else if (action === "split-right") {
+			const cursorTime = editor.playback.getCurrentTime();
+			useAppStore.getState().setEditorData(prev => prev.map(row => {
+				let newActions = [...row.actions];
+				let modified = false;
+				selected.forEach(sel => {
+					if (sel.elementId.endsWith("_compound")) return;
+					const actionIdx = newActions.findIndex(a => a.id === sel.elementId);
+					if (actionIdx > -1) {
+						const targetAction = newActions[actionIdx];
+						if (cursorTime > targetAction.start && cursorTime < targetAction.end) {
+							newActions[actionIdx] = { ...targetAction, end: cursorTime };
+							modified = true;
+						}
+					}
+				});
+				return modified ? { ...row, actions: newActions } : row;
+			}));
+		} else if (action === "duplicate-selected") {
+			useAppStore.getState().setEditorData(prev => prev.map(row => {
+				let newActions = [...row.actions];
+				let modified = false;
+				selected.forEach(sel => {
+					if (sel.elementId.endsWith("_compound")) return;
+					const targetAction = row.actions.find(a => a.id === sel.elementId);
+					if (targetAction) {
+						newActions.push({
+							...targetAction,
+							id: `action_${Date.now()}_${Math.random()}`,
+							zIndex: targetAction.zIndex + 1
+						});
+						modified = true;
+					}
+				});
+				return modified ? { ...row, actions: newActions } : row;
+			}));
 		} else {
 			invokeAction(action);
 		}
