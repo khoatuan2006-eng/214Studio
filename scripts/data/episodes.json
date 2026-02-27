@@ -1,0 +1,217 @@
+[
+    {
+        "title": "EP01 — Cuộc gặp gỡ đầu tiên",
+        "description": "Naruto và Sasuke gặp nhau tại sân trường",
+        "fps": 30,
+        "characters": [
+            {
+                "name": "Naruto",
+                "asset_hash": "naruto_hash_001",
+                "actions": [
+                    {
+                        "type": "move",
+                        "start_time": 0,
+                        "end_time": 2,
+                        "start_x": 100,
+                        "end_x": 500,
+                        "easing": "easeIn"
+                    },
+                    {
+                        "type": "fade",
+                        "start_time": 0,
+                        "end_time": 0.5,
+                        "start_opacity": 0,
+                        "end_opacity": 1
+                    }
+                ],
+                "initial_x": 100,
+                "initial_y": 540
+            },
+            {
+                "name": "Sasuke",
+                "asset_hash": "sasuke_hash_002",
+                "actions": [
+                    {
+                        "type": "move",
+                        "start_time": 0.5,
+                        "end_time": 2.5,
+                        "start_x": 1800,
+                        "end_x": 1200,
+                        "easing": "easeOut"
+                    }
+                ],
+                "initial_x": 1800,
+                "initial_y": 540
+            }
+        ]
+    },
+    {
+        "title": "EP02 — Huấn luyện buổi sáng",
+        "fps": 24,
+        "characters": [
+            {
+                "name": "Hero",
+                "asset_hash": "hero_hash_003",
+                "actions": [
+                    {
+                        "type": "move",
+                        "start_time": 0,
+                        "end_time": 3,
+                        "start_x": 200,
+                        "end_x": 1700
+                    },
+                    {
+                        "type": "scale",
+                        "start_time": 1,
+                        "end_time": 2,
+                        "start_scale": 1.0,
+                        "end_scale": 1.5,
+                        "easing": "easeInOut"
+                    }
+                ],
+                "initial_x": 200,
+                "initial_scale": 1.0
+            }
+        ]
+    },
+    {
+        "title": "EP03 — Trận chiến trên cầu",
+        "fps": 30,
+        "characters": [
+            {
+                "name": "Warrior A",
+                "asset_hash": "warrior_a_004",
+                "actions": [
+                    {
+                        "type": "move",
+                        "start_time": 0,
+                        "end_time": 1.5,
+                        "start_x": 100,
+                        "end_x": 960
+                    },
+                    {
+                        "type": "rotate",
+                        "start_time": 1,
+                        "end_time": 2,
+                        "start_rotation": 0,
+                        "end_rotation": 360,
+                        "easing": "easeIn"
+                    }
+                ]
+            },
+            {
+                "name": "Warrior B",
+                "asset_hash": "warrior_b_005",
+                "actions": [
+                    {
+                        "type": "move",
+                        "start_time": 0,
+                        "end_time": 1.5,
+                        "start_x": 1820,
+                        "end_x": 960
+                    },
+                    {
+                        "type": "scale",
+                        "start_time": 1.5,
+                        "end_time": 3,
+                        "start_scale": 1,
+                        "end_scale": 0.5
+                    }
+                ],
+                "initial_x": 1820
+            }
+        ]
+    },
+    {
+        "title": "EP04 — Hoàng hôn bình yên",
+        "fps": 24,
+        "characters": [
+            {
+                "name": "Sakura",
+                "asset_hash": "sakura_hash_006",
+                "actions": [
+                    {
+                        "type": "move",
+                        "start_time": 0,
+                        "end_time": 4,
+                        "start_x": 400,
+                        "end_x": 1500,
+                        "start_y": 600,
+                        "end_y": 400,
+                        "easing": "easeOut"
+                    },
+                    {
+                        "type": "fade",
+                        "start_time": 3,
+                        "end_time": 5,
+                        "start_opacity": 1,
+                        "end_opacity": 0
+                    }
+                ],
+                "initial_x": 400,
+                "initial_y": 600
+            }
+        ]
+    },
+    {
+        "title": "EP05 — Kẻ thù xuất hiện",
+        "fps": 30,
+        "characters": [
+            {
+                "name": "Villain",
+                "asset_hash": "villain_hash_007",
+                "actions": [
+                    {
+                        "type": "fade",
+                        "start_time": 0,
+                        "end_time": 1,
+                        "start_opacity": 0,
+                        "end_opacity": 1
+                    },
+                    {
+                        "type": "scale",
+                        "start_time": 0.5,
+                        "end_time": 2,
+                        "start_scale": 0.3,
+                        "end_scale": 2.0,
+                        "easing": "easeIn"
+                    },
+                    {
+                        "type": "move",
+                        "start_time": 1,
+                        "end_time": 3,
+                        "start_x": 960,
+                        "end_x": 960,
+                        "start_y": 200,
+                        "end_y": 540
+                    }
+                ],
+                "initial_x": 960,
+                "initial_y": 200,
+                "initial_scale": 0.3
+            },
+            {
+                "name": "Guard",
+                "asset_hash": "guard_hash_008",
+                "actions": [
+                    {
+                        "type": "move",
+                        "start_time": 2,
+                        "end_time": 4,
+                        "start_x": 1800,
+                        "end_x": 1200,
+                        "easing": "easeOut"
+                    },
+                    {
+                        "type": "rotate",
+                        "start_time": 3,
+                        "end_time": 4,
+                        "start_rotation": 0,
+                        "end_rotation": -15
+                    }
+                ],
+                "initial_x": 1800
+            }
+        ]
+    }
+]

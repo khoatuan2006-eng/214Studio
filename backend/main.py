@@ -515,6 +515,7 @@ async def add_asset(data: AssetAdd):
 
 EXPORTS_DIR = os.path.join(BASE_DIR, "exports")
 TEMP_RENDER_DIR = os.path.join(BASE_DIR, "temp_render")
+FFMPEG_PATH = os.path.join(BASE_DIR, "bin", "ffmpeg", "ffmpeg.exe")
 os.makedirs(EXPORTS_DIR, exist_ok=True)
 
 
@@ -607,7 +608,7 @@ async def export_finish(body: ExportFinishRequest):
         logger.info(f"[Export {body.renderJobId}] Rendering {len(frame_files)} frames at {body.fps} FPS...")
 
         ffmpeg_cmd = [
-            "ffmpeg", "-y",
+            FFMPEG_PATH, "-y",
             "-framerate", str(body.fps),
             "-i", os.path.join(job_dir, "frame_%04d.png"),
             "-c:v", "libx264",
@@ -642,6 +643,140 @@ async def export_finish(body: ExportFinishRequest):
         # Cleanup temp directory (frames only — MP4 stays until downloaded)
         if os.path.exists(job_dir):
             shutil.rmtree(job_dir, ignore_errors=True)
+
+
+# ============================================================
+# AI GATEWAY — Automation API (P3 Sprint 2 — Roadmap 9.2/9.5)
+# ============================================================
+
+class CharacterAction(BaseModel):
+    """A single animation action for a character (LLM-friendly)."""
+    type: str  # "move", "scale", "rotate", "fade"
+    start_time: float = 0.0
+    end_time: float = 3.0
+    # Movement
+    start_x: float | None = None
+    end_x: float | None = None
+    start_y: float | None = None
+    end_y: float | None = None
+    # Scale
+    start_scale: float | None = None
+    end_scale: float | None = None
+    # Rotation
+    start_rotation: float | None = None
+    end_rotation: float | None = None
+    # Opacity (fade)
+    start_opacity: float | None = None
+    end_opacity: float | None = None
+    # Easing
+    easing: str = "easeInOut"
+
+
+class ScriptCharacter(BaseModel):
+    """A character entry in the StoryScript."""
+    name: str
+    asset_id: str = ""
+    asset_hash: str = ""
+    actions: list[CharacterAction] = []
+    # Optional initial position
+    initial_x: float = 960.0
+    initial_y: float = 540.0
+    initial_scale: float = 1.0
+
+
+class StoryScript(BaseModel):
+    """
+    LLM-friendly animation script format.
+    Designed for easy generation by ChatGPT/Claude.
+    """
+    title: str = "Untitled Scene"
+    description: str = ""
+    fps: int = 30
+    canvas_width: int = 1920
+    canvas_height: int = 1080
+    characters: list[ScriptCharacter] = []
+
+
+@app.post("/api/automation/generate")
+async def automation_generate(script: StoryScript):
+    """
+    AI Gateway: Translate a simple StoryScript JSON into a full
+    AnimeStudio project using the Python SDK.
+
+    Returns the created project ID.
+    """
+    from backend.animestudio import Project, save_to_db
+
+    # Create project from script
+    project = Project(
+        name=script.title,
+        description=script.description,
+        canvas_width=script.canvas_width,
+        canvas_height=script.canvas_height,
+        fps=script.fps,
+    )
+
+    for char in script.characters:
+        track = project.add_track(
+            name=char.name,
+            character_id=char.asset_id or None,
+        )
+
+        # Set initial position keyframes
+        track.add_keyframe("x", time=0.0, value=char.initial_x)
+        track.add_keyframe("y", time=0.0, value=char.initial_y)
+        track.add_keyframe("scale", time=0.0, value=char.initial_scale)
+        track.add_keyframe("opacity", time=0.0, value=1.0)
+
+        # Add an action block if asset_hash is provided
+        if char.asset_hash:
+            # Calculate max duration from actions
+            max_end = max((a.end_time for a in char.actions), default=5.0)
+            track.add_action(
+                asset_hash=char.asset_hash,
+                start=0.0,
+                end=max_end,
+                z_index=0,
+            )
+
+        # Process each action into keyframes
+        for action in char.actions:
+            easing = action.easing or "easeInOut"
+
+            if action.type == "move":
+                if action.start_x is not None and action.end_x is not None:
+                    track.add_keyframe("x", time=action.start_time, value=action.start_x, easing=easing)
+                    track.add_keyframe("x", time=action.end_time, value=action.end_x, easing=easing)
+                if action.start_y is not None and action.end_y is not None:
+                    track.add_keyframe("y", time=action.start_time, value=action.start_y, easing=easing)
+                    track.add_keyframe("y", time=action.end_time, value=action.end_y, easing=easing)
+
+            elif action.type == "scale":
+                if action.start_scale is not None and action.end_scale is not None:
+                    track.add_keyframe("scale", time=action.start_time, value=action.start_scale, easing=easing)
+                    track.add_keyframe("scale", time=action.end_time, value=action.end_scale, easing=easing)
+
+            elif action.type == "rotate":
+                if action.start_rotation is not None and action.end_rotation is not None:
+                    track.add_keyframe("rotation", time=action.start_time, value=action.start_rotation, easing=easing)
+                    track.add_keyframe("rotation", time=action.end_time, value=action.end_rotation, easing=easing)
+
+            elif action.type == "fade":
+                if action.start_opacity is not None and action.end_opacity is not None:
+                    track.add_keyframe("opacity", time=action.start_time, value=action.start_opacity, easing=easing)
+                    track.add_keyframe("opacity", time=action.end_time, value=action.end_opacity, easing=easing)
+
+    # Save to database
+    project_id = save_to_db(project)
+
+    logger.info(f"[Automation] Generated project '{script.title}' with {len(script.characters)} characters → ID: {project_id}")
+
+    return JSONResponse(content={
+        "projectId": project_id,
+        "title": script.title,
+        "tracks": len(script.characters),
+        "status": "created",
+    })
 
 
 if __name__ == "__main__":

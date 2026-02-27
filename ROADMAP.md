@@ -749,7 +749,31 @@ scripts/
 | 🔴 P0 | Data Persistence, Undo/Redo, Asset Pipeline | 3–4 tháng |
 | 🟡 P1 | Timeline Engine, Keyframe System | 2–3 tháng |
 | 🟠 P2 | Rendering, Export CLI | 2–3 tháng |
-| 🟢 P3 | UX Polish, Scripting API | 1–2 tháng |
+## 🟣 P3 — Automation & Scripting
+
+<details>
+<summary>📋 Chi tiết đã làm — P3 Sprint 1 by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> P3 Sprint 1: Python Scripting API (Mục 9.1) — Automation SDK
+
+**Đã làm:**
+
+| # | Task | Score | Chi tiết |
+|---|------|-------|----------|
+| 1 | ✅ SDK Core Classes | 10/10 | `backend/animestudio/builder.py` — `Project`, `CharacterTrack`, `ActionBlock`, `Keyframe` dataclasses với Builder Pattern (add_track, add_keyframe, add_action). |
+| 2 | ✅ DB Integration | 10/10 | `save_to_db()` dump JSON chuẩn camelCase → insert/update `Project.data` qua SQLAlchemy. |
+| 3 | ✅ PoC Script | 10/10 | `scripts/generate_scene.py` — tạo project "Auto Generated Episode 1" với hero X:100→800 easeIn→easeOut, lưu DB thành công. |
+
+**Files đã tạo:**
+- `backend/animestudio/__init__.py` [NEW]
+- `backend/animestudio/builder.py` [NEW] — SDK core
+- `scripts/generate_scene.py` [NEW] — PoC script
+
+**Verification:** `python scripts/generate_scene.py` → ✅ SUCCESS
+
+</details>
+| 🟣 P3 | Automation & Scripting API | 1–2 tháng |
 | 🔵 P4 | Collaboration, Cloud | 3–4 tháng |
 | ⚙️ P5 | Testing, DevOps | ongoing |
 | 🎨 P6 | AI, Audio, Anime Features | 6+ tháng |
