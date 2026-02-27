@@ -1,5 +1,6 @@
 import { useAppStore } from '../store/useAppStore';
 import { API_BASE_URL } from '../config/api';
+import { yieldToMain } from './worker-utils';
 
 export type ExportStatus = 'idle' | 'extracting' | 'uploading' | 'rendering' | 'done' | 'error';
 
@@ -34,6 +35,7 @@ function waitForRender(): Promise<void> {
  * 3. POST /api/export/finish → receive MP4 → trigger download
  * 
  * This keeps browser RAM minimal: only CHUNK_SIZE frames in memory at any time.
+ * 18.2: Yields to main thread every 5 frames to prevent UI jank.
  */
 export async function exportVideo(
     duration: number,
@@ -74,6 +76,11 @@ export async function exportVideo(
 
             // Wait for React-Konva to re-render
             await waitForRender();
+
+            // 18.2: Yield to main thread every 5 frames to keep UI responsive
+            if (i % 5 === 0 && i > 0) {
+                await yieldToMain();
+            }
 
             if (!stageRef.current) {
                 onProgress({ status: 'error', currentFrame: i, totalFrames, message: 'Stage reference lost!' });

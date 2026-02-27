@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(BASE_DIR))
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Body, Depends, Query
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Body, Depends, Query, APIRouter
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -53,6 +53,375 @@ class AssetAdd(BaseModel):
     sub_name: str
     asset_name: str
     asset_hash: str
+
+
+# ============================================================
+# P0-0.4: INTENT-BASED API ENDPOINTS (Business Logic on Backend)
+# ============================================================
+
+# Router for intent-based endpoints (mounted after app creation)
+intent_router = APIRouter(prefix="/api", tags=["intent-api"])
+
+class TrackCreate(BaseModel):
+    """Intent: Create a new character track."""
+    project_id: str
+    name: str
+    character_id: str | None = None
+
+class TrackDelete(BaseModel):
+    """Intent: Delete a track."""
+    project_id: str
+    track_id: str
+
+class ActionCreate(BaseModel):
+    """Intent: Create an action block."""
+    project_id: str
+    track_id: str
+    asset_hash: str
+    start: float
+    end: float
+    z_index: int = 0
+
+class ActionUpdate(BaseModel):
+    """Intent: Move/resize an action block."""
+    project_id: str
+    action_id: str
+    start: float | None = None
+    end: float | None = None
+
+class ActionDelete(BaseModel):
+    """Intent: Delete an action block."""
+    project_id: str
+    action_id: str
+
+class KeyframeCreate(BaseModel):
+    """Intent: Add a keyframe."""
+    project_id: str
+    track_id: str
+    property: str  # x, y, scale, rotation, opacity
+    time: float
+    value: float
+    easing: str = "easeInOut"
+
+class KeyframeUpdate(BaseModel):
+    """Intent: Update a keyframe."""
+    project_id: str
+    track_id: str
+    property: str
+    old_time: float
+    new_time: float | None = None
+    value: float | None = None
+    easing: str | None = None
+
+class KeyframeDelete(BaseModel):
+    """Intent: Delete a keyframe."""
+    project_id: str
+    track_id: str
+    property: str
+    time: float
+
+
+@intent_router.post("/tracks/")
+async def create_track(body: TrackCreate, db: Session = Depends(get_db)):
+    """
+    P0-0.4: Create a new character track.
+    Server calculates ID, z-index, and initializes transform.
+    """
+    project = db.query(Project).filter(Project.id == body.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    data = project.data or []
+    import uuid
+    track_id = f"track_{uuid.uuid4().hex[:8]}"
+
+    # Calculate next z-index
+    max_z = max((t.get("zIndex", 0) for t in data), default=0)
+
+    new_track = {
+        "id": track_id,
+        "name": body.name,
+        "characterId": body.character_id,
+        "zIndex": max_z + 1,
+        "actions": [],
+        "transform": {
+            "x": [{"time": 0, "value": 960, "easing": "easeInOut"}],
+            "y": [{"time": 0, "value": 540, "easing": "easeInOut"}],
+            "scale": [{"time": 0, "value": 1.0, "easing": "easeInOut"}],
+            "rotation": [{"time": 0, "value": 0, "easing": "easeInOut"}],
+            "opacity": [{"time": 0, "value": 1.0, "easing": "easeInOut"}],
+        },
+        "blendMode": "normal",
+        "isExpanded": True,
+    }
+    data.append(new_track)
+    project.data = data
+    db.commit()
+    db.refresh(project)
+
+    logger.info(f"[P0-0.4] Created track '{body.name}' ({track_id}) in project {body.project_id}")
+    return JSONResponse(content={"track": new_track, "project": project.to_dict()})
+
+
+@intent_router.delete("/tracks/{project_id}/{track_id}")
+async def delete_track(project_id: str, track_id: str, db: Session = Depends(get_db)):
+    """
+    P0-0.4: Delete a track by ID.
+    """
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    data = project.data or []
+    original_len = len(data)
+    data = [t for t in data if t.get("id") != track_id]
+
+    if len(data) == original_len:
+        raise HTTPException(status_code=404, detail="Track not found")
+
+    project.data = data
+    db.commit()
+    db.refresh(project)
+
+    logger.info(f"[P0-0.4] Deleted track {track_id} from project {project_id}")
+    return JSONResponse(content={"message": "Track deleted", "project": project.to_dict()})
+
+
+@intent_router.post("/actions/")
+async def create_action(body: ActionCreate, db: Session = Depends(get_db)):
+    """
+    P0-0.4: Create an action block.
+    Server validates asset hash, auto-calculates duration if needed.
+    """
+    project = db.query(Project).filter(Project.id == body.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    data = project.data or []
+    track = next((t for t in data if t.get("id") == body.track_id), None)
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+
+    import uuid
+    action_id = f"action_{uuid.uuid4().hex[:8]}"
+
+    # Validate asset exists (optional - check if hash is in asset DB)
+    asset = db.query(Asset).filter(Asset.hash_sha256 == body.asset_hash).first()
+    if not asset:
+        logger.warning(f"[P0-0.4] Asset {body.asset_hash} not found in DB, but allowing creation")
+
+    new_action = {
+        "id": action_id,
+        "assetHash": body.asset_hash,
+        "start": body.start,
+        "end": body.end,
+        "zIndex": body.z_index,
+        "hidden": False,
+        "locked": False,
+    }
+    track["actions"].append(new_action)
+    project.data = data
+    db.commit()
+    db.refresh(project)
+
+    logger.info(f"[P0-0.4] Created action {action_id} in track {body.track_id}")
+    return JSONResponse(content={"action": new_action, "project": project.to_dict()})
+
+
+@intent_router.put("/actions/{project_id}/{action_id}")
+async def update_action(project_id: str, action_id: str, body: ActionUpdate, db: Session = Depends(get_db)):
+    """
+    P0-0.4: Update an action block (move/resize).
+    """
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    data = project.data or []
+    action_found = False
+
+    for track in data:
+        for action in track.get("actions", []):
+            if action.get("id") == action_id:
+                if body.start is not None:
+                    action["start"] = body.start
+                if body.end is not None:
+                    action["end"] = body.end
+                action_found = True
+                break
+        if action_found:
+            break
+
+    if not action_found:
+        raise HTTPException(status_code=404, detail="Action not found")
+
+    project.data = data
+    db.commit()
+    db.refresh(project)
+
+    logger.info(f"[P0-0.4] Updated action {action_id}")
+    return JSONResponse(content={"action": action, "project": project.to_dict()})
+
+
+@intent_router.delete("/actions/{project_id}/{action_id}")
+async def delete_action(project_id: str, action_id: str, db: Session = Depends(get_db)):
+    """
+    P0-0.4: Delete an action block.
+    """
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    data = project.data or []
+    action_found = False
+
+    for track in data:
+        original_len = len(track.get("actions", []))
+        track["actions"] = [a for a in track.get("actions", []) if a.get("id") != action_id]
+        if len(track["actions"]) < original_len:
+            action_found = True
+            break
+
+    if not action_found:
+        raise HTTPException(status_code=404, detail="Action not found")
+
+    project.data = data
+    db.commit()
+    db.refresh(project)
+
+    logger.info(f"[P0-0.4] Deleted action {action_id}")
+    return JSONResponse(content={"message": "Action deleted", "project": project.to_dict()})
+
+
+@intent_router.post("/keyframes/")
+async def create_keyframe(body: KeyframeCreate, db: Session = Depends(get_db)):
+    """
+    P0-0.4: Add a keyframe to a track.
+    Server validates property name and time.
+    """
+    project = db.query(Project).filter(Project.id == body.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    data = project.data or []
+    track = next((t for t in data if t.get("id") == body.track_id), None)
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+
+    valid_props = ["x", "y", "scale", "rotation", "opacity"]
+    if body.property not in valid_props:
+        raise HTTPException(status_code=400, detail=f"Invalid property. Must be one of: {valid_props}")
+
+    transform = track.get("transform", {})
+    prop_keyframes = transform.get(body.property, [])
+
+    new_kf = {
+        "time": body.time,
+        "value": body.value,
+        "easing": body.easing,
+    }
+
+    # Check if keyframe at this time already exists
+    existing_idx = next((i for i, kf in enumerate(prop_keyframes) if abs(kf.get("time", 0) - body.time) < 0.05), None)
+    if existing_idx is not None:
+        prop_keyframes[existing_idx] = new_kf  # Update existing
+    else:
+        prop_keyframes.append(new_kf)  # Add new
+
+    # Sort by time
+    prop_keyframes.sort(key=lambda kf: kf.get("time", 0))
+    transform[body.property] = prop_keyframes
+    track["transform"] = transform
+    project.data = data
+    db.commit()
+    db.refresh(project)
+
+    logger.info(f"[P0-0.4] Added keyframe {body.property}@{body.time} to track {body.track_id}")
+    return JSONResponse(content={"keyframe": new_kf, "project": project.to_dict()})
+
+
+@intent_router.put("/keyframes/")
+async def update_keyframe(body: KeyframeUpdate, db: Session = Depends(get_db)):
+    """
+    P0-0.4: Update a keyframe (time, value, or easing).
+    """
+    project = db.query(Project).filter(Project.id == body.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    data = project.data or []
+    track = next((t for t in data if t.get("id") == body.track_id), None)
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+
+    valid_props = ["x", "y", "scale", "rotation", "opacity"]
+    if body.property not in valid_props:
+        raise HTTPException(status_code=400, detail=f"Invalid property. Must be one of: {valid_props}")
+
+    transform = track.get("transform", {})
+    prop_keyframes = transform.get(body.property, [])
+
+    # Find keyframe by old_time
+    kf = next((kf for kf in prop_keyframes if abs(kf.get("time", 0) - body.old_time) < 0.05), None)
+    if not kf:
+        raise HTTPException(status_code=404, detail="Keyframe not found at specified time")
+
+    if body.new_time is not None:
+        kf["time"] = body.new_time
+    if body.value is not None:
+        kf["value"] = body.value
+    if body.easing is not None:
+        kf["easing"] = body.easing
+
+    # Re-sort if time changed
+    if body.new_time is not None:
+        prop_keyframes.sort(key=lambda k: k.get("time", 0))
+
+    transform[body.property] = prop_keyframes
+    track["transform"] = transform
+    project.data = data
+    db.commit()
+    db.refresh(project)
+
+    logger.info(f"[P0-0.4] Updated keyframe {body.property}@{body.old_time}")
+    return JSONResponse(content={"keyframe": kf, "project": project.to_dict()})
+
+
+@intent_router.delete("/keyframes/")
+async def delete_keyframe(body: KeyframeDelete, db: Session = Depends(get_db)):
+    """
+    P0-0.4: Delete a keyframe.
+    """
+    project = db.query(Project).filter(Project.id == body.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    data = project.data or []
+    track = next((t for t in data if t.get("id") == body.track_id), None)
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+
+    valid_props = ["x", "y", "scale", "rotation", "opacity"]
+    if body.property not in valid_props:
+        raise HTTPException(status_code=400, detail=f"Invalid property. Must be one of: {valid_props}")
+
+    transform = track.get("transform", {})
+    prop_keyframes = transform.get(body.property, [])
+
+    original_len = len(prop_keyframes)
+    prop_keyframes = [kf for kf in prop_keyframes if abs(kf.get("time", 0) - body.time) >= 0.05]
+
+    if len(prop_keyframes) == original_len:
+        raise HTTPException(status_code=404, detail="Keyframe not found at specified time")
+
+    transform[body.property] = prop_keyframes
+    track["transform"] = transform
+    project.data = data
+    db.commit()
+    db.refresh(project)
+
+    logger.info(f"[P0-0.4] Deleted keyframe {body.property}@{body.time}")
+    return JSONResponse(content={"message": "Keyframe deleted", "project": project.to_dict()})
 
 # Set up logging configuration
 logging.basicConfig(
@@ -108,6 +477,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# P0-0.4: Include intent-based API router
+app.include_router(intent_router)
 
 # Serve static files (Faces, Bodies, Frontend, and shared Assets)
 app.mount("/static", StaticFiles(directory=STORAGE_DIR), name="static")

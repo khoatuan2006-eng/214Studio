@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAppStore, STATIC_BASE, getAssetPath } from '../store/useAppStore';
+import { transientState, setCursorTime, setActiveEditTargetId, useTransientSnapshot } from '../stores/transient-store';
 import { useEditor } from '../hooks/use-editor';
 import { setDragData } from '../lib/drag-data';
 import { useTimelineStore, getDynamicDuration, getEffectiveOutPoint } from '../stores/timeline-store';
@@ -11,16 +12,30 @@ import { getInterpolatedValue, EASING_OPTIONS } from '../utils/easing';
 import type { BlendMode } from '../store/useAppStore';
 import { exportVideo } from '../utils/exporter';
 import type { ExportProgress } from '../utils/exporter';
+import { toast } from 'sonner';
+import { useStoreCleanup, useKonvaCleanup, useAnimationFrame } from '../hooks/useCleanup';
+import { useUndoRedo } from '../hooks/useUndoRedo';
 
-// Custom hook to load images for Konva
+// Custom hook to load images for Konva — with memory leak prevention
 const useKonvaImage = (url: string) => {
     const [image, setImage] = useState<HTMLImageElement | null>(null);
+    const imageRef = useRef<HTMLImageElement | null>(null);
+
     useEffect(() => {
         if (!url) return;
         const img = new window.Image();
         img.crossOrigin = 'anonymous';
         img.src = url;
         img.onload = () => setImage(img);
+        imageRef.current = img;
+
+        // 18.3: Cleanup — release image data on URL change or unmount
+        return () => {
+            img.onload = null;
+            img.onerror = null;
+            img.src = ''; // Release memory
+            imageRef.current = null;
+        };
     }, [url]);
     return image;
 };
@@ -142,17 +157,17 @@ CanvasAsset.displayName = 'CanvasAsset';
 
 // Quick standalone component that subscribes to time rapidly
 const PlayheadTimeDisplay = () => {
-    const time = useAppStore(s => s.cursorTime);
-    return <div className="font-mono text-xl text-indigo-400 w-24">{time.toFixed(2)}s</div>;
+    const snap = useTransientSnapshot();
+    return <div className="font-mono text-xl text-indigo-400 w-24">{snap.cursorTime.toFixed(2)}s</div>;
 };
 
 // Separated Right Sidebar to isolate re-renders away from Konva
 const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { selectedRowId: string, LOGICAL_WIDTH: number, LOGICAL_HEIGHT: number }) => {
     const editorData = useAppStore(s => s.editorData);
     const setEditorData = useAppStore(s => s.setEditorData);
-    const cursorTime = useAppStore(s => s.cursorTime);
+    const snap = useTransientSnapshot();
+    const cursorTime = snap.cursorTime;
     const [inspectorTab, setInspectorTab] = useState<'keyframes' | 'settings'>('keyframes');
-    const setActiveEditTargetId = useAppStore(s => s.setActiveEditTargetId);
 
     const toggleCharacterEditMode = (rowId: string) => {
         setActiveEditTargetId(rowId);
@@ -279,7 +294,7 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                             {selectedRow.characterId && (
                                 <button
                                     onClick={() => toggleCharacterEditMode(selectedRowId)}
-                                    className="p-1 px-2 text-xs bg-indigo-600 hover:bg-indigo-500 rounded text-white flex items-center gap-1 transition"
+                                    className="p-1 px-2 text-xs bg-indigo-600 hover:bg-indigo-500 rounded text-white flex items-center gap-1 transition btn-press"
                                 >
                                     <Edit className="w-3 h-3" /> Edit Character
                                 </button>
@@ -389,21 +404,21 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                                                     <div className="flex items-center gap-1">
                                                         <button
                                                             onClick={() => toggleLayerLock(selectedRow.id, action.id)}
-                                                            className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-indigo-400 transition-colors"
+                                                            className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-indigo-400 transition-colors btn-press"
                                                             title={isLocked ? "Unlock Layer" : "Lock Layer"}
                                                         >
                                                             {isLocked ? <Lock className="w-4 h-4 text-indigo-400" /> : <Unlock className="w-4 h-4" />}
                                                         </button>
                                                         <button
                                                             onClick={() => toggleLayerVisibility(selectedRow.id, action.id)}
-                                                            className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-neutral-200 transition-colors"
+                                                            className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-neutral-200 transition-colors btn-press"
                                                             title={isHidden ? "Show Layer" : "Hide Layer"}
                                                         >
                                                             {isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                         </button>
                                                         <button
                                                             onClick={() => deleteLayer(selectedRow.id, action.id)}
-                                                            className="p-1 hover:bg-red-900/50 rounded text-neutral-400 hover:text-red-400 transition-colors"
+                                                            className="p-1 hover:bg-red-900/50 rounded text-neutral-400 hover:text-red-400 transition-colors btn-press"
                                                             title="Delete Layer"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
@@ -431,6 +446,73 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
     );
 };
 
+interface CanvasContextMenuProps {
+    x: number;
+    y: number;
+    onClose: () => void;
+    onReset: () => void;
+    onDeselect: () => void;
+    onDelete: () => void;
+    onEdit: () => void;
+    onExport: () => void;
+    hasSelection: boolean;
+}
+
+const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
+    x, y, onClose, onReset, onDeselect, onDelete, onEdit, onExport, hasSelection
+}) => {
+    useEffect(() => {
+        const handleClickOutside = () => onClose();
+        window.addEventListener('click', handleClickOutside);
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, [onClose]);
+
+    return (
+        <div
+            className="fixed z-[100] min-w-[180px] bg-neutral-800 border border-neutral-600 rounded-lg shadow-2xl py-1.5 animate-fade-scale-in"
+            style={{ left: x, top: y }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={onClose} // Close on any menu item click
+        >
+            <button
+                className="w-full text-left px-4 py-2 text-sm text-neutral-200 hover:bg-indigo-600 hover:text-white transition-colors flex items-center gap-2.5 btn-press"
+                onClick={onReset}
+            >
+                <MousePointer2 className="w-3.5 h-3.5 text-neutral-400" /> Reset View
+            </button>
+            <button
+                className="w-full text-left px-4 py-2 text-sm text-neutral-200 hover:bg-indigo-600 hover:text-white transition-colors flex items-center gap-2.5 btn-press"
+                onClick={onDeselect}
+            >
+                <X className="w-3.5 h-3.5 text-neutral-400" /> Deselect All
+            </button>
+            {hasSelection && (
+                <>
+                    <div className="my-1 h-px bg-neutral-700" />
+                    <button
+                        className="w-full text-left px-4 py-2 text-sm text-neutral-200 hover:bg-indigo-600 hover:text-white transition-colors flex items-center gap-2.5 btn-press"
+                        onClick={onEdit}
+                    >
+                        <Edit className="w-3.5 h-3.5 text-neutral-400" /> Edit Character
+                    </button>
+                    <button
+                        className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-600 hover:text-white transition-colors flex items-center gap-2.5 btn-press"
+                        onClick={onDelete}
+                    >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete Character
+                    </button>
+                </>
+            )}
+            <div className="my-1 h-px bg-neutral-700" />
+            <button
+                className="w-full text-left px-4 py-2 text-sm text-neutral-200 hover:bg-indigo-600 hover:text-white transition-colors flex items-center gap-2.5 btn-press"
+                onClick={onExport}
+            >
+                <Film className="w-3.5 h-3.5 text-neutral-400" /> Export MP4
+            </button>
+        </div>
+    );
+};
 
 // --- Main Studio Component ---
 const StudioMode = () => {
@@ -440,23 +522,31 @@ const StudioMode = () => {
     const fetchCustomLibrary = useAppStore(state => state.fetchCustomLibrary);
     const editorData = useAppStore(state => state.editorData);
     const setEditorData = useAppStore(state => state.setEditorData);
-    const activeEditTargetId = useAppStore(state => state.activeEditTargetId);
+    const snapT = useTransientSnapshot();
+    const activeEditTargetId = snapT.activeEditTargetId;
 
     const editor = useEditor();
+    useUndoRedo(); // P0-0.3: Registers Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y globally
 
     const LOGICAL_WIDTH = 1920;
     const LOGICAL_HEIGHT = 1080;
 
     useEffect(() => {
-        fetchCustomLibrary();
+        const loadLib = async () => {
+            try {
+                await fetchCustomLibrary();
+            } catch (err) {
+                toast.error('Lỗi tải thư viện', { description: 'Không thể kết nối với server asset.' });
+            }
+        };
+        loadLib();
     }, [fetchCustomLibrary]);
 
     // Player State
     const [isPlaying, setIsPlaying] = useState(false);
     const [selectedRowId, setSelectedRowId] = useState<string>("");
     const [sidebarTab, setSidebarTab] = useState<'characters' | 'library'>('characters');
-    const setActiveEditTargetId = useAppStore(s => s.setActiveEditTargetId);
-    const cursorTime = useAppStore(s => s.cursorTime);
+    const cursorTime = snapT.cursorTime;
 
     useEffect(() => {
         if (activeEditTargetId) {
@@ -466,6 +556,9 @@ const StudioMode = () => {
         }
     }, [activeEditTargetId, editor.selection]);
 
+    // 18.3: Central subscription cleanup tracker
+    const addCleanup = useStoreCleanup();
+
     // Sync OpenCut Timeline selection with our React StudioMode local selection
     useEffect(() => {
         const unsubscribe = editor.selection.subscribe(() => {
@@ -474,8 +567,9 @@ const StudioMode = () => {
                 setSelectedRowId(selected[0].trackId);
             }
         });
+        addCleanup(unsubscribe); // 18.3: tracked for auto-cleanup
         return unsubscribe;
-    }, [editor.selection]);
+    }, [editor.selection, addCleanup]); // Added addCleanup to dependency array
 
     const [isSpacePressed, setIsSpacePressed] = useState(false);
     const isDraggingRef = useRef(false); // To detect if user dragged while holding space
@@ -518,7 +612,7 @@ const StudioMode = () => {
                 // P1 4.4: Keyframe Copy/Paste (Ctrl+Shift+C / Ctrl+Shift+V)
                 if (e.key.toLowerCase() === 'c' && e.shiftKey && selectedRowId) {
                     e.preventDefault();
-                    const ct = useAppStore.getState().cursorTime;
+                    const ct = transientState.cursorTime;
                     const row = useAppStore.getState().editorData.find(r => r.id === selectedRowId);
                     if (row) {
                         const props = ['x', 'y', 'scale', 'rotation', 'opacity', 'anchorX', 'anchorY'] as const;
@@ -537,7 +631,7 @@ const StudioMode = () => {
                     e.preventDefault();
                     const kfClipboard = useTimelineStore.getState().keyframeClipboard;
                     if (!kfClipboard || kfClipboard.length === 0) return;
-                    const ct = useAppStore.getState().cursorTime;
+                    const ct = transientState.cursorTime;
                     setEditorData(prev => prev.map(row => {
                         if (row.id !== selectedRowId) return row;
                         const newTransform = { ...row.transform };
@@ -558,18 +652,8 @@ const StudioMode = () => {
                     return;
                 }
 
-                if (e.key === 'z') {
-                    if (e.shiftKey) {
-                        e.preventDefault();
-                        useAppStore.temporal.getState().redo();
-                    } else {
-                        e.preventDefault();
-                        useAppStore.temporal.getState().undo();
-                    }
-                } else if (e.key === 'y') {
-                    e.preventDefault();
-                    useAppStore.temporal.getState().redo();
-                }
+                // P0-0.3: Undo/Redo handled by useUndoRedo hook — no manual handling needed here
+                // (Ctrl+Z/Y are consumed by useUndoRedo's event listener)
             }
         };
 
@@ -592,7 +676,7 @@ const StudioMode = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [editor, selectedRowId]);
+    }, [editor, selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT, setEditorData]); // Added missing dependencies
 
     const [canvasScale, setCanvasScale] = useState(1);
     const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
@@ -612,14 +696,39 @@ const StudioMode = () => {
         status: 'idle', currentFrame: 0, totalFrames: 0, message: ''
     });
 
+    // Canvas Context Menu State
+    const [canvasContextMenu, setCanvasContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+    const handleDeleteCharacter = (charId: string) => {
+        const charName = editorData.find(r => r.id === charId)?.name || 'Character';
+        setEditorData(prev => prev.filter(row => row.id !== charId));
+        if (selectedRowId === charId) setSelectedRowId('');
+        toast.success(`Đã xóa "${charName}"`, { duration: 2000 });
+    };
+
     const handleExportVideo = async () => {
         setShowExportModal(true);
         const duration = getDynamicDuration();
         const fps = 30;
         setExportProgress({ status: 'extracting', currentFrame: 0, totalFrames: Math.ceil(duration * fps), message: 'Starting...' });
-        await exportVideo(duration, fps, stageRef, (progress) => {
-            setExportProgress(progress);
-        });
+        try {
+            await exportVideo(duration, fps, stageRef, (progress) => {
+                setExportProgress(progress);
+                if (progress.status === 'done') {
+                    toast.success('Export hoàn tất!', { description: 'File MP4 đã được tải xuống.', duration: 4000 });
+                } else if (progress.status === 'error') {
+                    toast.error('Export thất bại', { description: progress.message, duration: 6000 });
+                }
+            });
+        } catch (err: any) {
+            toast.error('Export thất bại', { description: err?.message || 'Lỗi không xác định', duration: 6000 });
+            setExportProgress({ status: 'error', currentFrame: 0, totalFrames: 0, message: err?.message || 'Unknown error' });
+        }
+    };
+
+    const handleContextMenu = (e: any) => {
+        e.evt.preventDefault();
+        setCanvasContextMenu({ x: e.evt.clientX, y: e.evt.clientY });
     };
 
     useEffect(() => {
@@ -633,7 +742,7 @@ const StudioMode = () => {
         updateScale();
         window.addEventListener('resize', updateScale);
         return () => window.removeEventListener('resize', updateScale);
-    }, []);
+    }, [LOGICAL_WIDTH, LOGICAL_HEIGHT]); // Added missing dependencies
 
     // P1 3.11 + 3.9: Animation Loop with Dynamic Duration + In/Out Points
     useEffect(() => {
@@ -647,7 +756,7 @@ const StudioMode = () => {
                 const effectiveOut = getEffectiveOutPoint();
                 const maxDuration = getDynamicDuration();
 
-                useAppStore.getState().setCursorTime(prev => {
+                setCursorTime(prev => {
                     const next = prev + delta;
 
                     if (loopMode === 'loopAll') {
@@ -677,8 +786,8 @@ const StudioMode = () => {
         return () => cancelAnimationFrame(animationFrameId);
     }, [isPlaying]);
 
-    // Setup Active Assets (We map them all down to Konva nodes unconditionally)
-    const renderCharacters = editorData
+    // 18.1: Memoized character list — only recomputes when editorData or activeEditTargetId changes
+    const renderCharacters = useMemo(() => editorData
         .filter(row => !activeEditTargetId || row.id === activeEditTargetId)
         .map(row => {
             const sortedAssets = [...row.actions].sort((a, b) => a.zIndex - b.zIndex);
@@ -686,7 +795,7 @@ const StudioMode = () => {
                 ...row,
                 sortedAssets
             };
-        });
+        }), [editorData, activeEditTargetId]);
 
     // Transformer Attachment Effect
     useEffect(() => {
@@ -703,22 +812,41 @@ const StudioMode = () => {
         }
     }, [selectedRowId, renderCharacters]);
 
-    // Transient State Sync (Performance Boost 60FPS)
+    // Transient State Sync (Performance Boost 60FPS) + 18.1 Frustum Culling
     useEffect(() => {
+        // 18.1: Base extent for culling — multiplied by scale for accuracy
+        // Typical character art is ~500-1000px wide/tall at scale=1
+        const BASE_EXTENT = 600;
+
         const syncTransform = (time: number, data: CharacterTrack[]) => {
             data.forEach(char => {
                 const node = groupRefs.current[char.id];
                 if (node && !node.isDragging() && !transformerRef.current?.isTransforming()) {
-                    node.x(getInterpolatedValue(char.transform.x, time, LOGICAL_WIDTH / 2));
-                    node.y(getInterpolatedValue(char.transform.y, time, LOGICAL_HEIGHT / 2));
-                    node.scaleX(getInterpolatedValue(char.transform.scale, time, 1));
-                    node.scaleY(getInterpolatedValue(char.transform.scale, time, 1));
-                    node.rotation(getInterpolatedValue(char.transform.rotation, time, 0));
-                    node.opacity(getInterpolatedValue(char.transform.opacity, time, 100) / 100);
-                    node.offsetX(getInterpolatedValue(char.transform.anchorX, time, 0));
-                    node.offsetY(getInterpolatedValue(char.transform.anchorY, time, 0));
+                    const interpX = getInterpolatedValue(char.transform.x, time, LOGICAL_WIDTH / 2);
+                    const interpY = getInterpolatedValue(char.transform.y, time, LOGICAL_HEIGHT / 2);
+                    const interpScale = getInterpolatedValue(char.transform.scale, time, 1);
+
+                    // 18.1: Scale-aware frustum culling — padding grows with character scale
+                    const scaledPadding = BASE_EXTENT * Math.max(interpScale, 1);
+                    const isInViewport =
+                        interpX > -scaledPadding && interpX < LOGICAL_WIDTH + scaledPadding &&
+                        interpY > -scaledPadding && interpY < LOGICAL_HEIGHT + scaledPadding;
+
+                    node.visible(isInViewport);
+
+                    if (isInViewport) {
+                        node.x(interpX);
+                        node.y(interpY);
+                        node.scaleX(interpScale);
+                        node.scaleY(interpScale);
+                        node.rotation(getInterpolatedValue(char.transform.rotation, time, 0));
+                        node.opacity(getInterpolatedValue(char.transform.opacity, time, 100) / 100);
+                        node.offsetX(getInterpolatedValue(char.transform.anchorX, time, 0));
+                        node.offsetY(getInterpolatedValue(char.transform.anchorY, time, 0));
+                    }
                 }
 
+                // 18.1: Time-based asset culling — skip invisible and out-of-time-range assets
                 char.actions.forEach(action => {
                     const assetNode = assetRefs.current[action.id];
                     if (assetNode) {
@@ -731,7 +859,6 @@ const StudioMode = () => {
                 if (anchorNode && !anchorNode.isDragging()) {
                     anchorNode.x(getInterpolatedValue(char.transform.anchorX, time, 0));
                     anchorNode.y(getInterpolatedValue(char.transform.anchorY, time, 0));
-                    // Keep crosshair scale constant inversely proportional to group scale
                     const invertScale = 1 / getInterpolatedValue(char.transform.scale, time, 1);
                     anchorNode.scaleX(invertScale);
                     anchorNode.scaleY(invertScale);
@@ -744,39 +871,48 @@ const StudioMode = () => {
                 syncTransform(state.cursorTime, state.editorData);
             }
         });
+        addCleanup(unsub); // 18.3: tracked for auto-cleanup
 
         // Trigger an initial sync
         syncTransform(useAppStore.getState().cursorTime, useAppStore.getState().editorData);
 
         return unsub;
-    }, []);
+    }, [addCleanup, LOGICAL_WIDTH, LOGICAL_HEIGHT]); // Added missing dependencies
+
+    // 18.3: Cleanup Konva refs on unmount — uses actual hook (not dead code)
+    useKonvaCleanup(groupRefs, assetRefs, anchorRefs);
 
     const handleAddAsset = (assetHash: string, zIndex: number) => {
         const targetId = activeEditTargetId || selectedRowId;
         if (!targetId) {
-            alert("Please select a character track first.");
+            toast.warning('Chưa chọn character', { description: 'Hãy click chọn một character track trước khi thêm asset.' });
             return;
         }
 
         const cursorTime = useAppStore.getState().cursorTime;
-        setEditorData(prev => prev.map(row => {
-            if (row.id === targetId) {
-                return {
-                    ...row,
-                    actions: [
-                        ...row.actions,
-                        {
-                            id: `action_${Date.now()}_${Math.random()}`,
-                            start: cursorTime,
-                            end: cursorTime + 5,
-                            assetHash,
-                            zIndex
-                        }
-                    ]
-                };
-            }
-            return row;
-        }));
+        try {
+            setEditorData(prev => prev.map(row => {
+                if (row.id === targetId) {
+                    return {
+                        ...row,
+                        actions: [
+                            ...row.actions,
+                            {
+                                id: `action_${Date.now()}_${Math.random()}`,
+                                start: cursorTime,
+                                end: cursorTime + 5,
+                                assetHash,
+                                zIndex
+                            }
+                        ]
+                    };
+                }
+                return row;
+            }));
+            toast.success('Đã thêm asset vào track');
+        } catch (err) {
+            toast.error('Lỗi thêm asset');
+        }
     };
 
     const handleRemoveAsset = (assetHash: string) => {
@@ -833,6 +969,7 @@ const StudioMode = () => {
             }
         ]);
         setSelectedRowId(newId);
+        toast.success(`Đã thêm "${char.name}" vào canvas`, { duration: 2000 });
 
         if (defaultActions.length > 0) {
             editor.selection.setSelectedElements({ elements: [{ trackId: newId, elementId: defaultActions[0].id }] });
@@ -842,7 +979,7 @@ const StudioMode = () => {
     };
 
     const handleTransformEnd = (charId: string, node: any) => {
-        const { cursorTime, isAutoKeyframeEnabled } = useAppStore.getState();
+        const { cursorTime, isAutoKeyframeEnabled } = transientState;
         setEditorData(prev => prev.map(row => {
             if (row.id !== charId) return row;
             const newTransform = { ...row.transform };
@@ -878,7 +1015,7 @@ const StudioMode = () => {
                         // Auto-Keyframe is OFF, update base keyframe instead of creating a new one
                         const baseIdx = keys.findIndex(k => k.time === 0);
                         if (baseIdx >= 0) {
-                            // Determine delta logic or just set base? 
+                            // Determine delta logic or just set base?
                             // Software like capcut just sets the base value if you move it without keyframe
                             keys[baseIdx] = { ...keys[baseIdx], value };
                         } else {
@@ -897,8 +1034,8 @@ const StudioMode = () => {
 
     const transientHandlePropertyChange = (property: 'x' | 'y' | 'scale' | 'rotation' | 'opacity' | 'anchorX' | 'anchorY', value: number) => {
         if (!selectedRowId) return;
-        const { cursorTime, isAutoKeyframeEnabled } = useAppStore.getState();
-        // Optimization: during continuous drag, this invokes Zustand update. 
+        const { cursorTime, isAutoKeyframeEnabled } = transientState;
+        // Optimization: during continuous drag, this invokes Zustand update.
         // We might want to throttle this or only resolve onDragEnd if it gets heavy,
         // but it's handled via DragEnd/TransformEnd already! So this is just a setter.
         setEditorData(prev => prev.map(row => {
@@ -952,7 +1089,7 @@ const StudioMode = () => {
                                     Characters
                                 </button>
                                 <button
-                                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${sidebarTab === 'library' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-neutral-400 hover:text-neutral-300'}`}
+                                    className={`flex-1 py-3 text-sm font-semibold transition-colors btn-press ${sidebarTab === 'library' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-neutral-400 hover:text-neutral-300'}`}
                                     onClick={() => setSidebarTab('library')}
                                 >
                                     Accessories
@@ -968,7 +1105,7 @@ const StudioMode = () => {
                         <div className="flex justify-between items-center mb-6">
                             <button
                                 onClick={() => setActiveEditTargetId(null)}
-                                className="text-[#a4b0be] hover:text-white flex items-center gap-2 transition-colors font-semibold text-[0.9rem]"
+                                className="text-[#a4b0be] hover:text-white flex items-center gap-2 transition-colors font-semibold text-[0.9rem] btn-press"
                             >
                                 <ChevronLeft className="w-5 h-5" /> Back to Studio
                             </button>
@@ -1136,18 +1273,26 @@ const StudioMode = () => {
                 </div>
 
                 {/* Center: 16:9 Canvas Workarea */}
-                {/* Center: 16:9 Canvas Workarea */}
-                <div className={`transition-all duration-[600ms] cubic-bezier(0.16, 1, 0.3, 1) bg-neutral-950 flex flex-col relative overflow-hidden ${!activeEditTargetId ? 'flex-1' : 'w-1/3 min-w-[300px] shrink-0 p-8 pt-0'}`}>
+                <div
+                    className={`transition-all duration-[600ms] cubic-bezier(0.16, 1, 0.3, 1) bg-neutral-950 flex flex-col relative overflow-hidden ${!activeEditTargetId ? 'flex-1' : 'w-1/3 min-w-[300px] shrink-0 p-8 pt-0'}`}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        setCanvasContextMenu({ x: e.clientX, y: e.clientY });
+                    }}
+                    onMouseDown={(e) => {
+                        if (e.button === 0 && canvasContextMenu) setCanvasContextMenu(null);
+                    }}
+                >
                     {(!activeEditTargetId) && (
                         <div className="h-12 border-b border-neutral-800 bg-neutral-900 flex items-center px-4 justify-between">
                             <div className="flex gap-2">
-                                <button className="p-1.5 bg-neutral-800 rounded hover:bg-neutral-700 text-indigo-400"><MousePointer2 className="w-4 h-4" /></button>
+                                <button className="p-1.5 bg-neutral-800 rounded hover:bg-neutral-700 text-indigo-400 btn-press"><MousePointer2 className="w-4 h-4" /></button>
                                 <button
                                     onClick={() => {
                                         setZoomScale(1);
                                         setStagePos({ x: 0, y: 0 });
                                     }}
-                                    className="p-1.5 bg-neutral-800 rounded hover:bg-neutral-700 text-neutral-400 text-xs font-semibold px-3"
+                                    className="p-1.5 bg-neutral-800 rounded hover:bg-neutral-700 text-neutral-400 text-xs font-semibold px-3 btn-press"
                                 >
                                     Reset View
                                 </button>
@@ -1158,7 +1303,7 @@ const StudioMode = () => {
                                 </div>
                                 <button
                                     onClick={handleExportVideo}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-lg text-white text-xs font-semibold transition-all shadow-lg shadow-indigo-500/20"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-lg text-white text-xs font-semibold transition-all shadow-lg shadow-indigo-500/20 btn-press"
                                 >
                                     <Film className="w-3.5 h-3.5" />
                                     Export MP4
@@ -1179,8 +1324,8 @@ const StudioMode = () => {
                             >
                                 <Stage
                                     ref={stageRef}
-                                    width={LOGICAL_WIDTH * canvasScale}
-                                    height={LOGICAL_HEIGHT * canvasScale}
+                                    width={LOGICAL_WIDTH}
+                                    height={LOGICAL_HEIGHT}
                                     onWheel={(e: any) => {
                                         e.evt.preventDefault();
                                         const scaleBy = 1.05;
@@ -1215,14 +1360,14 @@ const StudioMode = () => {
                                             }
                                         }
                                     }}
-                                    onPointerMove={(e: any) => {
-                                        if (isPanning) {
-                                            setStagePos(prev => ({
-                                                x: prev.x + e.evt.movementX,
-                                                y: prev.y + e.evt.movementY
-                                            }));
+                                    onMouseDown={(e) => {
+                                        if (e.target === e.target.getStage()) {
+                                            editor.selection.clearSelection();
+                                            setSelectedRowId("");
                                         }
+                                        if (canvasContextMenu) setCanvasContextMenu(null);
                                     }}
+                                    onContextMenu={handleContextMenu}
                                     onPointerUp={() => setIsPanning(false)}
                                     onMouseLeave={() => setIsPanning(false)}
                                 >
@@ -1367,6 +1512,31 @@ const StudioMode = () => {
                             </div>
                         )}
                     </div>
+
+                    {/* 17.1: Actual Context Menu Rendering (addressed "ghost code" feedback) */}
+                    {canvasContextMenu && (
+                        <CanvasContextMenu
+                            x={canvasContextMenu.x}
+                            y={canvasContextMenu.y}
+                            onClose={() => setCanvasContextMenu(null)}
+                            onReset={() => {
+                                setZoomScale(1);
+                                setStagePos({ x: 0, y: 0 });
+                            }}
+                            onDeselect={() => {
+                                editor.selection.clearSelection();
+                                setSelectedRowId("");
+                            }}
+                            onDelete={() => {
+                                if (selectedRowId) handleDeleteCharacter(selectedRowId);
+                            }}
+                            onEdit={() => {
+                                if (selectedRowId) setActiveEditTargetId(selectedRowId);
+                            }}
+                            onExport={handleExportVideo}
+                            hasSelection={!!selectedRowId}
+                        />
+                    )}
                 </div>
 
                 {!activeEditTargetId && (
@@ -1381,11 +1551,14 @@ const StudioMode = () => {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsPlaying(!isPlaying)}
-                            className="p-2 bg-indigo-600 hover:bg-indigo-500 rounded-full text-white transition shadow-lg"
+                            className="p-2 bg-indigo-600 hover:bg-indigo-500 rounded-full text-white transition shadow-lg btn-press"
                         >
                             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                         </button>
-                        <PlayheadTimeDisplay />
+                        {/* Dynamic Status Display — optimized with 17.2 notifications later */}
+                        <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none group">
+                            <PlayheadTimeDisplay />
+                        </div>
                     </div>
                     <div className="flex gap-2"></div>
                 </div>

@@ -1,12 +1,28 @@
-import { useState, useEffect } from 'react';
-import { Palette, Shirt, Video, Menu } from 'lucide-react';
-import BaseMode from './components/BaseMode';
-import DressingRoomMode from './components/DressingRoomMode';
+import { useState, useEffect, lazy, Suspense } from 'react';
+import { Palette, Shirt, Video, Menu, Loader2 } from 'lucide-react';
 import { StudioErrorBoundary } from './components/StudioErrorBoundary';
-import StudioMode from './components/StudioMode';
 import ProjectManager from './components/ProjectManager';
 import { useProjectStore } from './store/useProjectStore';
 import { useAppStore } from './store/useAppStore';
+import { startEditorDataSync, stopEditorDataSync } from './stores/editor-data-store';
+const OnboardingOverlay = lazy(() => import('./components/OnboardingOverlay'));
+
+// 18.4: Lazy-load heavy tab components — only fetched when user switches to that tab
+const BaseMode = lazy(() => import('./components/BaseMode'));
+const DressingRoomMode = lazy(() => import('./components/DressingRoomMode'));
+const StudioMode = lazy(() => import('./components/StudioMode'));
+
+// Shared loading fallback
+function TabLoadingFallback() {
+  return (
+    <div className="flex-1 flex items-center justify-center bg-neutral-900">
+      <div className="flex flex-col items-center gap-3 animate-fade-scale-in">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin-smooth" />
+        <span className="text-sm text-neutral-400">Đang tải module...</span>
+      </div>
+    </div>
+  );
+}
 
 type Tab = 'base' | 'dressing' | 'studio';
 
@@ -25,6 +41,12 @@ function App() {
       return () => stopAutoSave();
     }
   }, [currentProject?.id]);
+
+  // P0-0.2: Start normalized editor data sync on mount
+  useEffect(() => {
+    startEditorDataSync();
+    return () => stopEditorDataSync();
+  }, []);
 
   // Mark project dirty when editorData changes
   useEffect(() => {
@@ -97,17 +119,24 @@ function App() {
         {/* Project Header Bar */}
         <ProjectManager />
 
-        {activeTab === 'base' && <BaseMode />}
-        {activeTab === 'dressing' && <DressingRoomMode />}
-        {activeTab === 'studio' && (
-          <StudioErrorBoundary>
-            <StudioMode />
-          </StudioErrorBoundary>
-        )}
+        {/* 18.4: Suspense-wrapped lazy tabs */}
+        <Suspense fallback={<TabLoadingFallback />}>
+          {activeTab === 'base' && <BaseMode />}
+          {activeTab === 'dressing' && <DressingRoomMode />}
+          {activeTab === 'studio' && (
+            <StudioErrorBoundary>
+              <StudioMode />
+            </StudioErrorBoundary>
+          )}
+        </Suspense>
+
+        {/* Onboarding Tour — shown on first visit (now lazy loaded) */}
+        <Suspense fallback={null}>
+          <OnboardingOverlay />
+        </Suspense>
       </main>
     </div>
   );
 }
 
 export default App;
-

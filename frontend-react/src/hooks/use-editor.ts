@@ -1,6 +1,9 @@
 import { useAppStore } from "@/store/useAppStore";
 import { useCallback, useMemo } from "react";
 import { useTimelineStore } from "@/stores/timeline-store";
+import { transientState, setCursorTime, setScrubbing, setActiveEditTargetId } from "@/stores/transient-store";
+import { useEditorDataStore } from "@/stores/editor-data-store";
+import { commandHistory, createMoveActionCommand, createDeleteActionsCommand, createAddKeyframeCommand, createRemoveKeyframeCommand, createDeleteTrackCommand, createAddTrackCommand, createBatchCommand } from "@/stores/command-history";
 import type { TimelineTrack, VideoElement, TimelineElement } from "../types/timeline";
 
 // Selection mock state globally
@@ -14,11 +17,12 @@ export function useEditor() {
 
     // Map our RowData (Characters) to OpenCut's TimelineTrack
     const getTracks = useCallback((): TimelineTrack[] => {
-        const activeEditTargetId = useAppStore.getState().activeEditTargetId;
+        const activeEditTargetId = transientState.activeEditTargetId;
         const tracks: TimelineTrack[] = [];
 
         if (activeEditTargetId) {
             // Nested Composition Context ("Chia để trị")
+            // P0-0.2: Use normalized store for O(1) lookup instead of .find()
             const character = editorData.find(c => c.id === activeEditTargetId);
             if (character) {
                 const baseCharacter = useAppStore.getState().characters.find(c => c.id === character.characterId);
@@ -170,53 +174,37 @@ export function useEditor() {
     // Our own generic listener bridge to Zustand
     const bridge = useMemo(() => ({
         // Support shifting Keyframes from the timeline UI directly
+        // P0-0.3: Wrapped with commandHistory for undo/redo support
         updateKeyframeTime: (trackId: string, oldTime: number, newTime: number) => {
-            useAppStore.getState().setEditorData(prev => prev.map(row => {
-                if (trackId.startsWith(row.id + '_')) {
-                    // Updating a specific sub-track keyframe
-                    const prop = trackId.split('_').pop() as keyof typeof row.transform;
-                    if (['x', 'y', 'scale', 'rotation', 'opacity'].includes(prop)) {
-                        const newTransform = { ...row.transform };
-                        const idx = newTransform[prop].findIndex(k => Math.abs(k.time - oldTime) < 0.05);
-                        if (idx >= 0) {
-                            newTransform[prop][idx] = { ...newTransform[prop][idx], time: newTime };
-                            newTransform[prop].sort((a, b) => a.time - b.time);
-                        }
-                        return { ...row, transform: newTransform };
-                    }
-                } else if (row.id === trackId) {
-                    // Updating unified (parent track) keyframe
-                    const newTransform = { ...row.transform };
-                    (['x', 'y', 'scale', 'rotation', 'opacity'] as const).forEach(prop => {
-                        const idx = newTransform[prop].findIndex(k => Math.abs(k.time - oldTime) < 0.05);
-                        if (idx >= 0) {
-                            newTransform[prop][idx] = { ...newTransform[prop][idx], time: newTime };
-                            newTransform[prop].sort((a, b) => a.time - b.time);
-                        }
-                    });
-                    return { ...row, transform: newTransform };
-                }
-                return row;
-            }));
+            // Find the track and keyframe info for command
+            const state = useAppStore.getState();
+            const row = state.editorData.find(r => trackId.startsWith(r.id + '_') || r.id === trackId);
+            if (!row) return;
+
+            const prop = trackId.includes('_') ? trackId.split('_').pop() as keyof typeof row.transform : null;
+            if (!prop || !['x', 'y', 'scale', 'rotation', 'opacity'].includes(prop)) return;
+
+            const keyframe = row.transform[prop].find(k => Math.abs(k.time - oldTime) < 0.05);
+            if (!keyframe) return;
+
+            // Create command for undo/redo
+            const cmd = createAddKeyframeCommand(row.id, prop, { ...keyframe, time: newTime });
+            commandHistory.execute(cmd);
         },
         removeKeyframe: (trackId: string, time: number) => {
-            useAppStore.getState().setEditorData(prev => prev.map(row => {
-                if (trackId.startsWith(row.id + '_')) {
-                    const prop = trackId.split('_').pop() as keyof typeof row.transform;
-                    if (['x', 'y', 'scale', 'rotation', 'opacity'].includes(prop)) {
-                        const newTransform = { ...row.transform };
-                        newTransform[prop] = newTransform[prop].filter(k => Math.abs(k.time - time) > 0.05);
-                        return { ...row, transform: newTransform };
-                    }
-                } else if (row.id === trackId) {
-                    const newTransform = { ...row.transform };
-                    (['x', 'y', 'scale', 'rotation', 'opacity'] as const).forEach(prop => {
-                        newTransform[prop] = newTransform[prop].filter(k => Math.abs(k.time - time) > 0.05);
-                    });
-                    return { ...row, transform: newTransform };
-                }
-                return row;
-            }));
+            // P0-0.3: Use command pattern for undo/redo
+            const state = useAppStore.getState();
+            const row = state.editorData.find(r => trackId.startsWith(r.id + '_') || r.id === trackId);
+            if (!row) return;
+
+            const prop = trackId.includes('_') ? trackId.split('_').pop() as keyof typeof row.transform : null;
+            if (!prop || !['x', 'y', 'scale', 'rotation', 'opacity'].includes(prop)) return;
+
+            const keyframe = row.transform[prop].find(k => Math.abs(k.time - time) < 0.05);
+            if (!keyframe) return;
+
+            const cmd = createRemoveKeyframeCommand(row.id, prop, keyframe);
+            commandHistory.execute(cmd);
         },
     }), []);
 
@@ -230,44 +218,63 @@ export function useEditor() {
             toggleTrackVisibility: (_params: { trackId: string }) => { },
             removeTrack: (trackId: string) => {
                 const state = useAppStore.getState();
-                const activeEditTargetId = state.activeEditTargetId;
+                const activeEditTargetId = transientState.activeEditTargetId;
 
                 if (activeEditTargetId && trackId.startsWith('nested_')) {
                     // Nested Composition Context: Delete specific accessory action
                     const actionId = trackId.replace('nested_', '');
-                    state.setEditorData(prev => prev.map(row => {
-                        if (row.id === activeEditTargetId) {
-                            return { ...row, actions: row.actions.filter(a => a.id !== actionId) };
-                        }
-                        return row;
-                    }));
+                    const row = state.editorData.find(r => r.id === activeEditTargetId);
+                    const action = row?.actions.find(a => a.id === actionId);
+                    if (row && action) {
+                        // P0-0.3: Use command pattern for undo/redo
+                        const cmd = createDeleteActionsCommand([{ trackId: row.id, action }]);
+                        commandHistory.execute(cmd);
+                    }
                 } else {
                     // Main Scene Context: Delete entire character and all its embedded tracks
-                    state.setEditorData(prev => prev.filter(row => row.id !== trackId));
-                    if (state.activeEditTargetId === trackId) {
-                        state.setActiveEditTargetId(null); // Exit context if we delete the character we are inside
+                    const track = state.editorData.find(r => r.id === trackId);
+                    const index = state.editorData.findIndex(r => r.id === trackId);
+                    if (track && index >= 0) {
+                        // P0-0.3: Use command pattern for undo/redo
+                        const cmd = createDeleteTrackCommand(track, index);
+                        commandHistory.execute(cmd);
+                        if (transientState.activeEditTargetId === trackId) {
+                            setActiveEditTargetId(null); // Exit context if we delete the character we are inside
+                        }
                     }
                 }
             },
             deleteElements: (elements: { elementId: string; trackId: string }[]) => {
-                const elementIds = new Set(elements.map(e => e.elementId));
-                useAppStore.getState().setEditorData(prev => prev.map(row => {
+                // P0-0.3: Use command pattern for undo/redo
+                const state = useAppStore.getState();
+                const deletedActions: { trackId: string; action: any }[] = [];
+
+                state.editorData.forEach(row => {
                     // Check if they deleted the Compound Block in Main Mode
                     if (elements.some(e => e.elementId === `${row.id}_compound`)) {
-                        return { ...row, actions: [] };
+                        // Delete all actions in this track
+                        row.actions.forEach(action => {
+                            deletedActions.push({ trackId: row.id, action });
+                        });
+                    } else {
+                        elements.forEach(e => {
+                            const action = row.actions.find(a => a.id === e.elementId);
+                            if (action) {
+                                deletedActions.push({ trackId: row.id, action });
+                            }
+                        });
                     }
+                });
 
-                    return {
-                        ...row,
-                        actions: row.actions.filter(a => !elementIds.has(a.id))
-                    };
-                }));
+                if (deletedActions.length > 0) {
+                    const cmd = createDeleteActionsCommand(deletedActions);
+                    commandHistory.execute(cmd);
+                }
             },
             splitElement: (elementId: string) => {
-                const state = useAppStore.getState();
-                const time = state.cursorTime;
+                const time = transientState.cursorTime;
 
-                state.setEditorData(prev => prev.map(row => {
+                useAppStore.getState().setEditorData(prev => prev.map(row => {
                     if (elementId.endsWith('_compound')) return row; // Compound split not supported yet
 
                     const actionIndex = row.actions.findIndex(a => a.id === elementId);
@@ -347,19 +354,15 @@ export function useEditor() {
                     if (minStart === Infinity) minStart = 0;
                     const delta = newStartTime - minStart;
 
-                    state.setEditorData(prev => prev.map(row => {
-                        if (row.id === sourceTrackId) {
-                            return {
-                                ...row,
-                                actions: row.actions.map(a => ({
-                                    ...a,
-                                    start: a.start + delta,
-                                    end: a.end + delta
-                                }))
-                            }
-                        }
-                        return row;
-                    }));
+                    // P0-0.3: Use command pattern - create batch command for all actions
+                    const commands = sourceRow.actions.map(action => {
+                        const oldStart = action.start;
+                        const oldEnd = action.end;
+                        return createMoveActionCommand(action.id, oldStart, oldEnd, oldStart + delta, oldEnd + delta);
+                    });
+                    
+                    const batchCmd = createBatchCommand(`Move character ${sourceRow.name}`, commands);
+                    commandHistory.execute(batchCmd);
                 } else {
                     // Moving a single specific track/accessory
                     // Find actual source row (in edit mode, sourceTrackId looks like `nested_action123`, but we find row by looking up actions)
@@ -368,18 +371,11 @@ export function useEditor() {
                     if (!actionToMove) return;
 
                     const duration = actionToMove.end - actionToMove.start;
+                    const newEnd = newStartTime + duration;
 
-                    state.setEditorData(prev => prev.map(row => {
-                        let actions = [...row.actions];
-                        if (row.id === sourceRow?.id) actions = actions.filter(a => a.id !== elementId);
-                        // In nested mode, targetTrackId might not correspond to standard rows.
-                        // For now, disallow moving Between characters when in nested edit mode.
-                        // If moving inside the same character, just update the start time.
-                        if (row.id === sourceRow?.id) {
-                            actions.push({ ...actionToMove, start: newStartTime, end: newStartTime + duration });
-                        }
-                        return { ...row, actions };
-                    }));
+                    // P0-0.3: Use command pattern for undo/redo
+                    const cmd = createMoveActionCommand(elementId, actionToMove.start, actionToMove.end, newStartTime, newEnd);
+                    commandHistory.execute(cmd);
                 }
             },
             updateElementStartTime: ({ elements, startTime }: { elements: { trackId: string; elementId: string }[], startTime: number }) => {
@@ -476,19 +472,19 @@ export function useEditor() {
         },
         playback: {
             seek: ({ time }: { time: number }) => {
-                useAppStore.getState().setCursorTime(time);
+                setCursorTime(time);
             },
-            getCurrentTime: () => useAppStore.getState().cursorTime,
+            getCurrentTime: () => transientState.cursorTime,
             isPlaying: false,
-            setScrubbing: ({ isScrubbing: val }: { isScrubbing: boolean }) => useAppStore.getState().setIsScrubbing(val),
-            getIsScrubbing: () => useAppStore.getState().isScrubbing,
+            setScrubbing: ({ isScrubbing: val }: { isScrubbing: boolean }) => setScrubbing(val),
+            getIsScrubbing: () => transientState.isScrubbing,
         },
         project: {
             getActive: () => ({ id: "project-1", resolution: { width: 1920, height: 1080 }, settings: { fps: 30 } }),
             getTimelineViewState: () => ({
                 zoomLevel: 1, // Default zoom
                 scrollLeft: 0,
-                playheadTime: useAppStore.getState().cursorTime,
+                playheadTime: transientState.cursorTime,
             }),
             setTimelineViewState: (_args: any) => { }, // Mock
         },

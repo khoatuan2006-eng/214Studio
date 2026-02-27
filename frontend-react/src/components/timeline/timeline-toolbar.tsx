@@ -21,6 +21,7 @@ import { type TAction, invokeAction } from "@/lib/actions";
 import { cn } from "@/utils/ui";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useAppStore } from "@/store/useAppStore";
+import { useTransientSnapshot, toggleAutoKeyframe } from "@/stores/transient-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	Bookmark02Icon,
@@ -81,8 +82,8 @@ function ToolbarLeftSection() {
 	const editor = useEditor();
 	const currentTime = editor.playback.getCurrentTime();
 	const currentBookmarked = editor.scenes.isBookmarked({ time: currentTime });
-	const isAutoKeyframeEnabled = useAppStore(s => s.isAutoKeyframeEnabled);
-	const toggleAutoKeyframe = useAppStore(s => s.toggleAutoKeyframe);
+	const snapT = useTransientSnapshot();
+	const isAutoKeyframeEnabled = snapT.isAutoKeyframeEnabled;
 
 	const handleAction = ({
 		action,

@@ -1,7 +1,17 @@
 import { create } from 'zustand';
-import { temporal } from 'zundo';
 import axios from 'axios';
 import { API_BASE, STATIC_BASE } from '@/config/api';
+
+// P0-0.1: Transient state moved to Valtio. Re-export for gradual migration.
+export {
+    transientState,
+    setCursorTime,
+    setScrubbing,
+    setPlaying,
+    toggleAutoKeyframe,
+    setActiveEditTargetId,
+    useTransientSnapshot,
+} from '@/stores/transient-store';
 
 // Re-export for backward compatibility (other files import these from useAppStore)
 export { API_BASE, STATIC_BASE };
@@ -90,74 +100,48 @@ interface AppState {
     fetchCharacters: () => Promise<void>;
     fetchCustomLibrary: () => Promise<void>;
 
-    // Studio Layout State
+    // Studio Layout State (Domain Data only — transient state is in transient-store.ts)
     editorData: CharacterTrack[];
     setEditorData: (data: CharacterTrack[] | ((prev: CharacterTrack[]) => CharacterTrack[])) => void;
     toggleTrackExpanded: (trackId: string) => void;
-    cursorTime: number;
-    setCursorTime: (time: number | ((prev: number) => number)) => void;
-    isScrubbing: boolean;
-    setIsScrubbing: (isScrubbing: boolean) => void;
-    isAutoKeyframeEnabled: boolean;
-    toggleAutoKeyframe: () => void;
-
-    // "Chia để trị" - Character Edit Mode Context
-    activeEditTargetId: string | null;
-    setActiveEditTargetId: (id: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
-    temporal(
-        (set) => ({
-            characters: [],
-            customLibrary: { categories: [] },
-            isLoading: false,
-            error: null,
-            editorData: [],
-            setEditorData: (data) => set((state) => ({
-                editorData: typeof data === 'function' ? data(state.editorData) : data
-            })),
-            toggleTrackExpanded: (trackId) => set((state) => ({
-                editorData: state.editorData.map(row =>
-                    row.id === trackId ? { ...row, isExpanded: !row.isExpanded } : row
-                )
-            })),
-            cursorTime: 0,
-            setCursorTime: (time) => set((state) => ({
-                cursorTime: typeof time === 'function' ? time(state.cursorTime) : time
-            })),
-            isScrubbing: false,
-            setIsScrubbing: (isScrubbing) => set({ isScrubbing }),
-            isAutoKeyframeEnabled: false,
-            toggleAutoKeyframe: () => set(state => ({ isAutoKeyframeEnabled: !state.isAutoKeyframeEnabled })),
-            activeEditTargetId: null,
-            setActiveEditTargetId: (id) => set({ activeEditTargetId: id }),
+    (set) => ({
+        characters: [],
+        customLibrary: { categories: [] },
+        isLoading: false,
+        error: null,
+        editorData: [],
+        setEditorData: (data) => set((state) => ({
+            editorData: typeof data === 'function' ? data(state.editorData) : data
+        })),
+        toggleTrackExpanded: (trackId) => set((state) => ({
+            editorData: state.editorData.map(row =>
+                row.id === trackId ? { ...row, isExpanded: !row.isExpanded } : row
+            )
+        })),
 
-            fetchCharacters: async () => {
-                set({ isLoading: true, error: null });
-                try {
-                    const res = await axios.get(`${API_BASE}/characters/`);
-                    set({ characters: res.data, isLoading: false });
-                } catch (error: any) {
-                    set({ error: error.message, isLoading: false });
-                }
-            },
-
-            fetchCustomLibrary: async () => {
-                set({ isLoading: true, error: null });
-                try {
-                    const res = await axios.get(`${API_BASE}/library/`);
-                    set({ customLibrary: res.data, isLoading: false });
-                } catch (error: any) {
-                    set({ error: error.message, isLoading: false });
-                }
+        fetchCharacters: async () => {
+            set({ isLoading: true, error: null });
+            try {
+                const res = await axios.get(`${API_BASE}/characters/`);
+                set({ characters: res.data, isLoading: false });
+            } catch (error: any) {
+                set({ error: error.message, isLoading: false });
             }
-        }),
-        {
-            partialize: (state) => ({ editorData: state.editorData }),
-            limit: 100,
+        },
+
+        fetchCustomLibrary: async () => {
+            set({ isLoading: true, error: null });
+            try {
+                const res = await axios.get(`${API_BASE}/library/`);
+                set({ customLibrary: res.data, isLoading: false });
+            } catch (error: any) {
+                set({ error: error.message, isLoading: false });
+            }
         }
-    )
+    })
 );
 
 // Helper function to resolve asset paths like the old JS did (Fallback check via hash)

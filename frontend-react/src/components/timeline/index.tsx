@@ -16,6 +16,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { useAppStore } from "@/store/useAppStore";
+import { setActiveEditTargetId, useTransientSnapshot } from "@/stores/transient-store";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -372,8 +373,8 @@ export function Timeline() {
 		timelineHeaderRef.current?.getBoundingClientRect().height ?? 0;
 
 	// Access global edit context
-	const activeEditTargetId = useAppStore(state => state.activeEditTargetId);
-	const setActiveEditTargetId = useAppStore(state => state.setActiveEditTargetId);
+	const snapT = useTransientSnapshot();
+	const activeEditTargetId = snapT.activeEditTargetId;
 	const editorData = useAppStore(state => state.editorData);
 	const setEditorData = useAppStore(state => state.setEditorData);
 	const activeCharacterName = activeEditTargetId
