@@ -493,6 +493,33 @@
 
 </details>
 
+---
+
+## 🟠 P2 — Rendering & Export Pipeline
+
+### 5. Preview Rendering
+
+| # | Việc cần làm | Độ phức tạp |
+|---|---|---|
+| 5.1 | **WebGL 2 Renderer**: Chuyển canvas render từ 2D Context sang WebGL tăng hiệu năng 10x. | 🔴 Cao |
+| 5.2 | **Real-Time Preview**: Chạy playback mượt ≥30fps cho scene ≤5 characters. | 🔴 Cao |
+| 5.3 | **Resolution Preview Modes**: 25%, 50%, 100%, 200%. | 🟢 Thấp |
+| 5.4 | **Safe Area Overlay**: Hiển thị khung an toàn 16:9 / 9:16 / 1:1 trên canvas. | 🟢 Thấp |
+| 5.5 | **Background Color/Gradient/Image** cho canvas khi preview và export. | 🟢 Thấp |
+
+### 6. Export Pipeline (🌟 chạy được bằng script CLI)
+
+| # | Việc cần làm | Độ phức tạp |
+|---|---|---|
+| 6.1 | **Video Export Engine** dùng `ffmpeg`. Backend nhận request export → render từng frame → ghép video. | 🔴 Cao |
+| 6.2 | **Export formats**: MP4 (H.264), WebM (VP9), GIF, APNG, PNG sequence. | 🔴 Cao |
+| 6.3 | **CLI Export Script**: `python scripts/export.py --project my_scene.json --format mp4 --fps 24 --out output.mp4`. | 🟡 Trung bình |
+| 6.4 | **Headless Render Mode**: Chạy không cần browser, dùng `Pillow` render từng frame → ffmpeg. | 🔴 Cao |
+| 6.5 | **Export Queue**: Nhiều project export song song, có progress bar từng job. | 🟡 Trung bình |
+| 6.6 | **Sprite Sheet Export**: Render nhiều frame thành một sprite sheet PNG dùng cho game engine. | 🟡 Trung bình |
+| 6.7 | **JSON Animation Export**: Export toàn bộ timeline ra JSON để dùng trong PixiJS / Three.js / Babylon.js. | 🟡 Trung bình |
+| 6.8 | **After Effects JSX Export**: Sinh file `.jsx` import trực tiếp vào Adobe After Effects. | 🔴 Cao |
+
 <details>
 <summary>📋 Chi tiết đã làm — P2 Sprint 1 by Contributor #2 (2026-02-27)</summary>
 
@@ -542,34 +569,7 @@
 
 ---
 
-## 🟠 P2 — Rendering & Export Pipeline
-
-### 5. Preview Rendering
-
-| # | Việc cần làm | Độ phức tạp |
-|---|---|---|
-| 5.1 | **WebGL 2 Renderer**: Chuyển canvas render từ 2D Context sang WebGL tăng hiệu năng 10x. | 🔴 Cao |
-| 5.2 | **Real-Time Preview**: Chạy playback mượt ≥30fps cho scene ≤5 characters. | 🔴 Cao |
-| 5.3 | **Resolution Preview Modes**: 25%, 50%, 100%, 200%. | 🟢 Thấp |
-| 5.4 | **Safe Area Overlay**: Hiển thị khung an toàn 16:9 / 9:16 / 1:1 trên canvas. | 🟢 Thấp |
-| 5.5 | **Background Color/Gradient/Image** cho canvas khi preview và export. | 🟢 Thấp |
-
-### 6. Export Pipeline (🌟 chạy được bằng script CLI)
-
-| # | Việc cần làm | Độ phức tạp |
-|---|---|---|
-| 6.1 | **Video Export Engine** dùng `ffmpeg`. Backend nhận request export → render từng frame → ghép video. | 🔴 Cao |
-| 6.2 | **Export formats**: MP4 (H.264), WebM (VP9), GIF, APNG, PNG sequence. | 🔴 Cao |
-| 6.3 | **CLI Export Script**: `python scripts/export.py --project my_scene.json --format mp4 --fps 24 --out output.mp4`. | 🟡 Trung bình |
-| 6.4 | **Headless Render Mode**: Chạy không cần browser, dùng `Pillow` render từng frame → ffmpeg. | 🔴 Cao |
-| 6.5 | **Export Queue**: Nhiều project export song song, có progress bar từng job. | 🟡 Trung bình |
-| 6.6 | **Sprite Sheet Export**: Render nhiều frame thành một sprite sheet PNG dùng cho game engine. | 🟡 Trung bình |
-| 6.7 | **JSON Animation Export**: Export toàn bộ timeline ra JSON để dùng trong PixiJS / Three.js / Babylon.js. | 🟡 Trung bình |
-| 6.8 | **After Effects JSX Export**: Sinh file `.jsx` import trực tiếp vào Adobe After Effects. | 🔴 Cao |
-
----
-
-## 🟢 P3 — Professional UX & Collaboration
+##  P3 — Professional UX & Collaboration
 
 ### 7. Dressing Room & Asset UX
 
@@ -630,6 +630,52 @@ char_b.actions[0].set_range(start=1.0, end=5.0)
 
 export(scene, format="mp4", fps=24, resolution=(1920, 1080), output="ep1_intro.mp4")
 ```
+
+<details>
+<summary>📋 Chi tiết đã làm — P3 Sprint 1 by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> P3 Sprint 1: Python Scripting API (Mục 9.1) — Automation SDK
+
+**Đã làm:**
+
+| # | Task | Score | Chi tiết |
+|---|------|-------|----------|
+| 1 | ✅ SDK Core Classes | 10/10 | `backend/animestudio/builder.py` — `Project`, `CharacterTrack`, `ActionBlock`, `Keyframe` dataclasses với Builder Pattern (add_track, add_keyframe, add_action). |
+| 2 | ✅ DB Integration | 10/10 | `save_to_db()` dump JSON chuẩn camelCase → insert/update `Project.data` qua SQLAlchemy. |
+| 3 | ✅ PoC Script | 10/10 | `scripts/generate_scene.py` — tạo project "Auto Generated Episode 1" với hero X:100→800 easeIn→easeOut, lưu DB thành công. |
+
+**Files đã tạo:**
+- `backend/animestudio/__init__.py` [NEW]
+- `backend/animestudio/builder.py` [NEW] — SDK core
+- `scripts/generate_scene.py` [NEW] — PoC script
+
+**Verification:** `python scripts/generate_scene.py` → ✅ SUCCESS
+
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — P3 Sprint 2 by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> P3 Sprint 2: AI Gateway & Batch Generator (Mục 9.2 & 9.5)
+
+**Đã làm:**
+
+| # | Task | Score | Chi tiết |
+|---|------|-------|----------|
+| 1 | ✅ API Automation Endpoint | 10/10 | `POST /api/automation/generate` nhận `StoryScript` JSON (LLM-friendly) → SDK → save_to_db → trả `projectId`. Hỗ trợ 4 action types: move, scale, rotate, fade. |
+| 2 | ✅ Batch Generator | 10/10 | `scripts/batch_generate.py` — đọc `scripts/data/episodes.json` → tạo N projects trong DB với 1 lệnh. Đã verify tạo thành công 5 projects. |
+| 3 | ✅ Sample Data | 10/10 | `scripts/data/episodes.json` — 5 kịch bản mẫu đa dạng (move, scale, rotate, fade, multi-character). |
+
+**Files đã tạo/sửa:**
+- `backend/main.py` — Thêm `StoryScript`, `ScriptCharacter`, `CharacterAction` schemas + endpoint
+- `scripts/batch_generate.py` [NEW] — Batch generator
+- `scripts/data/episodes.json` [NEW] — 5 sample episodes
+
+**Verification:** `python scripts/batch_generate.py` → 5/5 projects ✅
+
+</details>
 
 ---
 
@@ -749,34 +795,12 @@ scripts/
 | 🔴 P0 | Data Persistence, Undo/Redo, Asset Pipeline | 3–4 tháng |
 | 🟡 P1 | Timeline Engine, Keyframe System | 2–3 tháng |
 | 🟠 P2 | Rendering, Export CLI | 2–3 tháng |
-## 🟣 P3 — Automation & Scripting
-
-<details>
-<summary>📋 Chi tiết đã làm — P3 Sprint 1 by Contributor #2 (2026-02-27)</summary>
-
-> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
-> P3 Sprint 1: Python Scripting API (Mục 9.1) — Automation SDK
-
-**Đã làm:**
-
-| # | Task | Score | Chi tiết |
-|---|------|-------|----------|
-| 1 | ✅ SDK Core Classes | 10/10 | `backend/animestudio/builder.py` — `Project`, `CharacterTrack`, `ActionBlock`, `Keyframe` dataclasses với Builder Pattern (add_track, add_keyframe, add_action). |
-| 2 | ✅ DB Integration | 10/10 | `save_to_db()` dump JSON chuẩn camelCase → insert/update `Project.data` qua SQLAlchemy. |
-| 3 | ✅ PoC Script | 10/10 | `scripts/generate_scene.py` — tạo project "Auto Generated Episode 1" với hero X:100→800 easeIn→easeOut, lưu DB thành công. |
-
-**Files đã tạo:**
-- `backend/animestudio/__init__.py` [NEW]
-- `backend/animestudio/builder.py` [NEW] — SDK core
-- `scripts/generate_scene.py` [NEW] — PoC script
-
-**Verification:** `python scripts/generate_scene.py` → ✅ SUCCESS
-
-</details>
 | 🟣 P3 | Automation & Scripting API | 1–2 tháng |
 | 🔵 P4 | Collaboration, Cloud | 3–4 tháng |
 | ⚙️ P5 | Testing, DevOps | ongoing |
 | 🎨 P6 | AI, Audio, Anime Features | 6+ tháng |
+
+---
 
 ---
 
