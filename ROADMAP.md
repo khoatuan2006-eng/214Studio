@@ -28,12 +28,70 @@
 
 > **Nhận xét từ Tech Lead:** "Hệ thống vỡ vụn từ bên trong. Zustand đang gánh quá nhiều, Data đang quá sâu, và Undo/Redo tốn quá nhiều RAM. Dừng vẽ feature mới, quay lại sửa móng ngay lập tức!"
 
-| # | Việc cần làm (Refactor) | Độ phức tạp |
+| # | Việc cần làm (Refactor) | Trạng thái |
 |---|---|---|
-| 0.1 | **Tách Transient State khỏi Zustand**: Dời toàn bộ trạng thái UI (Mouse Position, isPlaying, hover state, selection) sang cơ chế phi-Render (như Valtio, Jotai, hoặc RxJS). Zustand `useAppStore` CHỈ LƯU Timeline Data (`editorData`). Cấm Zustand re-render 60fps khi play! | 🔴 Cực cao |
-| 0.2 | **Normalize `editorData`**: Chuyển cấu trúc lồng nhau (Array of Array) thành Flat Dictionary/Normalized Map (`tracks: {id: ...}`, `actions: {id: ...}`). Tra cứu O(1) bằng ID thay vì `find()` mỗi render. | 🔴 Cực cao |
-| 0.3 | **Command Pattern Undo/Redo**: Vứt bỏ middleware lưu toàn bộ snapshot. Viết Custom Command Pattern. Lưu Delta/Patch (sự thay đổi) cho mỗi action (thêm/xóa/sửa). Giảm 99% RAM cho Undo Stack. | 🔴 Cao |
-| 0.4 | **Đẩy Logic về Backend**: Frontend không tự lo check trùng asset hash hay tính toán save data nữa. Gửi payload "Cần tạo action X", Server tính toán và trả về State chuẩn nhất. | 🟡 Trung bình |
+| 0.1 | **Tách Transient State khỏi Zustand** | ✅ **HOÀN THÀNH** (Tech Lead: 9/10) |
+| 0.2 | **Normalize `editorData`** | ⚠️ Infrastructure only — chưa integrate |
+| 0.3 | **Command Pattern Undo/Redo** | ⚠️ Hook wired nhưng không có command nào được push |
+| 0.4 | **Đẩy Logic về Backend** | ❌ Chưa bắt đầu |
+
+---
+
+### ✅ 0.1 — Tách Transient State (DONE — Tech Lead Approved 9/10)
+
+> 🦅 **TECH LEAD VERDICT:** Tôi grep cả codebase. `useTransientSnapshot()` THỰC SỰ được import ở **5 consumer files**: `StudioMode.tsx`, `use-editor.ts`, `timeline/index.tsx`, `timeline-toolbar.tsx`, và re-export qua `useAppStore.ts`. `temporal()` middleware đã bị XÓA SẠCH khỏi `useAppStore`. Animation loop 60fps giờ chỉ re-render `PlayheadTimeDisplay`, KHÔNG re-render toàn bộ tree nữa.
+> 
+> **Score: 9/10.** Đúng như tự đánh giá. Mục này có thể xóa ở sprint sau khi đã stable 2 tuần.
+
+**Còn lại cần làm:**
+- Selection state (`selectedElements`) vẫn dùng module-level variable trong `use-editor.ts` — nên chuyển sang Valtio để consistency.
+
+---
+
+### ⚠️ 0.2 — Normalize `editorData` (Infrastructure Only — Tech Lead: 3/10)
+
+> 🦅 **TECH LEAD REVIEW:** Lại dính bài cũ rồi các bạn ơi! Viết framework xong rồi... bỏ đó.
+> 
+> **Bằng chứng từ codebase:**
+> - `useEditorDataStore` — **KHÔNG ĐƯỢC IMPORT Ở BẤT CỨ ĐÂU** ngoài file khai báo.
+> - `startEditorDataSync()` — **KHÔNG ĐƯỢC GỌI Ở BẤT CỨ ĐÂU**. Không có file nào gọi hàm này. Sync engine BẤT HOẠT. Normalized store mãi mãi rỗng.
+> - `use-editor.ts` vẫn dùng `.find()` truyền thống trên mảng lồng nhau. O(N) lookup y hệ cũ.
+> 
+> **Tự chấm 8/10 khi chưa có consumer nào dùng = ảo.**
+> **Score thực tế: 3/10** (Code chất lượng tốt nhưng là dead code 100%).
+>
+> **Việc cần làm để đạt 8/10 thật:**
+> 1. Gọi `startEditorDataSync()` trong `App.tsx` hoặc `main.tsx` khi mount.
+> 2. Chuyển **ít nhất** `use-editor.ts` → dùng `useEditorDataStore.getTrack()` thay vì `editorData.find()`.
+> 3. Chuyển `StudioMode.tsx` render loop → đọc từ normalized store thay vì raw `editorData`.
+
+---
+
+### ⚠️ 0.3 — Command Pattern Undo/Redo (Skeleton Only — Tech Lead: 4/10)
+
+> 🦅 **TECH LEAD REVIEW:** Framework tuyệt đẹp. 9 command factories viết sạch sẽ. `useSyncExternalStore` cho reactive undo/redo badges — giỏi. NHƯNG:
+> 
+> **Bằng chứng từ codebase:**
+> - `commandHistory.execute()` — **KHÔNG ĐƯỢC GỌI Ở BẤT CỨ ĐÂU** ngoài `useUndoRedo.ts` (chỉ expose, không ai gọi).
+> - `useUndoRedo()` có đăng ký Ctrl+Z → nhưng `commandHistory.undo()` fire vào... **STACK RỖNG**. Không bao giờ có command nào được push vào stack!
+> - `use-editor.ts` (nơi mutations thực sự xảy ra: moveElement, splitElement, resize, addKeyframe...) — **KHÔNG IMPORT `commandHistory`** hay bất cứ command factory nào.
+> - Nghĩa là: User nhấn Ctrl+Z → Không gì xảy ra. Undo "không lỗi" nhưng cũng "không làm gì".
+> 
+> **Tự chấm 8/10 khi undo hoàn toàn bất hoạt trên UI = ảo.**
+> **Score thực tế: 4/10** (Infrastructure excellent, integration = zero).
+> 
+> **Việc cần làm để đạt 8/10 thật:**
+> 1. Trong `use-editor.ts`, wrap MỌI mutation (moveElement, resizeElement, addAction, deleteAction, addKeyframe...) bằng `commandHistory.execute(createXxxCommand(...))`.
+> 2. Test thủ công: kéo keyframe → Ctrl+Z → keyframe phải quay lại vị trí cũ.
+> 3. Xóa `zundo` khỏi `package.json` dependencies (đã remove code nhưng chưa remove package).
+
+---
+
+### ❌ 0.4 — Đẩy Logic về Backend (Chưa bắt đầu)
+
+| Việc cần làm | Độ phức tạp |
+|---|---|
+| Frontend không tự lo check trùng asset hash hay tính toán save data nữa. Gửi payload "Cần tạo action X", Server tính toán và trả về State chuẩn nhất. | 🟡 Trung bình |
 
 ---
 
