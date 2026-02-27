@@ -5,6 +5,7 @@ import { useEditor } from "@/hooks/use-editor";
 import { getRulerConfig, shouldShowLabel } from "@/lib/timeline/ruler-utils";
 import { useScrollPosition } from "@/hooks/timeline/use-scroll-position";
 import { TimelineTick } from "./timeline-tick";
+import { useTimelineStore, getDynamicDuration } from "@/stores/timeline-store";
 
 interface TimelineRulerProps {
 	zoomLevel: number;
@@ -43,6 +44,13 @@ export function TimelineRuler({
 	const { scrollLeft, viewportWidth } = useScrollPosition({
 		scrollRef: tracksScrollRef,
 	});
+
+	// P1 3.9: In/Out Points overlay
+	const inPoint = useTimelineStore(s => s.inPoint);
+	const outPoint = useTimelineStore(s => s.outPoint);
+	const dynamicDuration = getDynamicDuration();
+	const effectiveOutPoint = outPoint ?? dynamicDuration;
+	const hasInOut = inPoint > 0 || outPoint !== null;
 
 	/**
 	 * widens the virtualization buffer during zoom transitions.
@@ -96,6 +104,10 @@ export function TimelineRuler({
 		);
 	}
 
+	// In/Out Points pixel positions
+	const inPointPx = inPoint * pixelsPerSecond;
+	const outPointPx = effectiveOutPoint * pixelsPerSecond;
+
 	return (
 		<div
 			role="slider"
@@ -108,7 +120,7 @@ export function TimelineRuler({
 			onWheel={handleWheel}
 			onClick={handleTimelineContentClick}
 			onMouseDown={handleRulerTrackingMouseDown}
-			onKeyDown={() => {}}
+			onKeyDown={() => { }}
 		>
 			<div
 				role="none"
@@ -119,6 +131,42 @@ export function TimelineRuler({
 				}}
 				onMouseDown={handleRulerMouseDown}
 			>
+				{/* P1 3.9: In/Out Points Highlight Overlay */}
+				{hasInOut && (
+					<>
+						{/* Grey zone BEFORE inPoint */}
+						{inPoint > 0 && (
+							<div
+								className="absolute top-0 bottom-0 pointer-events-none z-[1]"
+								style={{
+									left: 0,
+									width: `${inPointPx}px`,
+									background: 'rgba(0, 0, 0, 0.35)',
+								}}
+							/>
+						)}
+						{/* Active In/Out zone highlight */}
+						<div
+							className="absolute top-0 bottom-0 pointer-events-none z-[1]"
+							style={{
+								left: `${inPointPx}px`,
+								width: `${Math.max(0, outPointPx - inPointPx)}px`,
+								background: 'rgba(56, 189, 248, 0.08)',
+								borderLeft: '2px solid rgba(56, 189, 248, 0.7)',
+								borderRight: '2px solid rgba(56, 189, 248, 0.7)',
+							}}
+						/>
+						{/* Grey zone AFTER outPoint */}
+						<div
+							className="absolute top-0 bottom-0 pointer-events-none z-[1]"
+							style={{
+								left: `${outPointPx}px`,
+								right: 0,
+								background: 'rgba(0, 0, 0, 0.35)',
+							}}
+						/>
+					</>
+				)}
 				{timelineTicks}
 			</div>
 		</div>

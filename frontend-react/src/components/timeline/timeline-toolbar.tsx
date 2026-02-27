@@ -35,6 +35,7 @@ import {
 	AlignLeftIcon,
 	AlignRightIcon,
 	Layers01Icon,
+	RecordIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
@@ -80,6 +81,8 @@ function ToolbarLeftSection() {
 	const editor = useEditor();
 	const currentTime = editor.playback.getCurrentTime();
 	const currentBookmarked = editor.scenes.isBookmarked({ time: currentTime });
+	const isAutoKeyframeEnabled = useAppStore(s => s.isAutoKeyframeEnabled);
+	const toggleAutoKeyframe = useAppStore(s => s.toggleAutoKeyframe);
 
 	const handleAction = ({
 		action,
@@ -237,6 +240,17 @@ function ToolbarLeftSection() {
 
 				<Tooltip>
 					<ToolbarButton
+						icon={<HugeiconsIcon icon={RecordIcon} className={isAutoKeyframeEnabled ? "text-red-500 fill-red-500 animate-pulse" : ""} />}
+						isActive={isAutoKeyframeEnabled}
+						tooltip={isAutoKeyframeEnabled ? "Disable Auto-Keyframe" : "Enable Auto-Keyframe"}
+						onClick={() => toggleAutoKeyframe()}
+					/>
+				</Tooltip>
+
+				<div className="bg-border mx-1 h-6 w-px" />
+
+				<Tooltip>
+					<ToolbarButton
 						icon={<HugeiconsIcon icon={Bookmark02Icon} />}
 						isActive={currentBookmarked}
 						tooltip={currentBookmarked ? "Remove bookmark" : "Add bookmark"}
@@ -283,9 +297,13 @@ function ToolbarRightSection({
 	const {
 		snappingEnabled,
 		rippleEditingEnabled,
+		loopMode,
 		toggleSnapping,
 		toggleRippleEditing,
+		cycleLoopMode,
 	} = useTimelineStore();
+
+	const loopTooltip = loopMode === "off" ? "Loop: OFF" : loopMode === "loopAll" ? "Loop: ALL" : "Loop: IN↔OUT";
 
 	return (
 		<div className="flex items-center gap-1">
@@ -302,6 +320,20 @@ function ToolbarRightSection({
 					isActive={rippleEditingEnabled}
 					tooltip="Ripple editing"
 					onClick={() => toggleRippleEditing()}
+				/>
+
+				<ToolbarButton
+					icon={
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+							<polyline points="17 1 21 5 17 9" />
+							<path d="M3 11V9a4 4 0 0 1 4-4h14" />
+							<polyline points="7 23 3 19 7 15" />
+							<path d="M21 13v2a4 4 0 0 1-4 4H3" />
+						</svg>
+					}
+					isActive={loopMode !== "off"}
+					tooltip={loopTooltip}
+					onClick={() => cycleLoopMode()}
 				/>
 			</TooltipProvider>
 

@@ -111,15 +111,6 @@ export function useEditor() {
         } else {
             // Main Scene Context (Compound View)
             editorData.forEach(row => {
-                // Unify keyframes for parent track from all properties
-                const uniqueTimes = new Set<number>();
-                (['x', 'y', 'scale', 'rotation', 'opacity'] as const).forEach(prop => {
-                    row.transform[prop].forEach(k => uniqueTimes.add(k.time));
-                });
-                const unifiedKeyframes = Array.from(uniqueTimes)
-                    .sort((a, b) => a - b)
-                    .map(time => ({ time }));
-
                 let minStart = Infinity;
                 let maxEnd = 0;
                 row.actions.forEach(a => {
@@ -128,6 +119,7 @@ export function useEditor() {
                 });
                 if (minStart === Infinity) minStart = 0;
 
+                // Main Track keeps the Actions, but Keyframes belong to sub-tracks
                 const parentTrack: TimelineTrack = {
                     id: row.id,
                     name: row.name || `Data ${row.id}`,
@@ -135,7 +127,7 @@ export function useEditor() {
                     hidden: false,
                     isMain: false,
                     muted: false,
-                    keyframes: unifiedKeyframes,
+                    keyframes: [], // Extracted to property tracks
                     elements: row.actions.length === 0 ? [] : [{
                         id: row.id + "_compound", // Special ID for compound Dragging
                         name: row.name || `Data ${row.id}`,
@@ -148,10 +140,27 @@ export function useEditor() {
                         transform: { x: 0, y: 0, scale: 1, rotation: 0 },
                         opacity: 100,
                         hidden: false,
-                        keyframes: unifiedKeyframes
+                        keyframes: []
                     }] as VideoElement[],
                 };
                 tracks.push(parentTrack);
+
+                // If expanded, inject the 5 property tracks right below it
+                if (row.isExpanded) {
+                    const props = ['x', 'y', 'scale', 'rotation', 'opacity'] as const;
+                    props.forEach(prop => {
+                        const capitalized = prop.charAt(0).toUpperCase() + prop.slice(1);
+                        tracks.push({
+                            id: `${row.id}_${prop}`,
+                            name: capitalized,
+                            type: "property",
+                            targetProperty: prop,
+                            parentId: row.id,
+                            keyframes: row.transform[prop],
+                            elements: []
+                        } as any);
+                    });
+                }
             });
         }
 

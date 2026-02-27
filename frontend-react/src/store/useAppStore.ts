@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { temporal } from 'zundo';
 import axios from 'axios';
+import { API_BASE, STATIC_BASE } from '@/config/api';
 
-export const API_BASE = 'http://localhost:8001/api';
-export const STATIC_BASE = 'http://localhost:8001/static';
+// Re-export for backward compatibility (other files import these from useAppStore)
+export { API_BASE, STATIC_BASE };
 
 export interface CharacterAsset {
     name: string;
@@ -51,7 +52,7 @@ export interface ActionBlock {
     locked?: boolean;
 }
 
-export type EasingType = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';
+export type EasingType = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'step';
 
 export interface TimelineKeyframe {
     time: number;
@@ -69,11 +70,14 @@ export interface TransformData {
     anchorY: TimelineKeyframe[];
 }
 
+export type BlendMode = "source-over" | "multiply" | "screen" | "overlay" | "darken" | "lighten";
+
 export interface CharacterTrack {
     id: string;
     name: string;
     characterId?: string;
     transform: TransformData;
+    blendMode?: BlendMode;
     actions: ActionBlock[];
     isExpanded?: boolean;
 }
@@ -89,10 +93,13 @@ interface AppState {
     // Studio Layout State
     editorData: CharacterTrack[];
     setEditorData: (data: CharacterTrack[] | ((prev: CharacterTrack[]) => CharacterTrack[])) => void;
+    toggleTrackExpanded: (trackId: string) => void;
     cursorTime: number;
     setCursorTime: (time: number | ((prev: number) => number)) => void;
     isScrubbing: boolean;
     setIsScrubbing: (isScrubbing: boolean) => void;
+    isAutoKeyframeEnabled: boolean;
+    toggleAutoKeyframe: () => void;
 
     // "Chia để trị" - Character Edit Mode Context
     activeEditTargetId: string | null;
@@ -110,12 +117,19 @@ export const useAppStore = create<AppState>()(
             setEditorData: (data) => set((state) => ({
                 editorData: typeof data === 'function' ? data(state.editorData) : data
             })),
+            toggleTrackExpanded: (trackId) => set((state) => ({
+                editorData: state.editorData.map(row =>
+                    row.id === trackId ? { ...row, isExpanded: !row.isExpanded } : row
+                )
+            })),
             cursorTime: 0,
             setCursorTime: (time) => set((state) => ({
                 cursorTime: typeof time === 'function' ? time(state.cursorTime) : time
             })),
             isScrubbing: false,
             setIsScrubbing: (isScrubbing) => set({ isScrubbing }),
+            isAutoKeyframeEnabled: false,
+            toggleAutoKeyframe: () => set(state => ({ isAutoKeyframeEnabled: !state.isAutoKeyframeEnabled })),
             activeEditTargetId: null,
             setActiveEditTargetId: (id) => set({ activeEditTargetId: id }),
 

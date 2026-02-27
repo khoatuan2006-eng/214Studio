@@ -2,10 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAppStore, STATIC_BASE, getAssetPath } from '../store/useAppStore';
 import { useEditor } from '../hooks/use-editor';
 import { setDragData } from '../lib/drag-data';
-import type { ActionBlock, TimelineKeyframe, EasingType, CharacterTrack } from '../store/useAppStore';
+import { useTimelineStore, getDynamicDuration, getEffectiveOutPoint } from '../stores/timeline-store';
+import type { ActionBlock, EasingType, CharacterTrack } from '../store/useAppStore';
 import { Timeline as TimelinePanel } from './timeline';
 import { Stage, Layer, Image as KonvaImageRect, Rect, Group, Text, Transformer, Circle, Line } from 'react-konva';
-import { Play, Pause, Plus, MousePointer2, Eye, EyeOff, Trash2, Edit, ChevronLeft, Lock, Unlock } from 'lucide-react';
+import { Play, Pause, Plus, MousePointer2, Eye, EyeOff, Trash2, Edit, ChevronLeft, Lock, Unlock, Film, X, Download } from 'lucide-react';
+import { getInterpolatedValue, EASING_OPTIONS } from '../utils/easing';
+import type { BlendMode } from '../store/useAppStore';
+import { exportVideo } from '../utils/exporter';
+import type { ExportProgress } from '../utils/exporter';
 
 // Custom hook to load images for Konva
 const useKonvaImage = (url: string) => {
@@ -131,38 +136,9 @@ const CanvasAsset = React.forwardRef<any, { assetHash: string; zIndex: number; o
 });
 CanvasAsset.displayName = 'CanvasAsset';
 
-// --- Math Helpers ---
-const applyEasing = (progress: number, type?: EasingType): number => {
-    switch (type) {
-        case 'easeIn': return progress * progress * progress;
-        case 'easeOut': return 1 - Math.pow(1 - progress, 3);
-        case 'easeInOut': return progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-        case 'linear':
-        default: return progress;
-    }
-};
+// Easing math now imported from '@/utils/easing'
 
-const getInterpolatedValue = (keyframes: TimelineKeyframe[], time: number, defaultValue: number): number => {
-    if (!keyframes || keyframes.length === 0) return defaultValue;
-
-    const sorted = [...keyframes].sort((a, b) => a.time - b.time);
-    if (time <= sorted[0].time) return sorted[0].value;
-    if (time >= sorted[sorted.length - 1].time) return sorted[sorted.length - 1].value;
-
-    for (let i = 0; i < sorted.length - 1; i++) {
-        if (time >= sorted[i].time && time <= sorted[i + 1].time) {
-            const k1 = sorted[i];
-            const k2 = sorted[i + 1];
-            const tRange = k2.time - k1.time;
-            if (tRange === 0) return k1.value;
-
-            let progress = (time - k1.time) / tRange;
-            progress = applyEasing(progress, k1.easing);
-            return k1.value + (k2.value - k1.value) * progress;
-        }
-    }
-    return defaultValue;
-};
+// getInterpolatedValue now imported from '@/utils/easing'
 
 // Quick standalone component that subscribes to time rapidly
 const PlayheadTimeDisplay = () => {
@@ -248,6 +224,13 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
         }
     };
 
+    const handleBlendModeChange = (blendMode: BlendMode) => {
+        setEditorData(prev => prev.map(row => {
+            if (row.id !== selectedRowId) return row;
+            return { ...row, blendMode };
+        }));
+    };
+
     const toggleLayerVisibility = (rowId: string, actionId: string) => {
         setEditorData(prev => prev.map(r => r.id === rowId ? {
             ...r,
@@ -312,10 +295,9 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                                         onChange={(e) => handlePropertyChange('easing', e.target.value as EasingType)}
                                         className="w-full bg-neutral-800 border border-neutral-700 rounded p-1.5 text-sm outline-none focus:border-indigo-500 text-neutral-200"
                                     >
-                                        <option value="linear">Linear (Constant Speed)</option>
-                                        <option value="easeIn">Ease In (Accelerate)</option>
-                                        <option value="easeOut">Ease Out (Decelerate)</option>
-                                        <option value="easeInOut">Ease In & Out (Smooth)</option>
+                                        {EASING_OPTIONS.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <PropertyInput
@@ -373,6 +355,21 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
 
                         {inspectorTab === 'settings' && (
                             <div className="space-y-4">
+                                <div className="space-y-2 mb-6">
+                                    <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Blend Mode</h4>
+                                    <select
+                                        value={selectedRow.blendMode || "source-over"}
+                                        onChange={(e) => handleBlendModeChange(e.target.value as BlendMode)}
+                                        className="w-full bg-neutral-800 border border-neutral-700 rounded p-1.5 text-sm outline-none focus:border-indigo-500 text-neutral-200"
+                                    >
+                                        <option value="source-over">Normal</option>
+                                        <option value="multiply">Multiply</option>
+                                        <option value="screen">Screen</option>
+                                        <option value="overlay">Overlay</option>
+                                        <option value="darken">Darken</option>
+                                        <option value="lighten">Lighten</option>
+                                    </select>
+                                </div>
                                 <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Layer Tree</h4>
                                 {selectedRow.actions.length === 0 ? (
                                     <div className="text-xs text-neutral-500 italic p-3 bg-neutral-800/50 rounded-md">
@@ -518,6 +515,49 @@ const StudioMode = () => {
             }
 
             if (e.ctrlKey || e.metaKey) {
+                // P1 4.4: Keyframe Copy/Paste (Ctrl+Shift+C / Ctrl+Shift+V)
+                if (e.key.toLowerCase() === 'c' && e.shiftKey && selectedRowId) {
+                    e.preventDefault();
+                    const ct = useAppStore.getState().cursorTime;
+                    const row = useAppStore.getState().editorData.find(r => r.id === selectedRowId);
+                    if (row) {
+                        const props = ['x', 'y', 'scale', 'rotation', 'opacity', 'anchorX', 'anchorY'] as const;
+                        const clipboard = props.map(p => ({
+                            trackId: selectedRowId,
+                            property: p,
+                            value: getInterpolatedValue(row.transform[p], ct,
+                                p === 'x' ? LOGICAL_WIDTH / 2 : p === 'y' ? LOGICAL_HEIGHT / 2 :
+                                    p === 'scale' ? 1 : p === 'opacity' ? 100 : 0)
+                        }));
+                        useTimelineStore.getState().setKeyframeClipboard(clipboard);
+                    }
+                    return;
+                }
+                if (e.key.toLowerCase() === 'v' && e.shiftKey && selectedRowId) {
+                    e.preventDefault();
+                    const kfClipboard = useTimelineStore.getState().keyframeClipboard;
+                    if (!kfClipboard || kfClipboard.length === 0) return;
+                    const ct = useAppStore.getState().cursorTime;
+                    setEditorData(prev => prev.map(row => {
+                        if (row.id !== selectedRowId) return row;
+                        const newTransform = { ...row.transform };
+                        kfClipboard.forEach(kf => {
+                            const prop = kf.property as keyof typeof newTransform;
+                            const keys = [...newTransform[prop]];
+                            const existingIdx = keys.findIndex(k => Math.abs(k.time - ct) < 0.05);
+                            if (existingIdx >= 0) {
+                                keys[existingIdx] = { ...keys[existingIdx], value: kf.value };
+                            } else {
+                                keys.push({ time: ct, value: kf.value, easing: 'linear' });
+                            }
+                            keys.sort((a, b) => a.time - b.time);
+                            newTransform[prop] = keys;
+                        });
+                        return { ...row, transform: newTransform };
+                    }));
+                    return;
+                }
+
                 if (e.key === 'z') {
                     if (e.shiftKey) {
                         e.preventDefault();
@@ -564,6 +604,23 @@ const StudioMode = () => {
     const groupRefs = useRef<{ [key: string]: any }>({});
     const assetRefs = useRef<{ [key: string]: any }>({});
     const anchorRefs = useRef<{ [key: string]: any }>({});
+    const stageRef = useRef<any>(null);
+
+    // Export State
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportProgress, setExportProgress] = useState<ExportProgress>({
+        status: 'idle', currentFrame: 0, totalFrames: 0, message: ''
+    });
+
+    const handleExportVideo = async () => {
+        setShowExportModal(true);
+        const duration = getDynamicDuration();
+        const fps = 30;
+        setExportProgress({ status: 'extracting', currentFrame: 0, totalFrames: Math.ceil(duration * fps), message: 'Starting...' });
+        await exportVideo(duration, fps, stageRef, (progress) => {
+            setExportProgress(progress);
+        });
+    };
 
     useEffect(() => {
         const updateScale = () => {
@@ -578,7 +635,7 @@ const StudioMode = () => {
         return () => window.removeEventListener('resize', updateScale);
     }, []);
 
-    // Animation Loop for Playback
+    // P1 3.11 + 3.9: Animation Loop with Dynamic Duration + In/Out Points
     useEffect(() => {
         let animationFrameId: number;
         let lastTime = performance.now();
@@ -586,9 +643,27 @@ const StudioMode = () => {
         const loop = (time: number) => {
             if (isPlaying) {
                 const delta = (time - lastTime) / 1000;
+                const { loopMode, inPoint } = useTimelineStore.getState();
+                const effectiveOut = getEffectiveOutPoint();
+                const maxDuration = getDynamicDuration();
+
                 useAppStore.getState().setCursorTime(prev => {
                     const next = prev + delta;
-                    return next > 30 ? 0 : next;
+
+                    if (loopMode === 'loopAll') {
+                        // Loop entire timeline: 0 ↔ maxDuration
+                        return next > maxDuration ? 0 : next;
+                    } else if (loopMode === 'loopSelection') {
+                        // Loop In/Out region: inPoint ↔ outPoint
+                        return next > effectiveOut ? inPoint : next;
+                    } else {
+                        // Off: pause at outPoint
+                        if (next > effectiveOut) {
+                            setIsPlaying(false);
+                            return effectiveOut;
+                        }
+                        return next;
+                    }
                 });
             }
             lastTime = time;
@@ -767,7 +842,7 @@ const StudioMode = () => {
     };
 
     const handleTransformEnd = (charId: string, node: any) => {
-        const cursorTime = useAppStore.getState().cursorTime;
+        const { cursorTime, isAutoKeyframeEnabled } = useAppStore.getState();
         setEditorData(prev => prev.map(row => {
             if (row.id !== charId) return row;
             const newTransform = { ...row.transform };
@@ -781,12 +856,37 @@ const StudioMode = () => {
 
             updates.forEach(({ prop, value }) => {
                 const keys = [...newTransform[prop as keyof typeof newTransform]];
-                const existingIdx = keys.findIndex(k => Math.abs(k.time - cursorTime) < 0.05);
-                if (existingIdx >= 0) {
-                    keys[existingIdx] = { ...keys[existingIdx], value };
+
+                if (cursorTime === 0) {
+                    // At time 0, always just update the base keyframe (time 0)
+                    const existingIdx = keys.findIndex(k => k.time === 0);
+                    if (existingIdx >= 0) {
+                        keys[existingIdx] = { ...keys[existingIdx], value };
+                    } else {
+                        keys.push({ time: 0, value, easing: 'linear' });
+                    }
                 } else {
-                    keys.push({ time: cursorTime, value, easing: 'linear' });
+                    // Time > 0
+                    const existingIdx = keys.findIndex(k => Math.abs(k.time - cursorTime) < 0.05);
+                    if (existingIdx >= 0) {
+                        // Overwrite existing keyframe at this time
+                        keys[existingIdx] = { ...keys[existingIdx], value };
+                    } else if (isAutoKeyframeEnabled) {
+                        // Auto-create new keyframe because Auto-Keyframe is ON
+                        keys.push({ time: cursorTime, value, easing: 'linear' });
+                    } else {
+                        // Auto-Keyframe is OFF, update base keyframe instead of creating a new one
+                        const baseIdx = keys.findIndex(k => k.time === 0);
+                        if (baseIdx >= 0) {
+                            // Determine delta logic or just set base? 
+                            // Software like capcut just sets the base value if you move it without keyframe
+                            keys[baseIdx] = { ...keys[baseIdx], value };
+                        } else {
+                            keys.push({ time: 0, value, easing: 'linear' });
+                        }
+                    }
                 }
+
                 keys.sort((a, b) => a.time - b.time);
                 newTransform[prop as keyof typeof newTransform] = keys;
             });
@@ -797,7 +897,7 @@ const StudioMode = () => {
 
     const transientHandlePropertyChange = (property: 'x' | 'y' | 'scale' | 'rotation' | 'opacity' | 'anchorX' | 'anchorY', value: number) => {
         if (!selectedRowId) return;
-        const cursorTime = useAppStore.getState().cursorTime;
+        const { cursorTime, isAutoKeyframeEnabled } = useAppStore.getState();
         // Optimization: during continuous drag, this invokes Zustand update. 
         // We might want to throttle this or only resolve onDragEnd if it gets heavy,
         // but it's handled via DragEnd/TransformEnd already! So this is just a setter.
@@ -805,12 +905,22 @@ const StudioMode = () => {
             if (row.id !== selectedRowId) return row;
             const newTransform = { ...row.transform };
             const keys = [...newTransform[property as keyof typeof newTransform]];
-            const existingIdx = keys.findIndex(k => Math.abs(k.time - cursorTime) < 0.05);
 
-            if (existingIdx >= 0) {
-                keys[existingIdx] = { ...keys[existingIdx], value };
+            if (cursorTime === 0) {
+                const existingIdx = keys.findIndex(k => k.time === 0);
+                if (existingIdx >= 0) keys[existingIdx] = { ...keys[existingIdx], value };
+                else keys.push({ time: 0, value, easing: 'linear' });
             } else {
-                keys.push({ time: cursorTime, value, easing: 'linear' });
+                const existingIdx = keys.findIndex(k => Math.abs(k.time - cursorTime) < 0.05);
+                if (existingIdx >= 0) {
+                    keys[existingIdx] = { ...keys[existingIdx], value };
+                } else if (isAutoKeyframeEnabled) {
+                    keys.push({ time: cursorTime, value, easing: 'linear' });
+                } else {
+                    const baseIdx = keys.findIndex(k => k.time === 0);
+                    if (baseIdx >= 0) keys[baseIdx] = { ...keys[baseIdx], value };
+                    else keys.push({ time: 0, value, easing: 'linear' });
+                }
             }
 
             keys.sort((a, b) => a.time - b.time);
@@ -1042,8 +1152,17 @@ const StudioMode = () => {
                                     Reset View
                                 </button>
                             </div>
-                            <div className="text-sm text-neutral-400 font-mono">
-                                Logical: 1920x1080 | Zoom: {(zoomScale * 100).toFixed(0)}%
+                            <div className="flex items-center gap-3">
+                                <div className="text-sm text-neutral-400 font-mono">
+                                    Logical: 1920x1080 | Zoom: {(zoomScale * 100).toFixed(0)}%
+                                </div>
+                                <button
+                                    onClick={handleExportVideo}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-lg text-white text-xs font-semibold transition-all shadow-lg shadow-indigo-500/20"
+                                >
+                                    <Film className="w-3.5 h-3.5" />
+                                    Export MP4
+                                </button>
                             </div>
                         </div>
                     )}
@@ -1059,6 +1178,7 @@ const StudioMode = () => {
                                 }}
                             >
                                 <Stage
+                                    ref={stageRef}
                                     width={LOGICAL_WIDTH * canvasScale}
                                     height={LOGICAL_HEIGHT * canvasScale}
                                     onWheel={(e: any) => {
@@ -1132,6 +1252,7 @@ const StudioMode = () => {
                                                 ref={(node) => { if (node) groupRefs.current[char.id] = node; }}
                                                 name="character-group"
                                                 draggable={true}
+                                                globalCompositeOperation={char.blendMode || 'source-over'}
                                                 onClick={(e) => {
                                                     e.cancelBubble = true;
                                                     setSelectedRowId(char.id);
@@ -1274,7 +1395,77 @@ const StudioMode = () => {
                 </div>
             </div>
 
-        </div >
+            {/* Export Modal */}
+            {showExportModal && (
+                <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center backdrop-blur-sm">
+                    <div className="bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl p-8 w-[480px] max-w-[90vw]">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Film className="w-5 h-5 text-indigo-400" />
+                                Export Video
+                            </h2>
+                            {(exportProgress.status === 'done' || exportProgress.status === 'error' || exportProgress.status === 'idle') && (
+                                <button
+                                    onClick={() => { setShowExportModal(false); setExportProgress({ status: 'idle', currentFrame: 0, totalFrames: 0, message: '' }); }}
+                                    className="p-1.5 hover:bg-neutral-700 rounded-lg transition-colors text-neutral-400"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                {exportProgress.status === 'extracting' && (
+                                    <div className="w-3 h-3 rounded-full bg-amber-400 animate-pulse" />
+                                )}
+                                {exportProgress.status === 'uploading' && (
+                                    <div className="w-3 h-3 rounded-full bg-blue-400 animate-pulse" />
+                                )}
+                                {exportProgress.status === 'rendering' && (
+                                    <div className="w-3 h-3 rounded-full bg-purple-400 animate-pulse" />
+                                )}
+                                {exportProgress.status === 'done' && (
+                                    <div className="w-3 h-3 rounded-full bg-green-400" />
+                                )}
+                                {exportProgress.status === 'error' && (
+                                    <div className="w-3 h-3 rounded-full bg-red-400" />
+                                )}
+                                <span className="text-sm text-neutral-300">{exportProgress.message}</span>
+                            </div>
+                            {exportProgress.status === 'extracting' && exportProgress.totalFrames > 0 && (
+                                <div className="space-y-2">
+                                    <div className="w-full bg-neutral-800 rounded-full h-3 overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-150 rounded-full"
+                                            style={{ width: `${(exportProgress.currentFrame / exportProgress.totalFrames) * 100}%` }}
+                                        />
+                                    </div>
+                                    <div className="text-xs text-neutral-500 text-right">
+                                        {exportProgress.currentFrame} / {exportProgress.totalFrames} frames
+                                    </div>
+                                </div>
+                            )}
+                            {(exportProgress.status === 'uploading' || exportProgress.status === 'rendering') && (
+                                <div className="w-full bg-neutral-800 rounded-full h-3 overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 animate-pulse rounded-full" style={{ width: '100%' }} />
+                                </div>
+                            )}
+                            {exportProgress.status === 'done' && (
+                                <div className="flex items-center gap-2 text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                                    <Download className="w-4 h-4" />
+                                    <span className="text-sm">Your MP4 has been downloaded successfully!</span>
+                                </div>
+                            )}
+                            {exportProgress.status === 'error' && (
+                                <div className="text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm">
+                                    {exportProgress.message}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

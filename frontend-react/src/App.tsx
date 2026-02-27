@@ -1,15 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Palette, Shirt, Video, Menu } from 'lucide-react';
 import BaseMode from './components/BaseMode';
 import DressingRoomMode from './components/DressingRoomMode';
 import { StudioErrorBoundary } from './components/StudioErrorBoundary';
 import StudioMode from './components/StudioMode';
+import ProjectManager from './components/ProjectManager';
+import { useProjectStore } from './store/useProjectStore';
+import { useAppStore } from './store/useAppStore';
 
 type Tab = 'base' | 'dressing' | 'studio';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('base'); // Start on base mode for now
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { currentProject, startAutoSave, stopAutoSave, markDirty } = useProjectStore();
+
+  // Start auto-save when a project is loaded
+  useEffect(() => {
+    if (currentProject) {
+      startAutoSave(() => {
+        const editorData = useAppStore.getState().editorData;
+        return { editorData };
+      });
+      return () => stopAutoSave();
+    }
+  }, [currentProject?.id]);
+
+  // Mark project dirty when editorData changes
+  useEffect(() => {
+    let prevEditorData = useAppStore.getState().editorData;
+    const unsubscribe = useAppStore.subscribe((state) => {
+      if (state.editorData !== prevEditorData) {
+        prevEditorData = state.editorData;
+        if (currentProject) markDirty();
+      }
+    });
+    return unsubscribe;
+  }, [currentProject?.id]);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-neutral-900 text-neutral-100 font-sans">
@@ -67,6 +94,9 @@ function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 min-h-0 flex flex-col relative overflow-hidden bg-neutral-900">
+        {/* Project Header Bar */}
+        <ProjectManager />
+
         {activeTab === 'base' && <BaseMode />}
         {activeTab === 'dressing' && <DressingRoomMode />}
         {activeTab === 'studio' && (
@@ -80,3 +110,4 @@ function App() {
 }
 
 export default App;
+

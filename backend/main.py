@@ -1,22 +1,33 @@
 import os
 import shutil
 import sys
+import json
 import logging
+import tempfile
+from datetime import datetime, timezone
+from typing import List
+from concurrent.futures import ThreadPoolExecutor
 
 # Absolute paths setup first to fix import errors when running directly
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(BASE_DIR))
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Body
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Body, Depends, Query
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from backend.core.library_manager import (
     load_library, create_category, update_category, delete_category,
     create_subfolder, add_asset_to_subfolder, rename_subfolder, delete_subfolder
 )
+from backend.core.database import get_db, init_db
+from backend.core.models import Project, Asset, AssetVersion
+from backend.core.schemas import ProjectCreate, ProjectUpdate, AutoSaveRequest
+from backend.core.project_exporter import export_project, import_project
 
 # Pydantic models for custom taxonomy requests
 class CategoryCreate(BaseModel):
@@ -54,23 +65,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Absolute paths setup first to fix import errors when running directly
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(BASE_DIR))
-
-from backend.core.psd_processor import process_psd, load_db
-
+# Absolute paths
 UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
 STORAGE_DIR = os.path.join(BASE_DIR, "storage")
+AUTOSAVE_DIR = os.path.join(BASE_DIR, ".autosave")
+THUMBNAILS_DIR = os.path.join(STORAGE_DIR, "thumbnails")
 FRONTEND_DIR = os.path.join(os.path.dirname(BASE_DIR), "frontend")
 
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(STORAGE_DIR, exist_ok=True)
+os.makedirs(AUTOSAVE_DIR, exist_ok=True)
+os.makedirs(THUMBNAILS_DIR, exist_ok=True)
+
+# Thread pool for batch PSD processing
+psd_executor = ThreadPoolExecutor(max_workers=3)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize database on startup
+    init_db()
+    logger.info("Database initialized successfully")
     yield
-    # Cleanup task if needed
+    # Cleanup
+    psd_executor.shutdown(wait=False)
 
 app = FastAPI(title="Anime Studio Builder API", lifespan=lifespan)
 
@@ -99,8 +116,13 @@ app.mount("/static", StaticFiles(directory=STORAGE_DIR), name="static")
 os.makedirs(os.path.join(STORAGE_DIR, "assets"), exist_ok=True)
 app.mount("/assets", StaticFiles(directory=os.path.join(STORAGE_DIR, "assets")), name="assets")
 
+# Mount thumbnails
+app.mount("/thumbnails", StaticFiles(directory=THUMBNAILS_DIR), name="thumbnails")
+
 app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="frontend_css")
 app.mount("/js", StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")), name="frontend_js")
+
+from backend.core.psd_processor import process_psd, load_db
 
 @app.get("/")
 async def serve_frontend():
@@ -113,38 +135,327 @@ async def get_characters():
     data = load_db()
     return JSONResponse(content=data)
 
-@app.post("/api/upload-psd/")
-async def upload_psd(file: UploadFile = File(...)):
-    """Receives a PSD file, saves it, and processes it."""
-    logger.info(f"Received PSD upload request: {file.filename}")
-    if not file.filename.endswith(".psd"):
-        logger.warning(f"Rejected invalid file type: {file.filename}")
-        raise HTTPException(status_code=400, detail="Only .psd files are allowed.")
-        
-    temp_file_path = os.path.join(UPLOADS_DIR, file.filename)
-    
+
+# ============================================================
+# PROJECT CRUD API (Roadmap 1.3)
+# ============================================================
+
+@app.get("/api/projects/")
+async def list_projects(db: Session = Depends(get_db)):
+    """List all projects (lightweight, no data blob)."""
+    projects = db.query(Project).order_by(Project.updated_at.desc()).all()
+    return JSONResponse(content=[p.to_list_item() for p in projects])
+
+
+@app.post("/api/projects/", status_code=201)
+async def create_project(body: ProjectCreate, db: Session = Depends(get_db)):
+    """Create a new project."""
+    project = Project(
+        name=body.name,
+        description=body.description,
+        canvas_width=body.canvas_width,
+        canvas_height=body.canvas_height,
+        fps=body.fps,
+        data=body.data,
+    )
+    db.add(project)
+    db.commit()
+    db.refresh(project)
+    logger.info(f"Created project: {project.name} ({project.id})")
+    return JSONResponse(content=project.to_dict(), status_code=201)
+
+
+@app.get("/api/projects/{project_id}")
+async def get_project(project_id: str, db: Session = Depends(get_db)):
+    """Get a project by ID (full data)."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return JSONResponse(content=project.to_dict())
+
+
+@app.put("/api/projects/{project_id}")
+async def update_project(project_id: str, body: ProjectUpdate, db: Session = Depends(get_db)):
+    """Update a project."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    if body.name is not None:
+        project.name = body.name
+    if body.description is not None:
+        project.description = body.description
+    if body.canvas_width is not None:
+        project.canvas_width = body.canvas_width
+    if body.canvas_height is not None:
+        project.canvas_height = body.canvas_height
+    if body.fps is not None:
+        project.fps = body.fps
+    if body.data is not None:
+        project.data = body.data
+
+    db.commit()
+    db.refresh(project)
+    logger.info(f"Updated project: {project.name} ({project.id})")
+    return JSONResponse(content=project.to_dict())
+
+
+@app.delete("/api/projects/{project_id}")
+async def delete_project(project_id: str, db: Session = Depends(get_db)):
+    """Delete a project."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Also remove autosave
+    autosave_path = os.path.join(AUTOSAVE_DIR, f"draft_{project_id}.json")
+    if os.path.exists(autosave_path):
+        os.remove(autosave_path)
+
+    db.delete(project)
+    db.commit()
+    logger.info(f"Deleted project: {project_id}")
+    return JSONResponse(content={"message": "Deleted"})
+
+
+# ============================================================
+# AUTO-SAVE API (Roadmap 1.4)
+# ============================================================
+
+@app.post("/api/projects/{project_id}/autosave")
+async def autosave_project(project_id: str, body: AutoSaveRequest, db: Session = Depends(get_db)):
+    """Save a draft of the project to .autosave/ directory."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    draft_path = os.path.join(AUTOSAVE_DIR, f"draft_{project_id}.json")
+    draft_data = {
+        "project_id": project_id,
+        "data": body.data,
+        "saved_at": datetime.now(timezone.utc).isoformat(),
+    }
+    with open(draft_path, "w", encoding="utf-8") as f:
+        json.dump(draft_data, f, ensure_ascii=False)
+
+    return JSONResponse(content={"message": "Auto-saved", "path": draft_path})
+
+
+@app.get("/api/projects/{project_id}/autosave")
+async def get_autosave(project_id: str):
+    """Retrieve the latest auto-save draft for a project."""
+    draft_path = os.path.join(AUTOSAVE_DIR, f"draft_{project_id}.json")
+    if not os.path.exists(draft_path):
+        raise HTTPException(status_code=404, detail="No auto-save found")
+
+    with open(draft_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return JSONResponse(content=data)
+
+
+# ============================================================
+# PROJECT EXPORT / IMPORT (Roadmap 1.6)
+# ============================================================
+
+@app.get("/api/projects/{project_id}/export")
+async def export_project_endpoint(project_id: str, db: Session = Depends(get_db)):
+    """Export a project as a .animestudio file (ZIP)."""
     try:
-        with open(temp_file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
-        logger.info(f"Saved PSD to temporary path: {temp_file_path}")
-        
-        # Process the PSD
-        process_psd(temp_file_path)
-        
-        logger.info(f"PSD processing completed successfully for: {file.filename}")
-        
-        # Optionally remove the uploaded file to save space
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
-            
-        return {"message": "success", "filename": file.filename}
-        
+        export_dir = os.path.join(BASE_DIR, "exports")
+        os.makedirs(export_dir, exist_ok=True)
+        zip_path = export_project(db, project_id, export_dir)
+        return FileResponse(
+            zip_path,
+            media_type="application/zip",
+            filename=os.path.basename(zip_path)
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/projects/import")
+async def import_project_endpoint(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Import a .animestudio file and create a new project."""
+    if not file.filename.endswith(".animestudio"):
+        raise HTTPException(status_code=400, detail="Only .animestudio files are allowed")
+
+    # Save uploaded file to temp
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".animestudio") as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+
+    try:
+        project = import_project(db, tmp_path)
+        return JSONResponse(content=project.to_dict(), status_code=201)
     except Exception as e:
-        logger.error(f"Error processing PSD {file.filename}: {str(e)}", exc_info=True)
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
-        raise HTTPException(status_code=500, detail=f"Error processing PSD: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Import failed: {str(e)}")
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
+# ============================================================
+# PSD UPLOAD (Original + Batch support — Roadmap 2.2)
+# ============================================================
+
+def _process_single_psd(file_path: str, filename: str) -> dict:
+    """
+    Blocking helper: saves, processes a single PSD file, cleans up.
+    Runs inside ThreadPoolExecutor.
+    """
+    try:
+        process_psd(file_path)
+        logger.info(f"PSD processing completed successfully for: {filename}")
+        return {"filename": filename, "status": "success", "error": None}
+    except Exception as e:
+        logger.error(f"Error processing PSD {filename}: {str(e)}", exc_info=True)
+        return {"filename": filename, "status": "error", "error": str(e)}
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+
+@app.post("/api/upload-psd/")
+async def upload_psd(files: List[UploadFile] = File(...)):
+    """
+    Receives one or more PSD files, saves and processes them.
+    Uses ThreadPoolExecutor for true parallel batch processing.
+    """
+    import asyncio
+
+    results = []
+    errors = []
+    tasks = []
+
+    loop = asyncio.get_event_loop()
+
+    for file in files:
+        if not file.filename.endswith(".psd"):
+            errors.append({"filename": file.filename, "error": "Only .psd files are allowed"})
+            continue
+
+        temp_file_path = os.path.join(UPLOADS_DIR, file.filename)
+
+        # Save uploaded file to disk (fast I/O, do it here before dispatching)
+        try:
+            with open(temp_file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            logger.info(f"Saved PSD to temporary path: {temp_file_path}")
+        except Exception as e:
+            errors.append({"filename": file.filename, "error": f"Failed to save: {str(e)}"})
+            continue
+
+        # Dispatch PSD processing to thread pool
+        tasks.append(
+            loop.run_in_executor(psd_executor, _process_single_psd, temp_file_path, file.filename)
+        )
+
+    # Await all parallel PSD processing tasks
+    if tasks:
+        task_results = await asyncio.gather(*tasks, return_exceptions=True)
+        for result in task_results:
+            if isinstance(result, Exception):
+                errors.append({"filename": "unknown", "error": str(result)})
+            elif result.get("error"):
+                errors.append({"filename": result["filename"], "error": result["error"]})
+            else:
+                results.append({"filename": result["filename"], "status": "success"})
+
+    if errors and not results:
+        raise HTTPException(status_code=400, detail={"errors": errors})
+
+    return JSONResponse(content={
+        "message": "Upload complete",
+        "results": results,
+        "errors": errors,
+    })
+
+
+# ============================================================
+# ASSET API (Roadmap 2.4, 2.6)
+# ============================================================
+
+@app.get("/api/assets/")
+async def search_assets(
+    name: str | None = Query(None),
+    category: str | None = Query(None),
+    character: str | None = Query(None),
+    z_index: int | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    """Search and filter assets."""
+    query = db.query(Asset)
+    if name:
+        query = query.filter(Asset.original_name.ilike(f"%{name}%"))
+    if category:
+        query = query.filter(Asset.category == category)
+    if character:
+        query = query.filter(Asset.character_name.ilike(f"%{character}%"))
+    if z_index is not None:
+        query = query.filter(Asset.z_index == z_index)
+
+    assets = query.order_by(Asset.created_at.desc()).limit(200).all()
+    return JSONResponse(content=[a.to_dict() for a in assets])
+
+
+@app.delete("/api/assets/{asset_hash}")
+async def delete_asset(asset_hash: str, db: Session = Depends(get_db)):
+    """
+    Delete an asset entirely. Cascade removes from:
+    - SQLite assets table
+    - Asset file on disk
+    - Thumbnail file
+    - References in database.json (characters) and custom_library.json
+    """
+    # Remove from SQLite
+    asset = db.query(Asset).filter(Asset.hash_sha256 == asset_hash).first()
+    if asset:
+        db.delete(asset)
+        db.commit()
+
+    # Remove asset file
+    asset_file = os.path.join(STORAGE_DIR, "assets", f"{asset_hash}.png")
+    if os.path.exists(asset_file):
+        os.remove(asset_file)
+
+    # Remove thumbnail
+    thumb_file = os.path.join(THUMBNAILS_DIR, f"{asset_hash}_thumb.png")
+    if os.path.exists(thumb_file):
+        os.remove(thumb_file)
+
+    # Cascade remove from database.json (characters)
+    char_db = load_db()
+    modified = False
+    for char in char_db:
+        for group_name, layers in char.get("layer_groups", {}).items():
+            original_len = len(layers)
+            char["layer_groups"][group_name] = [
+                l for l in layers if l.get("hash") != asset_hash
+            ]
+            if len(char["layer_groups"][group_name]) < original_len:
+                modified = True
+
+    if modified:
+        from backend.core.psd_processor import save_db as save_char_db
+        save_char_db(char_db)
+
+    # Cascade remove from custom_library.json
+    lib = load_library()
+    lib_modified = False
+    for cat in lib.get("categories", []):
+        for sub in cat.get("subfolders", []):
+            original_len = len(sub.get("assets", []))
+            sub["assets"] = [a for a in sub.get("assets", []) if a.get("hash") != asset_hash]
+            if len(sub["assets"]) < original_len:
+                lib_modified = True
+
+    if lib_modified:
+        from backend.core.library_manager import save_library
+        save_library(lib)
+
+    logger.info(f"Cascade deleted asset: {asset_hash}")
+    return JSONResponse(content={"message": "Asset deleted"})
+
 
 # --- Custom Library API Endpoints ---
 @app.get("/api/library/")
@@ -196,6 +507,142 @@ async def add_asset(data: AssetAdd):
     if not cat:
         raise HTTPException(status_code=404, detail="Category or Subfolder not found")
     return JSONResponse(content=cat)
+
+
+# ============================================================
+# VIDEO EXPORT ENGINE — Chunked Upload (P2 Sprint 2)
+# ============================================================
+
+EXPORTS_DIR = os.path.join(BASE_DIR, "exports")
+TEMP_RENDER_DIR = os.path.join(BASE_DIR, "temp_render")
+os.makedirs(EXPORTS_DIR, exist_ok=True)
+
+
+class ExportStartRequest(BaseModel):
+    totalFrames: int
+    fps: int = 30
+
+
+class ExportChunkRequest(BaseModel):
+    renderJobId: str
+    chunkIndex: int
+    frameOffset: int  # Global index of the first frame in this chunk
+    frames: list[str]  # Base64-encoded PNG data (batch of ~10-20 frames)
+
+
+class ExportFinishRequest(BaseModel):
+    renderJobId: str
+    fps: int = 30
+
+
+@app.post("/api/export/start")
+async def export_start(body: ExportStartRequest):
+    """
+    Phase 1: Initialize a render session.
+    Creates a unique job directory to receive frame chunks.
+    """
+    import uuid
+    job_id = str(uuid.uuid4())[:12]
+    job_dir = os.path.join(TEMP_RENDER_DIR, job_id)
+    os.makedirs(job_dir, exist_ok=True)
+
+    logger.info(f"[Export {job_id}] Session started: {body.totalFrames} frames at {body.fps} FPS")
+
+    return JSONResponse(content={
+        "renderJobId": job_id,
+        "totalFrames": body.totalFrames,
+        "fps": body.fps,
+        "status": "ready"
+    })
+
+
+@app.post("/api/export/chunk")
+async def export_chunk(body: ExportChunkRequest):
+    """
+    Phase 2: Receive a batch of Base64 frames, decode and write to disk immediately.
+    Each chunk contains ~10-20 frames to keep memory usage minimal.
+    """
+    import base64
+
+    job_dir = os.path.join(TEMP_RENDER_DIR, body.renderJobId)
+    if not os.path.exists(job_dir):
+        raise HTTPException(status_code=404, detail=f"Render job {body.renderJobId} not found")
+
+    frames_written = 0
+    for i, frame_b64 in enumerate(body.frames):
+        global_index = body.frameOffset + i
+        frame_data = base64.b64decode(frame_b64)
+        frame_path = os.path.join(job_dir, f"frame_{global_index:04d}.png")
+        with open(frame_path, "wb") as f:
+            f.write(frame_data)
+        frames_written += 1
+
+    logger.info(f"[Export {body.renderJobId}] Chunk {body.chunkIndex}: wrote {frames_written} frames")
+
+    return JSONResponse(content={
+        "renderJobId": body.renderJobId,
+        "chunkIndex": body.chunkIndex,
+        "framesWritten": frames_written,
+        "status": "ok"
+    })
+
+
+@app.post("/api/export/finish")
+async def export_finish(body: ExportFinishRequest):
+    """
+    Phase 3: All chunks received. Run FFmpeg to stitch PNGs into MP4.
+    Returns the MP4 file for download and cleans up temp frames.
+    """
+    import subprocess
+
+    job_dir = os.path.join(TEMP_RENDER_DIR, body.renderJobId)
+    if not os.path.exists(job_dir):
+        raise HTTPException(status_code=404, detail=f"Render job {body.renderJobId} not found")
+
+    output_path = os.path.join(EXPORTS_DIR, f"export_{body.renderJobId}.mp4")
+
+    try:
+        # Count frames on disk
+        frame_files = sorted([f for f in os.listdir(job_dir) if f.endswith('.png')])
+        logger.info(f"[Export {body.renderJobId}] Rendering {len(frame_files)} frames at {body.fps} FPS...")
+
+        ffmpeg_cmd = [
+            "ffmpeg", "-y",
+            "-framerate", str(body.fps),
+            "-i", os.path.join(job_dir, "frame_%04d.png"),
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-preset", "fast",
+            output_path
+        ]
+        result = subprocess.run(
+            ffmpeg_cmd, capture_output=True, text=True, timeout=300
+        )
+
+        if result.returncode != 0:
+            logger.error(f"[Export {body.renderJobId}] FFmpeg error: {result.stderr}")
+            raise HTTPException(status_code=500, detail=f"FFmpeg failed: {result.stderr[:500]}")
+
+        logger.info(f"[Export {body.renderJobId}] Export complete: {output_path}")
+
+        return FileResponse(
+            output_path,
+            media_type="video/mp4",
+            filename=f"animation_export_{body.renderJobId}.mp4"
+        )
+
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="FFmpeg timed out (5 min limit)")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[Export {body.renderJobId}] Error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+    finally:
+        # Cleanup temp directory (frames only — MP4 stays until downloaded)
+        if os.path.exists(job_dir):
+            shutil.rmtree(job_dir, ignore_errors=True)
+
 
 if __name__ == "__main__":
     import uvicorn

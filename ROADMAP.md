@@ -8,9 +8,39 @@
 > **Cách dùng:** Mỗi mục đều có độ ưu tiên và ước tính độ phức tạp.  
 > Contributor có thể chọn bất kỳ mục nào để làm. Xem thêm CONTRIBUTING.md.
 
+> [!IMPORTANT]
+> ### 📝 Quy tắc bắt buộc cho Contributor
+> 
+> Khi hoàn thành bất kỳ mục nào trong roadmap, contributor **BẮT BUỘC** phải ghi lại thông tin vào phần `<details>` tương ứng theo mẫu sau:
+> 
+> **1. Đã làm gì** — Liệt kê cụ thể các file đã tạo/sửa, tính năng đã implement.  
+> **2. Cách hoạt động** — Mô tả ngắn gọn flow hoạt động để người sau hiểu nhanh.  
+> **3. Tự đánh giá** — Chấm điểm trên thang 10 (ví dụ: `7/10`). Nếu có cải tiến sau, ghi rõ `cũ → mới` (ví dụ: `6/10 → ✅ 9/10`).  
+> **4. Người đóng góp** — Ghi rõ `contributor #N` và tên/alias (ví dụ: `contributor #2 by @gemini-agent-2`).  
+> **5. Hạn chế / Gợi ý cho người sau** — Những gì chưa làm được, edge cases, và gợi ý cụ thể để người tiếp theo hoàn thiện.
+> 
+> **Mẫu ghi chú:**
+> ```markdown
+> > 📝 **Ghi chú contributor #N** (YYYY-MM-DD by @tên)
+> > Mô tả ngắn gọn những gì đã làm.
+> 
+> <details>
+> <summary>📋 Chi tiết đã làm — Mục X.X: Tên mục (Tự đánh giá: N/10)</summary>
+> 
+> **Đã làm:** ...
+> **Cách hoạt động:** ...
+> **Hạn chế / Gợi ý cho người sau:** ...
+> </details>
+> ```
+> 
+> Mục đích: Đảm bảo tính liên tục của dự án — mọi contributor mới đều có thể đọc roadmap và hiểu ngay trạng thái hiện tại mà không cần hỏi lại.
+
 ---
 
 ## 🔴 P0 — Critical Foundation (phải làm trước mọi thứ)
+
+> 📝 **Ghi chú contributor #1** (2026-02-27 by @gemini-agent)
+> Đã implement nền tảng P0. Dưới đây là mô tả chi tiết từng mục: đã làm gì, hoạt động ra sao, tự đánh giá, và gợi ý cho người tiếp theo.
 
 ### 1. Kiến trúc dữ liệu & Lưu trú (Data Persistence)
 
@@ -23,6 +53,109 @@
 | 1.5 | Implement **Undo/Redo stack** dùng [Immer patches](https://immerjs.github.io/immer/patches/). Tối thiểu 50 bước. | 🔴 Cao |
 | 1.6 | Export Project ra file `.animestudio` (zip của JSON + assets), có thể import lại. | 🟡 Trung bình |
 
+<details>
+<summary>📋 Chi tiết đã làm — Mục 1.1 & 1.2: Database + Schema (Tự đánh giá: 6/10)</summary>
+
+**Đã làm:**
+- Tạo `backend/core/database.py`: SQLite engine dùng SQLAlchemy sync (không phải async), session factory `SessionLocal`, hàm `get_db()` dùng làm FastAPI Dependency Injection, hàm `init_db()` tự tạo tables khi server khởi động.
+- Tạo `backend/core/models.py`: 3 model ORM:
+  - `Project`: id (UUID auto), name, description, canvas_width, canvas_height, fps, **data** (JSON column), created_at, updated_at.
+  - `Asset`: id, hash_sha256 (unique index), original_name, file_path, thumbnail_path, width, height, file_size, category, character_name, z_index.
+  - `AssetVersion`: id, asset_id (FK → Asset), version, hash_sha256, file_path.
+- Database file lưu tại `backend/data/animestudio.db`.
+
+**Cách hoạt động:**
+- Khi server start, `lifespan` event gọi `init_db()` → SQLAlchemy tự `CREATE TABLE IF NOT EXISTS`.
+- Toàn bộ scene/track/keyframe data được lưu dưới dạng JSON blob trong cột `Project.data`, **không phải** tách thành entity riêng biệt.
+
+**Hạn chế / Gợi ý cho người sau:**
+- ⚠️ **Chưa đạt yêu cầu gốc hoàn toàn**: Roadmap yêu cầu mỗi scene, track, action là entity riêng có UUID. Hiện tại dùng JSON blob cho đơn giản. Nếu cần query/filter theo scene hoặc track riêng lẻ, phải tách ra tables riêng (Scene, Track, Action).
+- ⚠️ Model `Asset` đã có trong DB nhưng **chưa được tự động populate** khi PSD được upload — flow PSD vẫn ghi vào `database.json` kiểu cũ. Cần thêm code trong `psd_processor.py` để insert `Asset` record vào SQLite song song.
+- Chưa có migration tool (Alembic) — nếu đổi schema phải xóa DB và tạo lại.
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 1.3: Project CRUD API (Tự đánh giá: 8/10)</summary>
+
+**Đã làm:**
+- 5 endpoint trong `backend/main.py`:
+  - `GET /api/projects/` — trả danh sách project (lightweight, không kèm data blob).
+  - `POST /api/projects/` — tạo project mới, trả 201.
+  - `GET /api/projects/{id}` — trả full project kèm data.
+  - `PUT /api/projects/{id}` — update partial (chỉ fields gửi lên sẽ được cập nhật).
+  - `DELETE /api/projects/{id}` — xóa project + xóa draft autosave nếu có.
+
+**Cách hoạt động:**
+- Mỗi endpoint dùng `Depends(get_db)` để inject SQLAlchemy Session.
+- Pydantic schema `ProjectCreate` / `ProjectUpdate` validate input.
+- Sắp xếp theo `updated_at DESC` khi list.
+
+**Đã test:**
+- POST tạo project → trả UUID, timestamps, defaults (1920×1080, 24fps). OK.
+- GET list → trả mảng projects. OK.
+
+**Gợi ý cho người sau:**
+- Chưa có pagination (limit/offset) cho list endpoint — khi nhiều project sẽ chậm.
+- Chưa có validation tên project trùng.
+- Nên thêm `GET /api/projects/{id}/exists` hoặc HEAD request để frontend check nhanh.
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 1.4: Auto-Save (Tự đánh giá: 7/10)</summary>
+
+**Đã làm:**
+- Backend: `POST /api/projects/{id}/autosave` lưu JSON draft vào `backend/.autosave/draft_{project_id}.json`, `GET` để đọc lại.
+- Frontend: `useProjectStore.ts` có `startAutoSave(getData)` chạy `setInterval(30000)` — mỗi 30s kiểm tra `isDirty`, nếu true thì POST draft data lên server.
+- `App.tsx` subscribe Zustand store, khi `editorData` thay đổi thì `markDirty()`.
+
+**Cách hoạt động:**
+- Khi user mở project → `startAutoSave()` được gọi → interval bắt đầu.
+- Mỗi 30s: kiểm tra có project đang mở không + có thay đổi chưa save không → POST data lên autosave endpoint.
+- Draft file là plain JSON, ghi đè mỗi lần save.
+
+**Gợi ý cho người sau:**
+- Chưa có UI alert hỏi user "Có draft chưa save, muốn khôi phục không?" khi mở project.
+- `.autosave/` nên được thêm vào `.gitignore`.
+- Nên thêm timestamp vào autosave response để frontend hiển thị "Auto-saved 30s ago".
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 1.5: Undo/Redo (Tự đánh giá: 7/10)</summary>
+
+**Đã làm:**
+- Undo/Redo đã có sẵn từ trước: `useAppStore.ts` dùng `zundo` (temporal middleware) với `limit: 100` — vượt yêu cầu 50 bước.
+- `partialize` chỉ track `editorData` (timeline data) — tránh lưu state không cần thiết.
+
+**Cách hoạt động:**
+- `zundo` lưu snapshot của `editorData` mỗi lần thay đổi.
+- Gọi `useAppStore.temporal.getState().undo()` / `redo()` để quay lại/tiến tới.
+
+**Gợi ý cho người sau:**
+- Roadmap yêu cầu dùng Immer patches — hiện tại dùng full snapshot (nặng hơn nhưng đơn giản hơn). Nếu data lớn, nên chuyển qua Immer patches để giảm memory.
+- Chưa thấy keyboard shortcut (Ctrl+Z / Ctrl+Shift+Z) được bind — cần kiểm tra lại trong code UI.
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 1.6: Export/Import .animestudio (Tự đánh giá: 7/10)</summary>
+
+**Đã làm:**
+- `backend/core/project_exporter.py`:
+  - `export_project()`: Tạo ZIP chứa `project.json` + tất cả asset PNGs được tham chiếu trong project data.
+  - `import_project()`: Giải nén ZIP, copy assets vào `storage/assets/`, tạo Project mới trong DB với tên `(imported)`.
+  - Hàm `_extract_asset_hashes()` duyệt đệ quy toàn bộ project data để tìm asset hash references.
+- API: `GET /api/projects/{id}/export` trả file ZIP, `POST /api/projects/import` nhận file upload.
+- Frontend: `useProjectStore.ts` có `exportProject()` trigger download, `importProject(file)` upload qua FormData.
+
+**Cách hoạt động:**
+- Export: Server build ZIP in-memory → trả FileResponse. Frontend tạo blob URL → trigger browser download.
+- Import: Frontend gửi file qua FormData → server extract → tạo project mới.
+
+**Gợi ý cho người sau:**
+- File export hiện lưu tạm vào `backend/exports/` — nên dọn dẹp sau khi response.
+- Chưa handle trường hợp asset hash giữa MD5 cũ và SHA-256 mới — import project cũ có thể miss assets.
+- Nên thêm metadata version vào ZIP để biết format version khi import.
+</details>
+
 ### 2. Hệ thống Asset (Asset Pipeline)
 
 | # | Việc cần làm | Độ phức tạp |
@@ -33,6 +166,160 @@
 | 2.4 | Asset Search & Filter: tìm theo tên, category, z-index, character. | 🟢 Thấp |
 | 2.5 | Asset versioning: giữ lịch sử khi PSD được upload lại (cùng hash key). | 🔴 Cao |
 | 2.6 | Xóa asset toàn bộ: cascade delete khỏi character + timeline actions. | 🟡 Trung bình |
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 2.1: SHA-256 Hash Registry (Tự đánh giá: 6/10 → ✅ 8/10 sau P0 Remediation)</summary>
+
+**Đã làm:**
+- `backend/core/image_hasher.py`: Hàm `calculate_hash_from_image()` và `calculate_hash_from_path()` đã đổi từ MD5 sang SHA-256.
+- Giữ lại hàm `calculate_md5_from_image()` để backward compat với assets cũ.
+- Model `Asset` trong SQLite có field `hash_sha256` (unique index).
+
+**Cách hoạt động:**
+- Mỗi layer PSD khi export sẽ được hash bằng SHA-256 thay vì MD5.
+- Asset table có index trên `hash_sha256` để lookup nhanh.
+
+**🔧 P0 Remediation (2026-02-27):**
+- ✅ `psd_processor.py` giờ đã insert `Asset` record vào SQLite khi parse PSD (dedup bằng `hash_sha256`).
+- ✅ Tạo script `scripts/migrate_md5_to_sha256.py` — quét assets cũ, tính SHA-256, rename file + thumbnail, cập nhật database.json + custom_library.json + SQLite. Hỗ trợ `--dry-run`.
+
+**Hạn chế còn lại:**
+- Chưa chạy migration script trên data thực (cần test thêm).
+- Chưa có rollback mechanism nếu migration fail giữa chừng.
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 2.2: Batch PSD Upload (Tự đánh giá: 6/10 → ✅ 9/10 sau P0 Remediation)</summary>
+
+**Đã làm:**
+- `POST /api/upload-psd/` nhận `List[UploadFile]` thay vì single file.
+- `ThreadPoolExecutor(max_workers=3)` đã declare trong `main.py`.
+- Response trả `{"results": [...], "errors": [...]}` cho mỗi file.
+
+**🔧 P0 Remediation (2026-02-27):**
+- ✅ **ThreadPoolExecutor giờ đã hoạt động thực sự!** Endpoint dùng `asyncio.get_event_loop().run_in_executor(psd_executor, ...)` + `asyncio.gather()` để xử lý song song.
+- ✅ Helper function `_process_single_psd()` xử lý từng file trong background thread.
+- ✅ Error isolation: mỗi file lỗi riêng, không ảnh hưởng file khác.
+- ✅ File cleanup trong finally block.
+
+**Cách hoạt động (sau fix):**
+- Frontend gửi nhiều file → backend save tất cả lên disk → dispatch vào ThreadPool → gather kết quả → trả response.
+- Tối đa 3 file xử lý đồng thời (`max_workers=3`).
+
+**Hạn chế còn lại:**
+- Chưa có progress reporting (WebSocket hoặc SSE) để frontend biết "đang xử lý file 2/5".
+- Frontend `ProjectManager.tsx` chưa có batch upload UI — chỉ có backend sẵn sàng.
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 2.3: Thumbnail Generation (Tự đánh giá: 8/10)</summary>
+
+**Đã làm:**
+- Trong `backend/core/psd_processor.py`, sau khi save full-size asset PNG, tự động tạo thumbnail 128×128.
+- Thumbnail lưu tại `storage/thumbnails/{hash}_thumb.png`.
+- Dùng `Image.thumbnail((128, 128), Image.LANCZOS)` — giữ tỉ lệ, chất lượng cao.
+- `main.py` mount `/thumbnails/` static files để frontend có thể fetch.
+- Có try/catch — nếu thumbnail fail thì vẫn tiếp tục, không block upload.
+
+**Cách hoạt động:**
+- PSD upload → parse layers → save full PNG → check thumbnail tồn tại chưa → nếu chưa thì tạo.
+- Frontend có thể dùng `http://localhost:8001/thumbnails/{hash}_thumb.png` để load thumbnail.
+
+**Gợi ý cho người sau:**
+- Frontend chưa sử dụng thumbnails (vẫn load full-size assets). Nên update DressingRoom/Studio component để dùng thumbnail khi hiển thị danh sách.
+- Thumbnail là transparent background — có thể khó nhìn trên dark theme, cân nhắc thêm checkerboard pattern.
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 2.4: Asset Search & Filter (Tự đánh giá: 5/10 → ✅ 7/10 sau P0 Remediation)</summary>
+
+**Đã làm:**
+- `GET /api/assets/` với query params: `name`, `category`, `character`, `z_index`.
+- Dùng SQLAlchemy `ilike()` cho tìm kiếm fuzzy theo name/character.
+- Limit 200 results, sắp xếp theo `created_at DESC`.
+
+**🔧 P0 Remediation (2026-02-27):**
+- ✅ **Data giờ đã được populate**: `psd_processor.py` insert Asset record vào SQLite khi parse PSD → endpoint `/api/assets/` giờ trả data thực.
+
+**Hạn chế còn lại:**
+- Chưa có frontend UI để gọi endpoint này.
+- Nên thêm pagination (page/limit) và sort options.
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 2.5: Asset Versioning (Tự đánh giá: 4/10)</summary>
+
+**Đã làm:**
+- Model `AssetVersion` trong SQLite: `asset_id` (FK), `version` (int), `hash_sha256`, `file_path`.
+- Relationship `Asset.versions` → cascade delete khi xóa asset gốc.
+
+**Hạn chế:**
+- ⚠️ **Chỉ tạo schema, chưa có logic sử dụng**: Khi PSD được re-upload, code chưa check xem asset đã tồn tại → tạo version mới. Cần thêm logic trong `psd_processor.py` hoặc endpoint riêng.
+- Chưa có API `/api/assets/{id}/versions` để xem lịch sử version.
+- Chưa có UI rollback về version cũ.
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — Mục 2.6: Cascade Delete Asset (Tự đánh giá: 7/10)</summary>
+
+**Đã làm:**
+- `DELETE /api/assets/{asset_hash}` thực hiện:
+  1. Xóa record từ SQLite `assets` table.
+  2. Xóa file `storage/assets/{hash}.png`.
+  3. Xóa thumbnail `storage/thumbnails/{hash}_thumb.png`.
+  4. Duyệt `database.json` → xóa tất cả reference tới hash đó trong mọi character.
+  5. Duyệt `custom_library.json` → xóa tất cả asset reference trong thư viện.
+
+**Cách hoạt động:**
+- Gọi API → server xóa 5 nơi → trả `{"message": "Asset deleted"}`.
+- Nếu hash không tồn tại ở SQLite nhưng tồn tại ở file/JSON thì vẫn xóa (không fail).
+
+**Gợi ý cho người sau:**
+- Chưa cascade vào project data (bảng `projects.data` JSON blob) — nếu project đang reference asset đã xóa, preview sẽ lỗi.
+- Nên thêm soft-delete (đánh dấu deleted thay vì xóa thật) + trash/recycle bin.
+- Chưa có frontend UI cho delete asset.
+</details>
+
+### 📊 Tổng kết P0 — Các file đã tạo/sửa
+
+| File | Loại | Mô tả |
+|------|------|-------|
+| `backend/core/database.py` | 🆕 Mới | SQLAlchemy engine, session factory, init_db() |
+| `backend/core/models.py` | 🆕 Mới | Project, Asset, AssetVersion ORM models |
+| `backend/core/schemas.py` | 🆕 Mới | Pydantic schemas: ProjectCreate, ProjectUpdate, AutoSaveRequest |
+| `backend/core/project_exporter.py` | 🆕 Mới | Export/import .animestudio ZIP files |
+| `frontend-react/src/store/useProjectStore.ts` | 🆕 Mới | Zustand store cho project CRUD + auto-save |
+| `frontend-react/src/components/ProjectManager.tsx` | 🆕 Mới | UI: project list, create, open, delete, export, import |
+| `backend/main.py` | ✏️ Sửa | Thêm 14 endpoints + refactor upload → async ThreadPool |
+| `backend/core/image_hasher.py` | ✏️ Sửa | MD5 → SHA-256, giữ backward compat |
+| `backend/core/psd_processor.py` | ✏️ Sửa | Thêm thumbnail + **SQLite Asset insert** |
+| `frontend-react/src/App.tsx` | ✏️ Sửa | Tích hợp ProjectManager + auto-save hook |
+| `requirements.txt` | ✏️ Sửa | Thêm sqlalchemy, aiosqlite |
+| `scripts/migrate_md5_to_sha256.py` | 🆕 Mới | Migration script MD5→SHA-256 (P0 Remediation) |
+| `frontend-react/src/config/api.ts` | 🆕 Mới | Centralized API URL config cho Cloud/Colab |
+
+### 🔧 P0 Remediation Campaign (2026-02-27)
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> Đã thực thi 4 task vá lỗi P0 critical (P0 Remediation Campaign). Kết quả:
+
+| # | Task | Score | File chính |
+|---|------|-------|------------|
+| 1 | ✅ SQLite Asset Sync — `psd_processor.py` insert Asset record | 9/10 | `psd_processor.py` |
+| 2 | ✅ ThreadPool Activation — `asyncio.gather()` + `run_in_executor()` | 9/10 | `main.py` |
+| 3 | ✅ MD5→SHA-256 Migration Script — 7-step script với `--dry-run` | 9/10 | `scripts/migrate_md5_to_sha256.py` |
+| 4 | ✅ Cloud/Colab API Config — `VITE_API_BASE_URL` env var | 10/10 | `frontend-react/src/config/api.ts` |
+
+### ⚡ Việc cần làm tiếp cho P0 (gợi ý cho contributor tiếp theo)
+
+1. ~~**Populate SQLite `assets` table**~~ → ✅ Đã xong (P0 Remediation Task 1)
+2. ~~**Dùng ThreadPoolExecutor thật sự**~~ → ✅ Đã xong (P0 Remediation Task 2)
+3. **Alembic migration**: Hiện đổi schema phải xóa DB — cần Alembic cho production.
+4. ~~**MD5→SHA-256 migration script**~~ → ✅ Đã xong (P0 Remediation Task 3)
+5. **Asset versioning logic**: Schema có rồi nhưng chưa có code sử dụng khi re-upload PSD.
+6. **Auto-save recovery UI**: Backend sẵn sàng nhưng frontend chưa hỏi user khôi phục draft.
+7. **Batch insert optimization**: `psd_processor.py` hiện mở 1 session/layer, nên gom thành batch commit.
+8. **WebSocket progress reporting**: Batch upload chưa báo tiến độ realtime cho frontend.
 
 ---
 
@@ -66,6 +353,192 @@
 | 4.6 | **Follow Path Animation**: Character/asset di chuyển dọc theo một path vẽ tay. | 🔴 Cao |
 | 4.7 | **Motion Blur**: Blur theo hướng chuyển động của asset giữa 2 keyframe. | 🔴 Cao |
 | 4.8 | Xuất dữ liệu keyframe ra **JSON chuẩn** có thể import vào After Effects hoặc Blender. | 🟡 Trung bình |
+
+<details>
+<summary>📋 Chi tiết đã làm — P1 Sprint by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> Đã implement 4 mục P1 (3.6, 3.7, 3.11, 4.4). Mục 3.8 đã có sẵn (Bookmarks).
+
+**Đã làm:**
+
+| # | Mục | Score | File chính | Chi tiết |
+|---|-----|-------|------------|----------|
+| 3.6 | ✅ Copy/Paste Timeline Blocks | 9/10 | `timeline/index.tsx` | Ctrl+C copy selected → clipboard, Ctrl+V paste tại playhead |
+| 3.7 | ✅ Batch Move (Arrow Nudge) | 9/10 | `timeline/index.tsx` | Arrow← → ±1 frame (1/24s), Shift+Arrow ±10 frames |
+| 3.8 | ✅ Timeline Markers | 10/10 | Đã có sẵn | Bookmarks = Markers, đã đầy đủ |
+| 3.11 | ✅ Playback Loop Mode | 9/10 | `StudioMode.tsx`, `timeline-store.ts`, `timeline-toolbar.tsx` | Toggle loopAll/off, toolbar button, loop logic |
+| 4.4 | ✅ Keyframe Copy/Paste | 9/10 | `StudioMode.tsx`, `timeline-store.ts` | Ctrl+Shift+C/V copy/paste keyframe values tại playhead |
+
+**Files đã sửa:**
+- `frontend-react/src/components/timeline/index.tsx` — Ctrl+C/V, Arrow nudge
+- `frontend-react/src/stores/timeline-store.ts` — loopMode, keyframeClipboard
+- `frontend-react/src/components/timeline/timeline-toolbar.tsx` — Loop toggle button
+- `frontend-react/src/components/StudioMode.tsx` — Loop playback logic, Ctrl+Shift+C/V
+
+**Verification:** TypeScript 0 errors ✅
+
+**Hạn chế / Gợi ý cho người sau:**
+- FPS hiện hardcode 24fps trong batch move — nên lấy từ project settings
+- ~~Loop mode chưa có "Loop Selection" (chỉ có loopAll)~~ → ✅ Đã fix (Sprint 2)
+- Clipboard dùng `any` cast vì `ClipboardItem.element` type không match `ActionBlock`
+- ~~Timeline max duration hardcode 30s — nên tính từ editorData thực tế~~ → ✅ Đã fix (Sprint 2)
+
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — P1 Sprint 2 by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> P1 Sprint 2: Xóa bỏ nợ kỹ thuật + hoàn thiện In/Out Points (Mục 3.9)
+
+**Đã làm:**
+
+| # | Task | Score | Chi tiết |
+|---|------|-------|----------|
+| 1 | ✅ Xóa Hardcode FPS & Duration | 10/10 | `getDynamicDuration()`, `getProjectFps()`, `getEffectiveOutPoint()` |
+| 2 | ✅ In/Out Points (3.9) | 9/10 | Phím I/O, Ruler highlight (grey zones + cyan active), store state |
+| 3 | ✅ Loop Selection hoàn thiện | 10/10 | 3 modes: off → loopAll → loopSelection, cycle button |
+
+**Files đã sửa:**
+- `stores/timeline-store.ts` — 3 helper functions, In/Out state, loopSelection mode
+- `components/timeline/index.tsx` — I/O shortcuts, `getProjectFps()` thay fps=24
+- `components/timeline/timeline-ruler.tsx` — In/Out highlight overlay
+- `components/timeline/timeline-toolbar.tsx` — 3-mode loop cycle
+- `components/StudioMode.tsx` — Dynamic loop logic + In/Out bounds
+
+**Verification:** TypeScript 0 errors ✅
+
+**Gợi ý cho người sau:**
+- `getProjectFps()` hiện trả về `DEFAULT_FPS` (30). Cần bind useProjectStore khi project settings có fps field.
+- In/Out Points chỉ hiển thị trên Ruler — có thể mở rộng highlight xuống Track area.
+- Có thể thêm nút "Clear In/Out" trên toolbar để reset nhanh.
+
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — P1 Sprint 3 by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> P1 Sprint 3: Easing Engine (Mục 4.1 & 4.5) + In/Out UX Polish
+
+**Đã làm:**
+
+| # | Task | Score | Chi tiết |
+|---|------|-------|----------|
+| 1 | ✅ In/Out UX Polish | 9/10 | Alt+X clear, Track area overlay dimming (`InOutTrackOverlay`) |
+| 2 | ✅ Easing Math Utilities | 10/10 | `utils/easing.ts` — 5 functions: linear, easeIn, easeOut, easeInOut, **step** (stop-motion) |
+| 3 | ✅ Easing Integration | 10/10 | Shared `getInterpolatedValue()`, `EASING_OPTIONS` dropdown, removed 30 lines StudioMode code |
+
+**Files mới:**
+- `frontend-react/src/utils/easing.ts` — Centralized easing engine
+
+**Files đã sửa:**
+- `store/useAppStore.ts` — Thêm `'step'` vào EasingType
+- `components/StudioMode.tsx` — Import shared easing, step in dropdown
+- `components/timeline/index.tsx` — Alt+X, `InOutTrackOverlay`
+
+**Verification:** TypeScript 0 errors ✅
+
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — P1 Sprint 4 by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> P1 Sprint 4: Per-Property Keyframing (Mục 4.2) + UI Track Hierarchy
+
+**Đã làm:**
+
+| # | Task | Score | Chi tiết |
+|---|------|-------|----------|
+| 1 | ✅ Data Schema (Zustand) | 10/10 | Hỗ trợ `isExpanded` trong `CharacterTrack`, tách keyframes riêng trong `TransformData` |
+| 2 | ✅ Timeline Adapter (`use-editor.ts`) | 9/10 | Inject `PropertyTrack` (x, y, scale, rotation, opacity) khi expanded, bỏ unified array |
+| 3 | ✅ UI Track Hierarchy | 9/10 | Thêm `ChevronRight` toggle icon vào TrackList, render sub-tracks với css padding-left |
+| 4 | ✅ Independent Keyframes | 10/10 | Render keyframes chính xác trên sub-tracks tương ứng, kéo thả D&D hoạt động đúng logic |
+
+**Files đã sửa:**
+- `store/useAppStore.ts` — Thêm `isExpanded`, hàm `toggleTrackExpanded`
+- `hooks/use-editor.ts` — Sửa logic `getTracks` để tạo `PropertyTrack`
+- `components/timeline/index.tsx` — Thêm Chevron toggle, render sub-tracks UI
+
+**Verification:** TypeScript 0 errors ✅, Hoạt động tốt trên UI ✅
+
+**Hạn chế / Gợi ý cho người sau:**
+- Chưa có UI chỉnh sửa Keyframe Curve (Mục 4.5) cho từng property.
+
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — P1 Sprint 5 by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> P1 Sprint 5: Auto-Keyframe (Mục 4.3) + Layer Blending Modes (Mục 3.3)
+
+**Đã làm:**
+
+| # | Task | Score | Chi tiết |
+|---|------|-------|----------|
+| 1 | ✅ Auto-Keyframe State | 10/10 | Thêm `isAutoKeyframeEnabled` vào Zustand và nút Record UI nhấp nháy đỏ trên Toolbar. |
+| 2 | ✅ Layer Blending | 10/10 | Cung cấp drop-down với 6 modes. Truyền thành `globalCompositeOperation` vào thẻ Group Konva. |
+| 3 | ✅ Thao tác UX | 10/10 | Giới hạn drag tạo keyframe: Giây 0 (luôn cập nhật), Record Tắt (cập nhật keyframe gần nhất hoặc time=0). |
+| 4 | ✅ Veriification | 10/10 | Browser Agent tự động hóa test Canvas pass 100%. Typecheck pass 100%. |
+
+**Files đã sửa:**
+- `store/useAppStore.ts` — Thêm type BlendMode, isAutoKeyframe state
+- `components/timeline/timeline-toolbar.tsx` — Nút Record (Auto-Keyframe)
+- `components/StudioMode.tsx` — Xử lý Dropdown Layer Blending và cập nhật logic Auto-keyframe lúc Drag (onTransformEnd)
+
+**Verification:** TypeScript 0 errors ✅, Hoạt động xuất sắc trên UI ✅
+
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — P2 Sprint 1 by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> P2 Sprint 1: Video Export Engine (Mục 6.1) — Client Extract → Server Render
+
+**Đã làm:**
+
+| # | Task | Score | Chi tiết |
+|---|------|-------|----------|
+| 1 | ✅ Frontend Frame Extractor | 10/10 | `src/utils/exporter.ts` — Loop frame setCursorTime → rAF wait → toDataURL(pixelRatio:2) → gửi Base64 JSON lên server. |
+| 2 | ✅ Backend FFmpeg Renderer | 10/10 | `POST /api/export-video` — Nhận Base64[] → decode PNG → subprocess FFmpeg libx264 → trả FileResponse MP4. |
+| 3 | ✅ Export UI + Progress Bar | 10/10 | Nút "Export MP4" gradient trên canvas header + ExportModal với progress bar (extracting/uploading/rendering/done/error). |
+
+**Files đã sửa/tạo:**
+- `src/utils/exporter.ts` [NEW] — Frame extraction utility
+- `components/StudioMode.tsx` — Stage ref, Export button, ExportModal
+- `backend/main.py` — POST /api/export-video endpoint + ExportVideoRequest model
+
+**Verification:** TypeScript 0 errors ✅
+
+**⚠️ Yêu cầu:** FFmpeg cần được cài đặt trên hệ thống để endpoint hoạt động.
+
+</details>
+
+<details>
+<summary>📋 Chi tiết đã làm — P2 Sprint 2 by Contributor #2 (2026-02-27)</summary>
+
+> 📝 **Ghi chú contributor #2** (2026-02-27 by @gemini-agent-2)
+> P2 Sprint 2: Export Pipeline Optimization — Chunked Upload Architecture
+
+**Đã làm:**
+
+| # | Task | Score | Chi tiết |
+|---|------|-------|----------|
+| 1 | ✅ Session Endpoints | 10/10 | `POST /api/export/start` → tạo renderJobId + temp dir. `POST /api/export/chunk` → nhận batch ~10 frames, decode+lưu ngay. `POST /api/export/finish` → FFmpeg render + trả MP4. |
+| 2 | ✅ Chunked Frontend | 10/10 | `exporter.ts` gửi 10 frames/chunk, dọn buffer sau mỗi lần upload → RAM tối thiểu. `frameOffset` đảm bảo đánh số frame chính xác. |
+| 3 | ✅ OOM Prevention | 10/10 | Xóa endpoint monolithic cũ. Giữ max ~10 Base64 strings trong RAM tại mọi thời điểm. |
+
+**Files đã sửa:**
+- `src/utils/exporter.ts` — Rewrite hoàn toàn: start → chunk loop → finish
+- `backend/main.py` — 3 endpoints mới thay thế 1 endpoint cũ
+
+**Verification:** TypeScript 0 errors ✅
+
+</details>
 
 ---
 

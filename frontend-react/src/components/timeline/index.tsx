@@ -12,6 +12,7 @@ import {
 	ArrowLeft01Icon,
 	ArrowUp01Icon,
 	ArrowDown01Icon,
+	ArrowRight01Icon
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { useAppStore } from "@/store/useAppStore";
@@ -54,7 +55,7 @@ import { TimelineRuler } from "./timeline-ruler";
 import { TimelineBookmarksRow } from "./bookmarks";
 import { useBookmarkDrag } from "@/hooks/timeline/use-bookmark-drag";
 import { useEdgeAutoScroll } from "@/hooks/timeline/use-edge-auto-scroll";
-import { useTimelineStore } from "@/stores/timeline-store";
+import { useTimelineStore, getProjectFps, getDynamicDuration } from "@/stores/timeline-store";
 import { useEditor } from "@/hooks/use-editor";
 import { useTimelinePlayhead } from "@/hooks/timeline/use-timeline-playhead";
 import { DragLine } from "./drag-line";
@@ -105,6 +106,104 @@ export function Timeline() {
 			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
 			const selected = editor.selection.getSelectedElements();
+
+			// ── P1 3.6: Copy/Paste Timeline Blocks ──
+			if (e.key.toLowerCase() === "c" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+				e.preventDefault();
+				if (!selected || selected.length === 0) return;
+				const edData = useAppStore.getState().editorData;
+				const copiedItems: any[] = [];
+				selected.forEach(sel => {
+					if (sel.elementId.endsWith("_compound")) return;
+					for (const row of edData) {
+						const action = row.actions.find(a => a.id === sel.elementId);
+						if (action) {
+							copiedItems.push({ trackId: row.id, trackType: "video" as const, element: { ...action } });
+							break;
+						}
+					}
+				});
+				if (copiedItems.length > 0) {
+					useTimelineStore.getState().setClipboard({ items: copiedItems });
+				}
+				return;
+			}
+
+			if (e.key.toLowerCase() === "v" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+				e.preventDefault();
+				const clipboard = useTimelineStore.getState().clipboard;
+				if (!clipboard || clipboard.items.length === 0) return;
+				const playheadTime = editor.playback.getCurrentTime();
+				// Find the earliest start time in copied items to calculate offset
+				// Cast to any because our clipboard stores ActionBlock data, not CreateTimelineElement
+				const minStart = Math.min(...clipboard.items.map(item => (item.element as any).start ?? 0));
+				const offset = playheadTime - minStart;
+				useAppStore.getState().setEditorData(prev => prev.map(row => {
+					const itemsForRow = clipboard.items.filter(item => item.trackId === row.id);
+					if (itemsForRow.length === 0) return row;
+					const newActions = [...row.actions];
+					itemsForRow.forEach(item => {
+						const el = item.element as any;
+						newActions.push({
+							...el,
+							id: `action_${Date.now()}_${Math.random()}`,
+							start: (el.start ?? 0) + offset,
+							end: (el.end ?? 1) + offset,
+						});
+					});
+					return { ...row, actions: newActions };
+				}));
+				return;
+			}
+
+			// ── P1 3.7: Batch Move — Arrow key nudge ──
+			// P1 3.9: In/Out Points — I / O shortcuts
+			if (e.key.toLowerCase() === "i" && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+				e.preventDefault();
+				const time = editor.playback.getCurrentTime();
+				useTimelineStore.getState().setInPoint(time);
+				return;
+			}
+			if (e.key.toLowerCase() === "o" && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+				e.preventDefault();
+				const time = editor.playback.getCurrentTime();
+				useTimelineStore.getState().setOutPoint(time);
+				return;
+			}
+
+			// P1 Sprint 3: Alt+X to clear In/Out Points
+			if (e.key.toLowerCase() === "x" && e.altKey && !e.ctrlKey && !e.metaKey) {
+				e.preventDefault();
+				useTimelineStore.getState().resetInOutPoints();
+				return;
+			}
+
+			if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+				if (!selected || selected.length === 0) return;
+				e.preventDefault();
+				const fps = getProjectFps();
+				const frameStep = e.shiftKey ? 10 / fps : 1 / fps;
+				const direction = e.key === "ArrowRight" ? 1 : -1;
+				const delta = frameStep * direction;
+				useAppStore.getState().setEditorData(prev => prev.map(row => {
+					let newActions = [...row.actions];
+					let modified = false;
+					selected.forEach(sel => {
+						if (sel.elementId.endsWith("_compound")) return;
+						const idx = newActions.findIndex(a => a.id === sel.elementId);
+						if (idx > -1) {
+							const action = newActions[idx];
+							const newStart = Math.max(0, action.start + delta);
+							const duration = action.end - action.start;
+							newActions[idx] = { ...action, start: newStart, end: newStart + duration };
+							modified = true;
+						}
+					});
+					return modified ? { ...row, actions: newActions } : row;
+				}));
+				return;
+			}
+
 			if (!selected || selected.length === 0) return;
 
 			if (e.key === "Delete" || e.key === "Backspace") {
@@ -365,6 +464,21 @@ export function Timeline() {
 											>
 												<div className="flex min-w-0 flex-1 items-center justify-end gap-2">
 
+													{track.type === "video" && !track.id.startsWith("nested_") && (
+														<button
+															onClick={(e) => {
+																e.stopPropagation();
+																useAppStore.getState().toggleTrackExpanded(track.id);
+															}}
+															className="p-0.5 hover:bg-neutral-800 rounded transition-colors"
+														>
+															<HugeiconsIcon
+																icon={ArrowRight01Icon}
+																className={`w-3.5 h-3.5 text-neutral-400 transition-transform ${useAppStore.getState().editorData.find(r => r.id === track.id)?.isExpanded ? "rotate-90" : ""
+																	}`}
+															/>
+														</button>
+													)}
 
 													<span className={`text-xs text-muted-foreground font-medium truncate flex-1 text-left ${track.type === "property" ? "pl-5" : ""}`}>
 														{track.name}
@@ -514,6 +628,8 @@ export function Timeline() {
 										)}px`,
 									}}
 								>
+									{/* P1 Sprint 3: In/Out overlay on track area */}
+									<InOutTrackOverlay zoomLevel={zoomLevel} />
 									{tracks.length === 0 ? (
 										<div />
 									) : (
@@ -684,6 +800,36 @@ function TrackToggleIcon({
 					onClick={onClick}
 				/>
 			)}
+		</>
+	);
+}
+
+/** P1 Sprint 3: Overlay that dims track area outside In/Out range */
+function InOutTrackOverlay({ zoomLevel }: { zoomLevel: number }) {
+	const inPoint = useTimelineStore(s => s.inPoint);
+	const outPoint = useTimelineStore(s => s.outPoint);
+	const dynamicDuration = getDynamicDuration();
+	const effectiveOutPoint = outPoint ?? dynamicDuration;
+	const hasInOut = inPoint > 0 || outPoint !== null;
+
+	if (!hasInOut) return null;
+
+	const pixelsPerSecond = TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
+	const inPx = inPoint * pixelsPerSecond;
+	const outPx = effectiveOutPoint * pixelsPerSecond;
+
+	return (
+		<>
+			{inPoint > 0 && (
+				<div
+					className="absolute top-0 bottom-0 pointer-events-none z-[2]"
+					style={{ left: 0, width: `${inPx}px`, background: 'rgba(0, 0, 0, 0.3)' }}
+				/>
+			)}
+			<div
+				className="absolute top-0 bottom-0 pointer-events-none z-[2]"
+				style={{ left: `${outPx}px`, right: 0, background: 'rgba(0, 0, 0, 0.3)' }}
+			/>
 		</>
 	);
 }

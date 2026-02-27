@@ -6,6 +6,8 @@ import logging
 from PIL import Image
 from psd_tools import PSDImage
 from backend.core.image_hasher import calculate_hash_from_image
+from backend.core.database import SessionLocal
+from backend.core.models import Asset
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +15,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(BASE_DIR, "data", "database.json")
 STORAGE_DIR = os.path.join(BASE_DIR, "storage")
 EXTRACTED_DIR = os.path.join(STORAGE_DIR, "extracted_psds")
+THUMBNAILS_DIR = os.path.join(STORAGE_DIR, "thumbnails")
 
 os.makedirs(EXTRACTED_DIR, exist_ok=True)
+os.makedirs(THUMBNAILS_DIR, exist_ok=True)
 
 def load_db():
     if not os.path.exists(DB_PATH):
@@ -93,7 +97,42 @@ def export_layer_recursive(layer, current_path_parts, current_fs_path, char_name
             if not os.path.exists(save_path):
                 padded_img.save(save_path)
                 logger.info(f"Saved deduplicated asset pool layer: {filename}")
-                
+            
+            # Generate 128x128 thumbnail (Roadmap 2.3)
+            thumb_path = os.path.join(THUMBNAILS_DIR, f"{img_hash}_thumb.png")
+            if not os.path.exists(thumb_path):
+                try:
+                    thumb = padded_img.copy()
+                    thumb.thumbnail((128, 128), Image.LANCZOS)
+                    thumb.save(thumb_path)
+                except Exception as e:
+                    logger.warning(f"Failed to generate thumbnail for {filename}: {e}")
+
+            # ── P0 FIX: Insert Asset record into SQLite ──
+            try:
+                db_session = SessionLocal()
+                existing_asset = db_session.query(Asset).filter(Asset.hash_sha256 == img_hash).first()
+                if not existing_asset:
+                    file_size_bytes = os.path.getsize(save_path) if os.path.exists(save_path) else 0
+                    top_group_name = current_path_parts[0] if current_path_parts else "Root"
+                    new_asset = Asset(
+                        hash_sha256=img_hash,
+                        original_name=safe_name,
+                        file_path=f"assets/{filename}",
+                        thumbnail_path=f"thumbnails/{img_hash}_thumb.png",
+                        width=psd_width,
+                        height=psd_height,
+                        file_size=file_size_bytes,
+                        category=top_group_name,
+                        character_name=char_name,
+                    )
+                    db_session.add(new_asset)
+                    db_session.commit()
+                    logger.info(f"Inserted asset into SQLite: {img_hash} ({safe_name})")
+                db_session.close()
+            except Exception as e:
+                logger.warning(f"Failed to insert asset into SQLite: {e}")
+
             top_group = current_path_parts[0] if current_path_parts else "Root"
             if top_group not in group_order:
                 group_order.append(top_group)
