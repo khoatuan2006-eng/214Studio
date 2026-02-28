@@ -7,7 +7,7 @@ from PIL import Image
 from psd_tools import PSDImage
 from backend.core.image_hasher import calculate_hash_from_image
 from backend.core.database import SessionLocal
-from backend.core.models import Asset
+from backend.core.models import Asset, AssetVersion
 
 logger = logging.getLogger(__name__)
 
@@ -108,30 +108,57 @@ def export_layer_recursive(layer, current_path_parts, current_fs_path, char_name
                 except Exception as e:
                     logger.warning(f"Failed to generate thumbnail for {filename}: {e}")
 
-            # ── P0 FIX: Insert Asset record into SQLite ──
+            # ── P1-2.1: Asset Versioning — Insert/version Asset record in SQLite ──
             try:
                 db_session = SessionLocal()
                 existing_asset = db_session.query(Asset).filter(Asset.hash_sha256 == img_hash).first()
                 if not existing_asset:
-                    file_size_bytes = os.path.getsize(save_path) if os.path.exists(save_path) else 0
-                    top_group_name = current_path_parts[0] if current_path_parts else "Root"
-                    new_asset = Asset(
-                        hash_sha256=img_hash,
-                        original_name=safe_name,
-                        file_path=f"assets/{filename}",
-                        thumbnail_path=f"thumbnails/{img_hash}_thumb.png",
-                        width=psd_width,
-                        height=psd_height,
-                        file_size=file_size_bytes,
-                        category=top_group_name,
-                        character_name=char_name,
-                    )
-                    db_session.add(new_asset)
-                    db_session.commit()
-                    logger.info(f"Inserted asset into SQLite: {img_hash} ({safe_name})")
+                    # Check if a prior version of this layer already exists (same name+character, different hash)
+                    prior = db_session.query(Asset).filter(
+                        Asset.original_name == safe_name,
+                        Asset.character_name == char_name,
+                        Asset.hash_sha256 != img_hash,
+                    ).first()
+                    if prior:
+                        # Snapshot the old asset as a version before overwriting
+                        latest_version = db_session.query(AssetVersion).filter(
+                            AssetVersion.asset_id == prior.id
+                        ).order_by(AssetVersion.version.desc()).first()
+                        next_version = (latest_version.version + 1) if latest_version else 1
+                        version_record = AssetVersion(
+                            asset_id=prior.id,
+                            version=next_version,
+                            hash_sha256=prior.hash_sha256,
+                            file_path=prior.file_path,
+                        )
+                        db_session.add(version_record)
+                        # Update the canonical asset row to the new hash
+                        prior.hash_sha256 = img_hash
+                        prior.file_path = f"assets/{filename}"
+                        prior.thumbnail_path = f"thumbnails/{img_hash}_thumb.png"
+                        prior.file_size = os.path.getsize(save_path) if os.path.exists(save_path) else 0
+                        db_session.commit()
+                        logger.info(f"Versioned asset {safe_name} (char={char_name}): v{next_version} saved, new hash={img_hash}")
+                    else:
+                        file_size_bytes = os.path.getsize(save_path) if os.path.exists(save_path) else 0
+                        top_group_name = current_path_parts[0] if current_path_parts else "Root"
+                        new_asset = Asset(
+                            hash_sha256=img_hash,
+                            original_name=safe_name,
+                            file_path=f"assets/{filename}",
+                            thumbnail_path=f"thumbnails/{img_hash}_thumb.png",
+                            width=psd_width,
+                            height=psd_height,
+                            file_size=file_size_bytes,
+                            category=top_group_name,
+                            character_name=char_name,
+                        )
+                        db_session.add(new_asset)
+                        db_session.commit()
+                        logger.info(f"Inserted asset into SQLite: {img_hash} ({safe_name})")
                 db_session.close()
             except Exception as e:
-                logger.warning(f"Failed to insert asset into SQLite: {e}")
+                logger.warning(f"Failed to insert/version asset in SQLite: {e}")
 
             top_group = current_path_parts[0] if current_path_parts else "Root"
             if top_group not in group_order:

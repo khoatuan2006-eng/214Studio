@@ -5,7 +5,7 @@ Asset and AssetVersion provide centralized asset management with SHA-256 hashing
 """
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, Float, Text, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, String, Integer, Float, Text, DateTime, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import relationship, DeclarativeBase
 
 
@@ -76,6 +76,9 @@ class Asset(Base):
     character_name = Column(String, nullable=True)
     z_index = Column(Integer, default=0)
 
+    # P1-2.4: Soft delete flag — True means asset is in trash bin
+    is_deleted = Column(Boolean, default=False, nullable=False)
+
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationship to versions
@@ -94,6 +97,7 @@ class Asset(Base):
             "category": self.category,
             "character_name": self.character_name,
             "z_index": self.z_index,
+            "is_deleted": self.is_deleted,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 

@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(BASE_DIR))
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Body, Depends, Query, APIRouter
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Body, Depends, Query, APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -667,6 +667,59 @@ async def import_project_endpoint(file: UploadFile = File(...), db: Session = De
 
 
 # ============================================================
+# P1-2.2: WEBSOCKET UPLOAD PROGRESS
+# ============================================================
+
+class UploadProgressManager:
+    """Thread-safe manager for WebSocket clients listening to upload progress."""
+
+    def __init__(self):
+        # session_id -> list of WebSocket connections
+        self._clients: dict[str, list[WebSocket]] = {}
+        import threading
+        self._lock = threading.Lock()
+
+    def register(self, session_id: str, ws: WebSocket):
+        with self._lock:
+            self._clients.setdefault(session_id, []).append(ws)
+
+    def unregister(self, session_id: str, ws: WebSocket):
+        with self._lock:
+            if session_id in self._clients:
+                self._clients[session_id] = [c for c in self._clients[session_id] if c is not ws]
+
+    async def broadcast(self, session_id: str, message: dict):
+        import asyncio
+        with self._lock:
+            targets = list(self._clients.get(session_id, []))
+        for ws in targets:
+            try:
+                await ws.send_json(message)
+            except Exception:
+                pass
+
+
+upload_progress_manager = UploadProgressManager()
+
+
+@app.websocket("/ws/upload-progress/{session_id}")
+async def upload_progress_ws(websocket: WebSocket, session_id: str):
+    """
+    WebSocket endpoint for real-time batch upload progress.
+    Connect before calling POST /api/upload-psd/?session_id=<id>
+    Messages: { type: 'progress'|'done'|'error', filename, index, total, message }
+    """
+    await websocket.accept()
+    upload_progress_manager.register(session_id, websocket)
+    try:
+        # Keep connection alive until client disconnects
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        upload_progress_manager.unregister(session_id, websocket)
+
+
+# ============================================================
 # PSD UPLOAD (Original + Batch support — Roadmap 2.2)
 # ============================================================
 
@@ -688,18 +741,25 @@ def _process_single_psd(file_path: str, filename: str) -> dict:
 
 
 @app.post("/api/upload-psd/")
-async def upload_psd(files: List[UploadFile] = File(...)):
+async def upload_psd(
+    files: List[UploadFile] = File(...),
+    session_id: str | None = Query(None),
+):
     """
     Receives one or more PSD files, saves and processes them.
     Uses ThreadPoolExecutor for true parallel batch processing.
+    Optional: pass ?session_id=<id> and connect to /ws/upload-progress/<id>
+    beforehand to receive real-time progress events (P1-2.2).
     """
     import asyncio
 
     results = []
     errors = []
-    tasks = []
+    total = sum(1 for f in files if f.filename.endswith(".psd"))
+    index = 0
 
     loop = asyncio.get_event_loop()
+    pending_tasks: list[tuple[asyncio.Future, str]] = []
 
     for file in files:
         if not file.filename.endswith(".psd"):
@@ -708,7 +768,6 @@ async def upload_psd(files: List[UploadFile] = File(...)):
 
         temp_file_path = os.path.join(UPLOADS_DIR, file.filename)
 
-        # Save uploaded file to disk (fast I/O, do it here before dispatching)
         try:
             with open(temp_file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
@@ -717,21 +776,56 @@ async def upload_psd(files: List[UploadFile] = File(...)):
             errors.append({"filename": file.filename, "error": f"Failed to save: {str(e)}"})
             continue
 
-        # Dispatch PSD processing to thread pool
-        tasks.append(
-            loop.run_in_executor(psd_executor, _process_single_psd, temp_file_path, file.filename)
-        )
+        pending_tasks.append((
+            loop.run_in_executor(psd_executor, _process_single_psd, temp_file_path, file.filename),
+            file.filename,
+        ))
 
-    # Await all parallel PSD processing tasks
-    if tasks:
-        task_results = await asyncio.gather(*tasks, return_exceptions=True)
-        for result in task_results:
-            if isinstance(result, Exception):
-                errors.append({"filename": "unknown", "error": str(result)})
-            elif result.get("error"):
-                errors.append({"filename": result["filename"], "error": result["error"]})
+    # Process tasks with sequential progress reporting
+    for fut, filename in pending_tasks:
+        index += 1
+        if session_id:
+            await upload_progress_manager.broadcast(session_id, {
+                "type": "progress",
+                "filename": filename,
+                "index": index,
+                "total": total,
+                "message": f"Processing {filename} ({index}/{total})...",
+            })
+        try:
+            result = await fut
+            if isinstance(result, Exception) or result.get("error"):
+                err = str(result) if isinstance(result, Exception) else result["error"]
+                errors.append({"filename": filename, "error": err})
+                if session_id:
+                    await upload_progress_manager.broadcast(session_id, {
+                        "type": "error",
+                        "filename": filename,
+                        "index": index,
+                        "total": total,
+                        "message": f"❌ {filename}: {err}",
+                    })
             else:
                 results.append({"filename": result["filename"], "status": "success"})
+                if session_id:
+                    await upload_progress_manager.broadcast(session_id, {
+                        "type": "progress",
+                        "filename": filename,
+                        "index": index,
+                        "total": total,
+                        "message": f"✅ {filename} done",
+                    })
+        except Exception as e:
+            errors.append({"filename": filename, "error": str(e)})
+
+    if session_id:
+        await upload_progress_manager.broadcast(session_id, {
+            "type": "done",
+            "total": total,
+            "success": len(results),
+            "failed": len(errors),
+            "message": f"Upload complete: {len(results)}/{total} succeeded.",
+        })
 
     if errors and not results:
         raise HTTPException(status_code=400, detail={"errors": errors})
@@ -753,10 +847,13 @@ async def search_assets(
     category: str | None = Query(None),
     character: str | None = Query(None),
     z_index: int | None = Query(None),
+    include_deleted: bool = Query(False),
     db: Session = Depends(get_db),
 ):
-    """Search and filter assets."""
+    """Search and filter assets. By default excludes soft-deleted assets."""
     query = db.query(Asset)
+    if not include_deleted:
+        query = query.filter(Asset.is_deleted == False)  # noqa: E712
     if name:
         query = query.filter(Asset.original_name.ilike(f"%{name}%"))
     if category:
@@ -770,20 +867,61 @@ async def search_assets(
     return JSONResponse(content=[a.to_dict() for a in assets])
 
 
+# P1-2.4: Soft delete — move asset to trash instead of permanent delete
 @app.delete("/api/assets/{asset_hash}")
 async def delete_asset(asset_hash: str, db: Session = Depends(get_db)):
     """
-    Delete an asset entirely. Cascade removes from:
-    - SQLite assets table
-    - Asset file on disk
-    - Thumbnail file
-    - References in database.json (characters) and custom_library.json
+    Soft-delete an asset: sets is_deleted=True in SQLite.
+    Files and references are kept; use /api/assets/{hash}/restore to recover.
+    Use /api/assets/{hash}/purge for permanent deletion.
     """
-    # Remove from SQLite
     asset = db.query(Asset).filter(Asset.hash_sha256 == asset_hash).first()
-    if asset:
-        db.delete(asset)
-        db.commit()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    asset.is_deleted = True
+    db.commit()
+    logger.info(f"Soft-deleted asset: {asset_hash}")
+    return JSONResponse(content={"message": "Asset moved to trash", "hash": asset_hash})
+
+
+# P1-2.4: Restore asset from trash
+@app.post("/api/assets/{asset_hash}/restore")
+async def restore_asset(asset_hash: str, db: Session = Depends(get_db)):
+    """Restore a soft-deleted asset from the trash bin."""
+    asset = db.query(Asset).filter(Asset.hash_sha256 == asset_hash).first()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    if not asset.is_deleted:
+        return JSONResponse(content={"message": "Asset is not in trash"})
+    asset.is_deleted = False
+    db.commit()
+    logger.info(f"Restored asset: {asset_hash}")
+    return JSONResponse(content={"message": "Asset restored", "hash": asset_hash})
+
+
+# P1-2.4: Trash bin list
+@app.get("/api/assets/trash")
+async def list_trash(db: Session = Depends(get_db)):
+    """Return all soft-deleted assets (the trash bin)."""
+    assets = db.query(Asset).filter(Asset.is_deleted == True).all()  # noqa: E712
+    return JSONResponse(content=[a.to_dict() for a in assets])
+
+
+# P1-2.4: Permanent purge of a trashed asset
+@app.delete("/api/assets/{asset_hash}/purge")
+async def purge_asset(asset_hash: str, db: Session = Depends(get_db)):
+    """
+    Permanently delete a trashed asset. Cascade removes:
+    - SQLite row, asset file, thumbnail, database.json refs, custom_library.json refs.
+    """
+    asset = db.query(Asset).filter(Asset.hash_sha256 == asset_hash).first()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    if not asset.is_deleted:
+        raise HTTPException(status_code=400, detail="Asset must be in trash before purging. Use DELETE /api/assets/{hash} first.")
+
+    db.delete(asset)
+    db.commit()
 
     # Remove asset file
     asset_file = os.path.join(STORAGE_DIR, "assets", f"{asset_hash}.png")
@@ -825,8 +963,27 @@ async def delete_asset(asset_hash: str, db: Session = Depends(get_db)):
         from backend.core.library_manager import save_library
         save_library(lib)
 
-    logger.info(f"Cascade deleted asset: {asset_hash}")
-    return JSONResponse(content={"message": "Asset deleted"})
+    logger.info(f"Permanently purged asset: {asset_hash}")
+    return JSONResponse(content={"message": "Asset permanently deleted"})
+
+
+# P1-2.1: Get version history for an asset
+@app.get("/api/assets/{asset_hash}/versions")
+async def get_asset_versions(asset_hash: str, db: Session = Depends(get_db)):
+    """Return all historical versions of an asset (sorted newest first)."""
+    asset = db.query(Asset).filter(Asset.hash_sha256 == asset_hash).first()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    versions = (
+        db.query(AssetVersion)
+        .filter(AssetVersion.asset_id == asset.id)
+        .order_by(AssetVersion.version.desc())
+        .all()
+    )
+    return JSONResponse(content={
+        "asset": asset.to_dict(),
+        "versions": [v.to_dict() for v in versions],
+    })
 
 
 # --- Custom Library API Endpoints ---

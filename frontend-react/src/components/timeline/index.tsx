@@ -48,6 +48,7 @@ import {
 	isMainTrack,
 } from "@/lib/timeline";
 import { TimelineToolbar } from "./timeline-toolbar";
+import { TrackGroupHeader } from "./track-group-header";
 import { useScrollSync } from "@/hooks/timeline/use-scroll-sync";
 import { useElementSelection } from "@/hooks/timeline/element/use-element-selection";
 import { useTimelineSeek } from "@/hooks/timeline/use-timeline-seek";
@@ -455,72 +456,47 @@ export function Timeline() {
 							>
 								<ScrollArea className="h-full w-full" ref={trackLabelsScrollRef}>
 									<div className="flex flex-col gap-1 w-full">
-										{tracks.map((track) => (
-											<div
-												key={track.id}
-												className={`group flex items-center px-3 ${track.type === "property" ? "bg-black/20 border-l-2 border-indigo-500/50" : ""}`}
-												style={{
-													height: `${getTrackHeight({ type: track.type })}px`,
-												}}
-											>
-												<div className="flex min-w-0 flex-1 items-center justify-end gap-2">
-
-													{track.type === "video" && !track.id.startsWith("nested_") && (
-														<button
-															onClick={(e) => {
-																e.stopPropagation();
-																useAppStore.getState().toggleTrackExpanded(track.id);
-															}}
-															className="p-0.5 hover:bg-neutral-800 rounded transition-colors"
-														>
-															<HugeiconsIcon
-																icon={ArrowRight01Icon}
-																className={`w-3.5 h-3.5 text-neutral-400 transition-transform ${useAppStore.getState().editorData.find(r => r.id === track.id)?.isExpanded ? "rotate-90" : ""
-																	}`}
-															/>
-														</button>
-													)}
-
-													<span className={`text-xs text-muted-foreground font-medium truncate flex-1 text-left ${track.type === "property" ? "pl-5" : ""}`}>
-														{track.name}
-													</span>
-
-													{import.meta.env?.DEV &&
-														isMainTrack(track) && (
-															<div className="bg-red-500 size-1.5 rounded-full" />
-														)}
-													{canTracktHaveAudio(track) && (
-														<TrackToggleIcon
-															isOff={track.muted}
-															icons={{
-																on: VolumeHighIcon,
-																off: VolumeOffIcon,
-															}}
-															onClick={() =>
-																editor.timeline.toggleTrackMute({
-																	trackId: track.id,
-																})
-															}
-														/>
-													)}
-													{canTrackBeHidden(track) && (
-														<TrackToggleIcon
-															isOff={track.hidden}
-															icons={{
-																on: ViewIcon,
-																off: ViewOffSlashIcon,
-															}}
-															onClick={() =>
-																editor.timeline.toggleTrackVisibility({
-																	trackId: track.id,
-																})
-															}
-														/>
-													)}
-													<TrackIcon track={track} />
-												</div>
-											</div>
-										))}
+										{/* P2-3.2: Group-aware track rendering */}
+										{(() => {
+											const { trackGroups, editorData } = useAppStore.getState();
+											const collapsedGroupIds = new Set(
+												trackGroups.filter(g => g.isCollapsed).map(g => g.id)
+											);
+											const renderedGroups = new Set<string>();
+											const items: React.ReactNode[] = [];
+											for (const track of tracks) {
+												const row = editorData.find(r => r.id === track.id || track.id.startsWith(r.id));
+												const groupId = row?.groupId;
+												const group = groupId ? trackGroups.find(g => g.id === groupId) : undefined;
+												if (group && !renderedGroups.has(group.id)) {
+													renderedGroups.add(group.id);
+													const cnt = editorData.filter(r => r.groupId === group.id).length;
+													items.push(<div key={`gh_${group.id}`} className="group"><TrackGroupHeader group={group} trackCount={cnt} /></div>);
+												}
+												if (groupId && collapsedGroupIds.has(groupId)) continue;
+												items.push(
+													<div
+														key={track.id}
+														className={`group flex items-center px-3 ${track.type === "property" ? "bg-black/20 border-l-2 border-indigo-500/50" : ""}`}
+														style={{ height: `${getTrackHeight({ type: track.type })}px`, paddingLeft: group ? '18px' : undefined, borderLeft: group ? `2px solid ${group.color}40` : undefined }}
+													>
+														<div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+															{track.type === "video" && !track.id.startsWith("nested_") && (
+																<button onClick={(e) => { e.stopPropagation(); useAppStore.getState().toggleTrackExpanded(track.id); }} className="p-0.5 hover:bg-neutral-800 rounded transition-colors">
+																	<HugeiconsIcon icon={ArrowRight01Icon} className={`w-3.5 h-3.5 text-neutral-400 transition-transform ${useAppStore.getState().editorData.find(r => r.id === track.id)?.isExpanded ? "rotate-90" : ""}`} />
+																</button>
+															)}
+															<span className={`text-xs text-muted-foreground font-medium truncate flex-1 text-left ${track.type === "property" ? "pl-5" : ""}`}>{track.name}</span>
+															{import.meta.env?.DEV && isMainTrack(track) && (<div className="bg-red-500 size-1.5 rounded-full" />)}
+															{canTracktHaveAudio(track) && (<TrackToggleIcon isOff={track.muted} icons={{ on: VolumeHighIcon, off: VolumeOffIcon }} onClick={() => editor.timeline.toggleTrackMute({ trackId: track.id })} />)}
+															{canTrackBeHidden(track) && (<TrackToggleIcon isOff={track.hidden} icons={{ on: ViewIcon, off: ViewOffSlashIcon }} onClick={() => editor.timeline.toggleTrackVisibility({ trackId: track.id })} />)}
+															<TrackIcon track={track} />
+														</div>
+													</div>
+												);
+											}
+											return items;
+										})()}
 									</div>
 								</ScrollArea>
 							</div>

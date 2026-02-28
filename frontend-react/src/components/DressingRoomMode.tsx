@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAppStore, STATIC_BASE, type Character } from '../store/useAppStore';
+import { API_BASE_URL } from '../config/api';
 import Organizer from './Organizer';
-import { Layers, ChevronLeft, Trash2, UserCheck, Users } from 'lucide-react';
+import { Layers, ChevronLeft, Trash2, UserCheck, Users, Eye, EyeOff } from 'lucide-react';
 
 const DressingRoomMode: React.FC = () => {
     const { characters, fetchCustomLibrary } = useAppStore();
@@ -16,6 +17,9 @@ const DressingRoomMode: React.FC = () => {
 
     // State: selected asset hashes per layer group. Record<groupName, { hash: string, z_index: number }>
     const [selections, setSelections] = useState<Record<string, { hash: string, z_index: number }>>({});
+    
+    // P3-6.1: State for asset visibility per asset
+    const [assetVisibility, setAssetVisibility] = useState<Record<string, boolean>>({});
 
     const toggleSelection = (groupName: string, zIndex: number, hash: string) => {
         setSelections(prev => {
@@ -61,13 +65,20 @@ const DressingRoomMode: React.FC = () => {
                         <div className="flex-1 overflow-y-auto pr-2">
                             <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-4">
                                 {characters.map(char => {
-                                    // Find thumbnail: first asset of the first layer group
+                                    // P1-2.3: Thumbnail Integration
+                                    // Use 128x128 thumbnail instead of full-size PNG for the character card
                                     let thumbPath = "";
                                     let charName = char.name;
                                     if (char.layer_groups && Object.keys(char.layer_groups).length > 0) {
-                                        const firstGroup = Object.values(char.layer_groups)[0];
+                                        const firstGroup = Object.values(char.layer_groups)[0] as any[];
                                         if (firstGroup && firstGroup.length > 0) {
-                                            thumbPath = `${STATIC_BASE}/${firstGroup[0].path}`;
+                                            const firstAsset = firstGroup[0];
+                                            if (firstAsset.hash) {
+                                                // Prefer thumbnail URL (128x128) over full-size asset
+                                                thumbPath = `${API_BASE_URL}/thumbnails/${firstAsset.hash}_thumb.png`;
+                                            } else {
+                                                thumbPath = `${STATIC_BASE}/${firstAsset.path}`;
+                                            }
                                         }
                                     }
 
@@ -144,18 +155,29 @@ const DressingRoomMode: React.FC = () => {
 
                                             <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-1.5 w-full">
                                                 {assets.map(asset => {
-                                                    const isSelected = selectedHash === asset.hash;
+                                                    const assetHash = asset.hash || asset.path; // Use path as fallback
+                                                    const isSelected = selectedHash === assetHash;
+                                                    const isVisible = assetVisibility[assetHash] !== false; // Default to true
+                                                    
+                                                    const toggleVisibility = (e: React.MouseEvent) => {
+                                                        e.stopPropagation();
+                                                        setAssetVisibility(prev => ({
+                                                            ...prev,
+                                                            [assetHash]: !isVisible
+                                                        }));
+                                                    };
+                                                    
                                                     return (
                                                         <div
-                                                            key={asset.hash}
-                                                            onClick={() => toggleSelection(groupName, zIndex, asset.hash || '')}
+                                                            key={assetHash}
+                                                            onClick={() => toggleSelection(groupName, zIndex, assetHash)}
                                                             className={`relative w-[80px] h-[80px] rounded-md border-[2px] cursor-pointer overflow-hidden transition-all group p-[2px] ${isSelected ? 'border-[#6c5ce7] shadow-[0_0_10px_rgba(108,92,231,0.8),inset_0_0_15px_rgba(108,92,231,0.5)]' : 'bg-black/40 border-transparent hover:border-[#5b4bc4] hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(0,0,0,0.3)]'
                                                                 }`}
                                                             title={asset.name}
                                                         >
                                                             <img
                                                                 src={`${STATIC_BASE}/${asset.path}`}
-                                                                className="w-full h-full object-contain"
+                                                                className={`w-full h-full object-contain ${!isVisible ? 'opacity-30' : ''}`}
                                                                 crossOrigin="anonymous"
                                                                 alt={asset.name}
                                                             />
@@ -169,6 +191,20 @@ const DressingRoomMode: React.FC = () => {
                                                                     </div>
                                                                 </div>
                                                             )}
+                                                            {/* P3-6.1: Quick-Toggle Asset Visibility */}
+                                                            <div className="absolute top-0 right-0 p-1 bg-black/50 rounded-bl-md">
+                                                                <button
+                                                                    onClick={toggleVisibility}
+                                                                    className="text-white hover:text-indigo-400 transition-colors"
+                                                                    title={`Toggle visibility (${isVisible ? 'Visible' : 'Hidden'})`}
+                                                                >
+                                                                    {isVisible ? (
+                                                                        <Eye className="w-3 h-3" />
+                                                                    ) : (
+                                                                        <EyeOff className="w-3 h-3" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     );
                                                 })}
@@ -187,6 +223,7 @@ const DressingRoomMode: React.FC = () => {
                 {Object.keys(selections).length > 0 ? (
                     <div className="relative w-full h-full flex items-center justify-center">
                         {Object.values(selections)
+                            .filter(sel => assetVisibility[sel.hash] !== false) // Only show visible assets
                             .sort((a, b) => a.z_index - b.z_index) // Sort by z_index ascending (draw from bottom up)
                             .map(sel => {
                                 // find asset path

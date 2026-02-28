@@ -31,6 +31,21 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { currentProject, startAutoSave, stopAutoSave, markDirty } = useProjectStore();
 
+  // P2-3.5: Restore editorData from saved project when project changes
+  useEffect(() => {
+    if (currentProject?.data?.editorData) {
+      useAppStore.getState().setEditorData(currentProject.data.editorData);
+    }
+    
+    // P3-HOTFIX: Restore scenes and activeSceneId when project loads
+    if (currentProject?.data?.scenes !== undefined) {
+      useAppStore.setState({
+        scenes: currentProject.data.scenes || [],
+        activeSceneId: currentProject.data.activeSceneId || null,
+      });
+    }
+  }, [currentProject?.id]);
+
   // Start auto-save when a project is loaded
   useEffect(() => {
     if (currentProject) {

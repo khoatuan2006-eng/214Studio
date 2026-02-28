@@ -6,9 +6,11 @@ import { setDragData } from '../lib/drag-data';
 import { useTimelineStore, getDynamicDuration, getEffectiveOutPoint } from '../stores/timeline-store';
 import type { ActionBlock, EasingType, CharacterTrack } from '../store/useAppStore';
 import { Timeline as TimelinePanel } from './timeline';
+import { SceneTabs } from './SceneTabs';
 import { Stage, Layer, Image as KonvaImageRect, Rect, Group, Text, Transformer, Circle, Line } from 'react-konva';
-import { Play, Pause, Plus, MousePointer2, Eye, EyeOff, Trash2, Edit, ChevronLeft, Lock, Unlock, Film, X, Download } from 'lucide-react';
+import { Play, Pause, Plus, MousePointer2, Eye, EyeOff, Trash2, Edit, ChevronLeft, Lock, Unlock, Film, X, Download, Keyboard } from 'lucide-react';
 import { getInterpolatedValue, EASING_OPTIONS } from '../utils/easing';
+import { EasingCurvePicker } from './EasingCurvePicker';
 import type { BlendMode } from '../store/useAppStore';
 import { exportVideo } from '../utils/exporter';
 import type { ExportProgress } from '../utils/exporter';
@@ -246,6 +248,13 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
         }));
     };
 
+    // P2-3.4: Speed Ramp handler
+    const handleSpeedChange = (speed: number) => {
+        setEditorData(prev => prev.map(row =>
+            row.id !== selectedRowId ? row : { ...row, speedMultiplier: speed }
+        ));
+    };
+
     const toggleLayerVisibility = (rowId: string, actionId: string) => {
         setEditorData(prev => prev.map(r => r.id === rowId ? {
             ...r,
@@ -303,18 +312,11 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
 
                         {inspectorTab === 'keyframes' && (
                             <div className="space-y-3">
-                                <div className="flex flex-col gap-1 mb-2">
-                                    <label className="text-xs text-neutral-400">Tween Auto Easing</label>
-                                    <select
-                                        value={currentEasing}
-                                        onChange={(e) => handlePropertyChange('easing', e.target.value as EasingType)}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded p-1.5 text-sm outline-none focus:border-indigo-500 text-neutral-200"
-                                    >
-                                        {EASING_OPTIONS.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                {/* P2-4.1: Easing Curves GUI — visual picker */}
+                                <EasingCurvePicker
+                                    value={currentEasing}
+                                    onChange={(v) => handlePropertyChange('easing', v)}
+                                />
                                 <PropertyInput
                                     label="X Position (0-1920)"
                                     value={Math.round(selectedInterpX)}
@@ -384,6 +386,37 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                                         <option value="darken">Darken</option>
                                         <option value="lighten">Lighten</option>
                                     </select>
+                                </div>
+                                {/* P2-3.4: Speed Ramp */}
+                                <div className="space-y-2 mb-6">
+                                    <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Playback Speed</h4>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="range"
+                                            min={0.1} max={4} step={0.05}
+                                            value={selectedRow.speedMultiplier ?? 1}
+                                            onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                                            className="flex-1 accent-indigo-500"
+                                        />
+                                        <span className="text-xs text-neutral-300 w-10 text-right font-mono">
+                                            {(selectedRow.speedMultiplier ?? 1).toFixed(2)}x
+                                        </span>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        {[0.25, 0.5, 1, 2, 4].map(v => (
+                                            <button
+                                                key={v}
+                                                onClick={() => handleSpeedChange(v)}
+                                                className={`flex-1 text-xs py-0.5 rounded transition-colors ${
+                                                    (selectedRow.speedMultiplier ?? 1) === v
+                                                        ? 'bg-indigo-600 text-white'
+                                                        : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                                                }`}
+                                            >
+                                                {v}x
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                                 <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Layer Tree</h4>
                                 {selectedRow.actions.length === 0 ? (
@@ -682,6 +715,12 @@ const StudioMode = () => {
     const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
     const [zoomScale, setZoomScale] = useState(1);
     const [isPanning, setIsPanning] = useState(false);
+    
+    // P3-5.2: Resolution Preview Modes
+    const [resolutionScale, setResolutionScale] = useState<number>(1); // 1 = 100%, 0.5 = 50%, 0.25 = 25%
+    
+    // P3-5.3: Safe Area Overlay
+    const [showSafeAreas, setShowSafeAreas] = useState<boolean>(false);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const transformerRef = useRef<any>(null);
@@ -695,6 +734,26 @@ const StudioMode = () => {
     const [exportProgress, setExportProgress] = useState<ExportProgress>({
         status: 'idle', currentFrame: 0, totalFrames: 0, message: ''
     });
+    
+    // P3-7.1: Keyboard Shortcuts Panel
+    const [showShortcuts, setShowShortcuts] = useState(false);
+    
+    // Global Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+            
+            if (e.key === '?') {
+                e.preventDefault();
+                setShowShortcuts(true);
+            } else if (e.key === 'Escape' && showShortcuts) {
+                setShowShortcuts(false);
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showShortcuts]);
 
     // Canvas Context Menu State
     const [canvasContextMenu, setCanvasContextMenu] = useState<{ x: number; y: number } | null>(null);
@@ -820,11 +879,16 @@ const StudioMode = () => {
 
         const syncTransform = (time: number, data: CharacterTrack[]) => {
             data.forEach(char => {
+                // P2-3.4: Speed Ramp — scale time relative to track's earliest action start
+                const speed = char.speedMultiplier ?? 1;
+                const trackStart = char.actions.length > 0 ? Math.min(...char.actions.map(a => a.start)) : 0;
+                const effectiveTime = speed !== 1 ? trackStart + (time - trackStart) * speed : time;
+
                 const node = groupRefs.current[char.id];
                 if (node && !node.isDragging() && !transformerRef.current?.isTransforming()) {
-                    const interpX = getInterpolatedValue(char.transform.x, time, LOGICAL_WIDTH / 2);
-                    const interpY = getInterpolatedValue(char.transform.y, time, LOGICAL_HEIGHT / 2);
-                    const interpScale = getInterpolatedValue(char.transform.scale, time, 1);
+                    const interpX = getInterpolatedValue(char.transform.x, effectiveTime, LOGICAL_WIDTH / 2);
+                    const interpY = getInterpolatedValue(char.transform.y, effectiveTime, LOGICAL_HEIGHT / 2);
+                    const interpScale = getInterpolatedValue(char.transform.scale, effectiveTime, 1);
 
                     // 18.1: Scale-aware frustum culling — padding grows with character scale
                     const scaledPadding = BASE_EXTENT * Math.max(interpScale, 1);
@@ -839,10 +903,10 @@ const StudioMode = () => {
                         node.y(interpY);
                         node.scaleX(interpScale);
                         node.scaleY(interpScale);
-                        node.rotation(getInterpolatedValue(char.transform.rotation, time, 0));
-                        node.opacity(getInterpolatedValue(char.transform.opacity, time, 100) / 100);
-                        node.offsetX(getInterpolatedValue(char.transform.anchorX, time, 0));
-                        node.offsetY(getInterpolatedValue(char.transform.anchorY, time, 0));
+                        node.rotation(getInterpolatedValue(char.transform.rotation, effectiveTime, 0));
+                        node.opacity(getInterpolatedValue(char.transform.opacity, effectiveTime, 100) / 100);
+                        node.offsetX(getInterpolatedValue(char.transform.anchorX, effectiveTime, 0));
+                        node.offsetY(getInterpolatedValue(char.transform.anchorY, effectiveTime, 0));
                     }
                 }
 
@@ -857,9 +921,9 @@ const StudioMode = () => {
 
                 const anchorNode = anchorRefs.current[char.id];
                 if (anchorNode && !anchorNode.isDragging()) {
-                    anchorNode.x(getInterpolatedValue(char.transform.anchorX, time, 0));
-                    anchorNode.y(getInterpolatedValue(char.transform.anchorY, time, 0));
-                    const invertScale = 1 / getInterpolatedValue(char.transform.scale, time, 1);
+                    anchorNode.x(getInterpolatedValue(char.transform.anchorX, effectiveTime, 0));
+                    anchorNode.y(getInterpolatedValue(char.transform.anchorY, effectiveTime, 0));
+                    const invertScale = 1 / getInterpolatedValue(char.transform.scale, effectiveTime, 1);
                     anchorNode.scaleX(invertScale);
                     anchorNode.scaleY(invertScale);
                 }
@@ -1298,6 +1362,28 @@ const StudioMode = () => {
                                 </button>
                             </div>
                             <div className="flex items-center gap-3">
+                                {/* P3-5.2: Resolution Preview Modes */}
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-sm text-neutral-400 font-mono whitespace-nowrap">Preview:</span>
+                                    <select
+                                        value={resolutionScale}
+                                        onChange={(e) => setResolutionScale(parseFloat(e.target.value))}
+                                        className="bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-neutral-200 focus:border-indigo-500 outline-none"
+                                    >
+                                        <option value={0.25}>25%</option>
+                                        <option value={0.5}>50%</option>
+                                        <option value={0.75}>75%</option>
+                                        <option value={1}>100%</option>
+                                    </select>
+                                </div>
+                                {/* P3-5.3: Safe Area Overlay */}
+                                <button
+                                    onClick={() => setShowSafeAreas(!showSafeAreas)}
+                                    className={`p-1.5 rounded ${showSafeAreas ? 'bg-indigo-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                                    title="Toggle safe area overlays (title safe/action safe)"
+                                >
+                                    <Eye className={`w-4 h-4 ${showSafeAreas ? 'text-white' : 'text-neutral-400'}`} />
+                                </button>
                                 <div className="text-sm text-neutral-400 font-mono">
                                     Logical: 1920x1080 | Zoom: {(zoomScale * 100).toFixed(0)}%
                                 </div>
@@ -1317,8 +1403,8 @@ const StudioMode = () => {
                             <div
                                 className="relative overflow-hidden bg-black shadow-2xl ring-1 ring-neutral-800"
                                 style={{
-                                    width: LOGICAL_WIDTH * canvasScale,
-                                    height: LOGICAL_HEIGHT * canvasScale,
+                                    width: LOGICAL_WIDTH * canvasScale * resolutionScale,
+                                    height: LOGICAL_HEIGHT * canvasScale * resolutionScale,
                                     cursor: isSpacePressed ? (isPanning ? 'grabbing' : 'grab') : 'default'
                                 }}
                             >
@@ -1378,6 +1464,34 @@ const StudioMode = () => {
                                         scaleY={canvasScale * zoomScale}
                                     >
                                         {!activeEditTargetId && <Rect name="background-rect" width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill="#111" />}
+
+                                        {/* P3-5.3: Safe Area Overlay */}
+                                        {showSafeAreas && (
+                                            <>
+                                                {/* Action Safe Area (90% of canvas) */}
+                                                <Rect
+                                                    x={LOGICAL_WIDTH * 0.05}
+                                                    y={LOGICAL_HEIGHT * 0.05}
+                                                    width={LOGICAL_WIDTH * 0.9}
+                                                    height={LOGICAL_HEIGHT * 0.9}
+                                                    stroke="#00ff00"
+                                                    strokeWidth={1}
+                                                    dash={[5, 5]}
+                                                    listening={false}
+                                                />
+                                                {/* Title Safe Area (80% of canvas) */}
+                                                <Rect
+                                                    x={LOGICAL_WIDTH * 0.1}
+                                                    y={LOGICAL_HEIGHT * 0.1}
+                                                    width={LOGICAL_WIDTH * 0.8}
+                                                    height={LOGICAL_HEIGHT * 0.8}
+                                                    stroke="#ffff00"
+                                                    strokeWidth={1}
+                                                    dash={[5, 5]}
+                                                    listening={false}
+                                                />
+                                            </>
+                                        )}
 
                                         {!activeEditTargetId && editorData.length === 0 && (
                                             <Text
@@ -1547,6 +1661,8 @@ const StudioMode = () => {
 
             {/* Bottom Half: Timeline */}
             <div className="h-72 w-full max-w-full bg-neutral-900 border-t border-neutral-700 flex flex-col shrink-0 overflow-hidden">
+                {/* P2-3.1: Scene Tabs */}
+                <SceneTabs />
                 <div className="flex items-center px-4 py-2 border-b border-neutral-700 bg-neutral-800 justify-between">
                     <div className="flex items-center gap-4">
                         <button
@@ -1634,6 +1750,88 @@ const StudioMode = () => {
                                     {exportProgress.message}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* P3-7.1: Keyboard Shortcuts Panel */}
+            {showShortcuts && (
+                <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center backdrop-blur-sm">
+                    <div className="bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl p-8 w-[600px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Keyboard className="w-5 h-5 text-indigo-400" /> Keyboard Shortcuts
+                            </h2>
+                            <button
+                                onClick={() => setShowShortcuts(false)}
+                                className="p-1.5 hover:bg-neutral-700 rounded-lg transition-colors text-neutral-400"
+                                title="Close shortcuts panel"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-3">
+                                    <h3 className="font-semibold text-indigo-400 border-b border-neutral-700 pb-1">Navigation</h3>
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Play / Pause</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">Space</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Pan Canvas</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">Space + Drag</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Zoom In/Out</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">Mouse Wheel</kbd>
+                                    </div>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    <h3 className="font-semibold text-indigo-400 border-b border-neutral-700 pb-1">Editing</h3>
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Undo</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">Ctrl + Z</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Redo</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">Ctrl + Shift + Z</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Delete Selected</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">Del</kbd>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-3 pt-4">
+                                <h3 className="font-semibold text-indigo-400 border-b border-neutral-700 pb-1">Timeline</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Add Keyframe</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">K</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Toggle Auto-Key</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">A</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Previous Frame</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">←</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
+                                        <span className="text-sm">Next Frame</span>
+                                        <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">→</kbd>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-6 text-center text-xs text-neutral-500">
+                            Press <kbd className="bg-neutral-800 px-1.5 py-0.5 rounded">?</kbd> to show this panel • Press <kbd className="bg-neutral-800 px-1.5 py-0.5 rounded">Esc</kbd> to close
                         </div>
                     </div>
                 </div>

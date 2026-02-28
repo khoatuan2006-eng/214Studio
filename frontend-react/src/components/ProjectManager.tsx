@@ -9,8 +9,10 @@ import {
     Clock,
     X,
     FileArchive,
+    RotateCcw,
 } from 'lucide-react';
 import { useProjectStore, type ProjectListItem } from '../store/useProjectStore';
+import { useAppStore } from '../store/useAppStore';
 
 interface ProjectManagerProps {
     onProjectLoaded?: () => void;
@@ -27,14 +29,21 @@ export default function ProjectManager({ onProjectLoaded }: ProjectManagerProps)
         createProject,
         loadProject,
         saveProject,
+        saveProjectWithScenes, // P3-HOTFIX
         deleteProject,
         exportProject,
         importProject,
+        checkAutosave,
+        restoreAutosave,
     } = useProjectStore();
 
     const [showProjectList, setShowProjectList] = useState(!currentProject);
     const [newProjectName, setNewProjectName] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // P1-1.3: Auto-save recovery state
+    const [autosaveInfo, setAutosaveInfo] = useState<{ projectId: string; savedAt: string } | null>(null);
+    const [showRecoveryModal, setShowRecoveryModal] = useState(false);
 
     useEffect(() => {
         loadProjects();
@@ -50,6 +59,12 @@ export default function ProjectManager({ onProjectLoaded }: ProjectManagerProps)
 
     const handleOpen = async (project: ProjectListItem) => {
         await loadProject(project.id);
+        // P1-1.3: Check for autosave draft after loading
+        const draft = await checkAutosave(project.id);
+        if (draft.found && draft.savedAt) {
+            setAutosaveInfo({ projectId: project.id, savedAt: draft.savedAt });
+            setShowRecoveryModal(true);
+        }
         setShowProjectList(false);
         onProjectLoaded?.();
     };
@@ -80,10 +95,53 @@ export default function ProjectManager({ onProjectLoaded }: ProjectManagerProps)
         });
     };
 
+    // P1-1.3: Auto-save Recovery Modal
+    const RecoveryModal = () => (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="bg-neutral-800 border border-amber-500/40 rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
+                <div className="flex items-center gap-2 mb-3">
+                    <RotateCcw className="w-5 h-5 text-amber-400" />
+                    <h3 className="text-white font-semibold">Unsaved Draft Found</h3>
+                </div>
+                <p className="text-sm text-neutral-300 mb-1">
+                    An auto-saved draft was found for this project.
+                </p>
+                {autosaveInfo && (
+                    <p className="text-xs text-amber-400 mb-4">
+                        Saved at: {formatDate(autosaveInfo.savedAt)}
+                    </p>
+                )}
+                <p className="text-xs text-neutral-400 mb-5">
+                    Would you like to restore the unsaved draft, or continue with the last saved version?
+                </p>
+                <div className="flex gap-2">
+                    <button
+                        onClick={async () => {
+                            if (autosaveInfo) await restoreAutosave(autosaveInfo.projectId);
+                            setShowRecoveryModal(false);
+                            setAutosaveInfo(null);
+                        }}
+                        className="flex-1 px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors"
+                    >
+                        Restore Draft
+                    </button>
+                    <button
+                        onClick={() => { setShowRecoveryModal(false); setAutosaveInfo(null); }}
+                        className="flex-1 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 text-neutral-200 text-sm rounded-lg transition-colors"
+                    >
+                        Use Saved Version
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
     // --- Header bar (always visible when a project is loaded) ---
     if (currentProject && !showProjectList) {
         return (
-            <div className="flex items-center gap-3 px-4 py-2 bg-neutral-800/70 border-b border-neutral-700/50 text-xs">
+            <>
+                {showRecoveryModal && <RecoveryModal />}
+                <div className="flex items-center gap-3 px-4 py-2 bg-neutral-800/70 border-b border-neutral-700/50 text-xs">
                 <button
                     onClick={() => setShowProjectList(true)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-neutral-700/60 hover:bg-neutral-600 text-neutral-200 transition-colors"
@@ -94,7 +152,11 @@ export default function ProjectManager({ onProjectLoaded }: ProjectManagerProps)
                 </button>
 
                 <button
-                    onClick={() => saveProject()}
+                    onClick={() => saveProjectWithScenes(
+                        useAppStore.getState().editorData,
+                        useAppStore.getState().scenes,
+                        useAppStore.getState().activeSceneId
+                    )}
                     className={`flex items-center gap-1 px-2 py-1.5 rounded-md transition-colors ${isDirty
                             ? 'bg-amber-600/80 hover:bg-amber-500 text-white'
                             : 'bg-neutral-700/40 text-neutral-400 hover:bg-neutral-600 hover:text-neutral-200'
@@ -121,6 +183,7 @@ export default function ProjectManager({ onProjectLoaded }: ProjectManagerProps)
                     </span>
                 )}
             </div>
+            </>
         );
     }
 

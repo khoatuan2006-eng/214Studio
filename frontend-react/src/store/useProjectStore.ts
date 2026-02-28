@@ -40,6 +40,8 @@ interface ProjectState {
     createProject: (name?: string) => Promise<ProjectData>;
     loadProject: (id: string) => Promise<void>;
     saveProject: (data?: Record<string, any>) => Promise<void>;
+    // P3-HOTFIX: Save with scenes support
+    saveProjectWithScenes: (editorData: any, scenes?: any[], activeSceneId?: string | null) => Promise<void>;
     deleteProject: (id: string) => Promise<void>;
     updateProjectName: (name: string) => Promise<void>;
     markDirty: () => void;
@@ -48,6 +50,10 @@ interface ProjectState {
     // Auto-save
     startAutoSave: (getData: () => Record<string, any>) => void;
     stopAutoSave: () => void;
+
+    // P1-1.3: Auto-save recovery
+    checkAutosave: (projectId: string) => Promise<{ found: boolean; savedAt?: string; data?: Record<string, any> }>;
+    restoreAutosave: (projectId: string) => Promise<void>;
 
     // Export / Import
     exportProject: () => Promise<void>;
@@ -129,6 +135,33 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
         }
     },
 
+    // P3-HOTFIX: Save project with scenes support
+    saveProjectWithScenes: async (editorData: any, scenes?: any[], activeSceneId?: string | null) => {
+        const { currentProject } = get();
+        if (!currentProject) return;
+
+        try {
+            const body: Record<string, any> = {
+                name: currentProject.name,
+                data: {
+                    editorData,
+                    scenes,
+                    activeSceneId,
+                },
+            };
+
+            const res = await axios.put(`${API_BASE}/projects/${currentProject.id}`, body);
+            set({
+                currentProject: res.data,
+                isDirty: false,
+                lastSavedAt: new Date().toISOString(),
+            });
+        } catch (error: any) {
+            console.error('Failed to save project:', error);
+            set({ error: error.message });
+        }
+    },
+
     deleteProject: async (id: string) => {
         try {
             await axios.delete(`${API_BASE}/projects/${id}`);
@@ -184,6 +217,33 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
         if (autoSaveInterval) {
             clearInterval(autoSaveInterval);
             set({ autoSaveInterval: null });
+        }
+    },
+
+    // P1-1.3: Check if an autosave draft exists for a project
+    checkAutosave: async (projectId: string) => {
+        try {
+            const res = await axios.get(`${API_BASE}/projects/${projectId}/autosave`);
+            return { found: true, savedAt: res.data.saved_at, data: res.data.data };
+        } catch {
+            return { found: false };
+        }
+    },
+
+    // P1-1.3: Restore the autosave draft into currentProject
+    restoreAutosave: async (projectId: string) => {
+        try {
+            const res = await axios.get(`${API_BASE}/projects/${projectId}/autosave`);
+            const draft = res.data;
+            // Merge draft data into current project state so editor picks it up
+            set((state) => ({
+                currentProject: state.currentProject
+                    ? { ...state.currentProject, data: draft.data }
+                    : state.currentProject,
+                isDirty: true,
+            }));
+        } catch (error: any) {
+            console.error('[RestoreAutosave] Failed:', error);
         }
     },
 
