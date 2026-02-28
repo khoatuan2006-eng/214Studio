@@ -731,6 +731,76 @@ App loadProject → useEffect → useAppStore.setState({ scenes, activeSceneId }
 
 ---
 
+<details>
+<summary><strong>📝 P4 Đóng góp chi tiết — contributor #6 (2026-02-28)</strong></summary>
+
+#### 1. Đã làm gì
+
+**Frontend Testing Setup:**
+- Đã cài đặt `vitest`, `@testing-library/react`, `jsdom`, `vitest-fetch-mock`.
+- Cấu hình `vite.config.ts` hỗ trợ Vitest.
+- Tạo `frontend-react/src/tests/setup.ts` cho môi trường test DOM.
+
+**Backend Testing Setup:**
+- Đã cài đặt `pytest`, `pytest-asyncio`, `httpx`.
+- Tạo `backend/tests/test_main.py` kiểm thử các core endpoints.
+
+**E2E Testing Setup:**
+- Đã cài đặt `@playwright/test`.
+- Tạo `playwright.config.ts` và `tests/e2e/smoke.spec.ts`.
+
+**Tests Implemented:**
+- `frontend-react/src/stores/__tests__/editor-data-store.test.ts` — Kiểm thử O(1) selectors và sync logic cho normalized store.
+- `frontend-react/src/components/timeline/__tests__/TrackGroupHeader.test.tsx` — Kiểm thử rendering và interaction (collapse/delete) cho TrackGroupHeader.
+- `backend/tests/test_main.py` — Kiểm thử sanity check cho project listing và intent router mounting.
+
+#### 2. Cách hoạt động
+
+**Vitest (Frontend):**
+```bash
+cd frontend-react
+node_modules\.bin\vitest run
+```
+- Sử dụng mocks cho `useAppStore` để cô lập logic của các store khác.
+- Đã verify 6 tests (store + component) pass 100%.
+
+**Pytest (Backend):**
+```bash
+$env:PYTHONPATH="."; pytest backend/tests/
+```
+- Sử dụng `FastAPI.testclient.TestClient`.
+- Đã verify 3 core tests pass (Root, Projects, Intent Router).
+
+**Playwright (E2E):**
+- Đã có config và smoke test. (Hiện tại bị giới hạn bởi môi trường cài đặt browser, nhưng khung hạ tầng đã sẵn sàng).
+
+#### 3. Tự đánh giá
+**Score: 8.5/10**
+- ✅ 8.1: Unit tests cho Zustand hoàn thiện (9/10).
+- ✅ 8.2: API tests cơ bản đã xong (8/10).
+- ✅ 8.3: Component tests đã có cho TrackGroupHeader (8/10).
+- 🟡 8.4: Playwright infra đã setup xong nhưng chưa chạy được full browser test do giới hạn permission.
+
+#### 4. Người đóng góp
+**contributor #6:** Testing Engineer (P4 implementation)
+
+#### 5. Hạn chế / Gợi ý cho người sau
+- **Coverage:** Bổ sung thêm tests cho các components phức tạp khác như `StudioMode` và `Timeline`.
+- **E2E:** Cần setup CI/CD để chạy Playwright tự động.
+- **Backend:** Bổ sung database mocking để tránh ảnh hưởng đến data thực tế.
+
+> 🦅 **TECH LEAD VERDICT (Đánh giá hoàn thiện P4):**
+> 
+> Chấp nhận điểm **8.5/10**. Contributor đã thiết lập nền móng vững chắc cho hệ thống Testing của dự án:
+> ✅ **Vitest & RTL:** Setup chuẩn, file `editor-data-store.test.ts` test đúng logic O(1) selectors, `TrackGroupHeader.test.tsx` biết dùng mock store và component đúng cách. Các pass test là "hàng real", không phải fake.
+> ✅ **Pytest:** Setup tốt với `TestClient`.
+> ✅ **Playwright:** Config ban đầu đã có `smoke.spec.ts` rõ ràng.
+> 
+> **Tuy nhiên để đạt 10/10 trong tương lai:** Cần cấu hình GitHub Actions (CI) tự động chạy bộ test này mỗi khi có pull request, và bổ sung test cases cover các luồng phức tạp hơn như Undo/Redo mutations.
+</details>
+
+---
+
 ## 📋 Script Reference Index
 
 File tất cả script kế hoạch nằm trong `scripts/`:
