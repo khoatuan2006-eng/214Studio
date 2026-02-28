@@ -5,7 +5,7 @@
  * Uses the singleton commandHistory instance.
  */
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 import { commandHistory } from '@/stores/command-history';
 
 /**
@@ -18,15 +18,23 @@ export function useUndoRedo(options?: { enableKeyboardShortcuts?: boolean }) {
     const enableKB = options?.enableKeyboardShortcuts ?? true;
 
     // Subscribe to command history changes for reactive UI
-    const snapshot = useSyncExternalStore(
-        (onStoreChange) => commandHistory.subscribe(onStoreChange),
-        () => ({
-            canUndo: commandHistory.canUndo(),
-            canRedo: commandHistory.canRedo(),
-            undoDescription: commandHistory.getUndoDescription(),
-            redoDescription: commandHistory.getRedoDescription(),
-        }),
-    );
+    const [snapshot, setSnapshot] = useState({
+        canUndo: commandHistory.canUndo(),
+        canRedo: commandHistory.canRedo(),
+        undoDescription: commandHistory.getUndoDescription(),
+        redoDescription: commandHistory.getRedoDescription(),
+    });
+
+    useEffect(() => {
+        return commandHistory.subscribe(() => {
+            setSnapshot({
+                canUndo: commandHistory.canUndo(),
+                canRedo: commandHistory.canRedo(),
+                undoDescription: commandHistory.getUndoDescription(),
+                redoDescription: commandHistory.getRedoDescription(),
+            });
+        });
+    }, []);
 
     // Keyboard shortcuts
     useEffect(() => {

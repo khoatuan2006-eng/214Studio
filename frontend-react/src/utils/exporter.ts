@@ -1,4 +1,4 @@
-import { useAppStore } from '../store/useAppStore';
+// useAppStore removed
 import { API_BASE_URL } from '../config/api';
 import { yieldToMain } from './worker-utils';
 
@@ -12,7 +12,7 @@ export interface ExportProgress {
 }
 
 /** How many frames to batch before sending a chunk to the server */
-const CHUNK_SIZE = 10;
+const CHUNK_SIZE = 20;
 
 /**
  * Wait for Konva to finish rendering after a state update.
@@ -21,7 +21,7 @@ const CHUNK_SIZE = 10;
 function waitForRender(): Promise<void> {
     return new Promise(resolve => {
         requestAnimationFrame(() => {
-            setTimeout(resolve, 50); // 50ms buffer for Konva to paint
+            setTimeout(resolve, 16); // ~1 frame at 60fps — minimal buffer
         });
     });
 }
@@ -72,7 +72,7 @@ export async function exportVideo(
             const time = i / fps;
 
             // Set the cursor time to this frame
-            useAppStore.getState().setCursorTime(time);
+            import('@/stores/transient-store').then(m => m.setCursorTime(time));
 
             // Wait for React-Konva to re-render
             await waitForRender();
@@ -88,7 +88,7 @@ export async function exportVideo(
             }
 
             // Capture frame as Base64 PNG
-            const dataURL = stageRef.current.toDataURL({ pixelRatio: 2 });
+            const dataURL = stageRef.current.toDataURL({ pixelRatio: 1 });
             const base64Data = dataURL.split(',')[1];
             chunkBuffer.push(base64Data);
 

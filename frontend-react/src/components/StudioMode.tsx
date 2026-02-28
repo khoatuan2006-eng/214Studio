@@ -1,45 +1,67 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useAppStore, STATIC_BASE, getAssetPath } from '../store/useAppStore';
-import { transientState, setCursorTime, setActiveEditTargetId, useTransientSnapshot } from '../stores/transient-store';
-import { useEditor } from '../hooks/use-editor';
+/// <reference types="@pixi/react" />
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useAppStore, STATIC_BASE, getAssetPath } from '@/store/useAppStore';
+import type { ActionBlock, BlendMode, EasingType } from '@/store/useAppStore';
+import { transientState, setActiveEditTargetId, useTransientSnapshot } from '../stores/transient-store';
 import { setDragData } from '../lib/drag-data';
 import { useTimelineStore, getDynamicDuration, getEffectiveOutPoint } from '../stores/timeline-store';
-import type { ActionBlock, EasingType, CharacterTrack } from '../store/useAppStore';
 import { Timeline as TimelinePanel } from './timeline';
 import { SceneTabs } from './SceneTabs';
-import { Stage, Layer, Image as KonvaImageRect, Rect, Group, Text, Transformer, Circle, Line } from 'react-konva';
-import { Play, Pause, Plus, MousePointer2, Eye, EyeOff, Trash2, Edit, ChevronLeft, Lock, Unlock, Film, X, Download, Keyboard } from 'lucide-react';
-import { getInterpolatedValue, EASING_OPTIONS } from '../utils/easing';
+import { Application } from '@pixi/react';
+import * as PIXI from 'pixi.js';
+import { Play, Pause, Plus, MousePointer2, Eye, EyeOff, Trash2, Edit, ChevronLeft, Lock, Unlock, Film, X, Download, Keyboard, Copy, Layers } from 'lucide-react';
+import { getInterpolatedValue } from '../utils/easing';
 import { EasingCurvePicker } from './EasingCurvePicker';
-import type { BlendMode } from '../store/useAppStore';
 import { exportVideo } from '../utils/exporter';
 import type { ExportProgress } from '../utils/exporter';
 import { toast } from 'sonner';
-import { useStoreCleanup, useKonvaCleanup, useAnimationFrame } from '../hooks/useCleanup';
+import { useStoreCleanup, useKonvaCleanup } from '../hooks/useCleanup';
 import { useUndoRedo } from '../hooks/useUndoRedo';
+import { useEditor } from '../hooks/use-editor';
+import { usePlayback, useSelection, useTransform } from '../hooks/use-editor-core';
+import { interpolationService } from '../core/services/interpolation-service';
+import { TransformHandles } from './studio/TransformHandles';
+import { SnapGuides } from './studio/SnapGuides';
+import { ProfessionalContextMenu as ContextMenu } from './studio/ProfessionalContextMenu';
+import { videoExporter } from '../services/video-export';
+import { extend } from '@pixi/react';
+import { Container, Sprite, Graphics, Text as PixiText } from 'pixi.js';
 
-// Custom hook to load images for Konva — with memory leak prevention
-const useKonvaImage = (url: string) => {
-    const [image, setImage] = useState<HTMLImageElement | null>(null);
-    const imageRef = useRef<HTMLImageElement | null>(null);
+extend({
+    Container,
+    Sprite,
+    Graphics,
+    Text: PixiText,
+});
+
+const PContainer: any = 'container';
+const PSprite: any = 'sprite';
+const PGraphics: any = 'graphics';
+const PText: any = 'text';
+import { clientExportVideo, supportsWebCodecs } from '../services/client-exporter';
+
+// Custom hook to load textures for PixiJS — with GPU caching
+const usePixiTexture = (url: string) => {
+    const [texture, setTexture] = useState<PIXI.Texture | null>(null);
 
     useEffect(() => {
         if (!url) return;
-        const img = new window.Image();
-        img.crossOrigin = 'anonymous';
-        img.src = url;
-        img.onload = () => setImage(img);
-        imageRef.current = img;
+        let isMounted = true;
 
-        // 18.3: Cleanup — release image data on URL change or unmount
+        PIXI.Assets.load({ src: url, data: { crossOrigin: 'anonymous' } })
+            .then(tex => {
+                if (isMounted) setTexture(tex);
+            })
+            .catch(err => {
+                console.error("Failed to load texture", url, err);
+            });
+
         return () => {
-            img.onload = null;
-            img.onerror = null;
-            img.src = ''; // Release memory
-            imageRef.current = null;
+            isMounted = false;
         };
     }, [url]);
-    return image;
+
+    return texture;
 };
 
 // Component for stable property input without caret jumping
@@ -133,21 +155,19 @@ const PropertyInput = ({ label, value, onChange, hasKeyframe, onToggleKeyframe, 
 const CanvasAsset = React.forwardRef<any, { assetHash: string; zIndex: number; onClick?: (e: any) => void; onTap?: (e: any) => void; locked?: boolean; hidden?: boolean }>(({ assetHash, onClick, onTap, locked, hidden }, ref) => {
     const characters = useAppStore(s => s.characters);
     const url = `${STATIC_BASE}/${getAssetPath(characters, assetHash)}`;
-    const image = useKonvaImage(url);
+    const texture = usePixiTexture(url);
 
-    if (!image) return null;
+    if (!texture) return null;
     return (
-        <KonvaImageRect
+        <PSprite
             ref={ref}
-            image={image}
+            texture={texture}
             x={0}
             y={0}
-            offset={{ x: image.width / 2, y: image.height / 2 }}
-            draggable={false}
-            listening={!locked}
+            anchor={0.5}
+            eventMode={locked ? 'none' : 'static'}
             visible={!hidden}
-            onClick={onClick}
-            onTap={onTap}
+            pointerdown={onClick}
         />
     );
 });
@@ -407,11 +427,10 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                                             <button
                                                 key={v}
                                                 onClick={() => handleSpeedChange(v)}
-                                                className={`flex-1 text-xs py-0.5 rounded transition-colors ${
-                                                    (selectedRow.speedMultiplier ?? 1) === v
-                                                        ? 'bg-indigo-600 text-white'
-                                                        : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
-                                                }`}
+                                                className={`flex-1 text-xs py-0.5 rounded transition-colors ${(selectedRow.speedMultiplier ?? 1) === v
+                                                    ? 'bg-indigo-600 text-white'
+                                                    : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                                                    }`}
                                             >
                                                 {v}x
                                             </button>
@@ -558,6 +577,8 @@ const StudioMode = () => {
     const snapT = useTransientSnapshot();
     const activeEditTargetId = snapT.activeEditTargetId;
 
+    const pixiAppRef = useRef<any>(null);
+
     const editor = useEditor();
     useUndoRedo(); // P0-0.3: Registers Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y globally
 
@@ -575,11 +596,12 @@ const StudioMode = () => {
         loadLib();
     }, [fetchCustomLibrary]);
 
-    // Player State
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [selectedRowId, setSelectedRowId] = useState<string>("");
+    const { isPlaying, pause, toggle, seek } = usePlayback();
+    const { selectedRowId, setSelectedRowId } = useSelection();
+    const { setSmartGuides } = useTransform();
     const [sidebarTab, setSidebarTab] = useState<'characters' | 'library'>('characters');
     const cursorTime = snapT.cursorTime;
+    // setActiveEditTargetId is imported from transient-store directly
 
     useEffect(() => {
         if (activeEditTargetId) {
@@ -587,10 +609,72 @@ const StudioMode = () => {
             editor.selection.clearSelection(); // Clear timeline selection
             setSelectedRowId("");
         }
-    }, [activeEditTargetId, editor.selection]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeEditTargetId]);
 
     // 18.3: Central subscription cleanup tracker
     const addCleanup = useStoreCleanup();
+
+    const handleDeleteRow = useCallback((id: string) => {
+        if (!id) return;
+        setEditorData(prev => prev.filter(row => row.id !== id));
+        if (selectedRowId === id) setSelectedRowId("");
+        toast.success("Character deleted");
+    }, [selectedRowId, setEditorData, setSelectedRowId]);
+
+    // P4-4.5: Global Keyboard Shortcuts for Studio
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+            // Delete selected character
+            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedRowId) {
+                e.preventDefault();
+                handleDeleteRow(selectedRowId);
+            }
+
+            // Space to play/pause
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggle();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedRowId, toggle, handleDeleteRow]);
+
+    // Context Floating Toolbar ref
+    const floatingToolbarRef = useRef<HTMLDivElement>(null);
+
+    // Update toolbar position — called on select, drag, and transform events
+    const updateToolbarPosition = () => {
+        if (!floatingToolbarRef.current || !selectedRowId) return;
+        const node = groupRefs.current[selectedRowId];
+        if (node) {
+            const rect = node.getClientRect();
+            const yOffset = rect.y > 60 ? -60 : rect.height + 12;
+            floatingToolbarRef.current.style.transform = `translate(calc(${rect.x + rect.width / 2}px - 50%), ${rect.y + yOffset}px)`;
+            floatingToolbarRef.current.style.opacity = '1';
+            floatingToolbarRef.current.style.pointerEvents = 'auto';
+        } else {
+            floatingToolbarRef.current.style.opacity = '0';
+            floatingToolbarRef.current.style.pointerEvents = 'none';
+        }
+    };
+
+    // Reposition toolbar when selection changes
+    useEffect(() => {
+        if (!selectedRowId || activeEditTargetId || isPlaying) {
+            if (floatingToolbarRef.current) {
+                floatingToolbarRef.current.style.opacity = '0';
+                floatingToolbarRef.current.style.pointerEvents = 'none';
+            }
+            return;
+        }
+        // Delay one frame to let Konva render the selection box first
+        requestAnimationFrame(updateToolbarPosition);
+    }, [selectedRowId, activeEditTargetId, isPlaying]);
 
     // Sync OpenCut Timeline selection with our React StudioMode local selection
     useEffect(() => {
@@ -602,7 +686,8 @@ const StudioMode = () => {
         });
         addCleanup(unsubscribe); // 18.3: tracked for auto-cleanup
         return unsubscribe;
-    }, [editor.selection, addCleanup]); // Added addCleanup to dependency array
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [addCleanup]); // Added addCleanup to dependency array
 
     const [isSpacePressed, setIsSpacePressed] = useState(false);
     const isDraggingRef = useRef(false); // To detect if user dragged while holding space
@@ -698,7 +783,7 @@ const StudioMode = () => {
                 setIsSpacePressed(false);
                 // Only toggle play/pause if they didn't pan the canvas while holding space
                 if (!isDraggingRef.current) {
-                    setIsPlaying(prev => !prev);
+                    toggle();
                 }
             }
         };
@@ -709,21 +794,20 @@ const StudioMode = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [editor, selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT, setEditorData]); // Added missing dependencies
+    }, [editor, selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT, setEditorData, toggle]); // Added missing dependencies
 
     const [canvasScale, setCanvasScale] = useState(1);
     const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
     const [zoomScale, setZoomScale] = useState(1);
     const [isPanning, setIsPanning] = useState(false);
-    
+
     // P3-5.2: Resolution Preview Modes
     const [resolutionScale, setResolutionScale] = useState<number>(1); // 1 = 100%, 0.5 = 50%, 0.25 = 25%
-    
+
     // P3-5.3: Safe Area Overlay
     const [showSafeAreas, setShowSafeAreas] = useState<boolean>(false);
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const transformerRef = useRef<any>(null);
     const groupRefs = useRef<{ [key: string]: any }>({});
     const assetRefs = useRef<{ [key: string]: any }>({});
     const anchorRefs = useRef<{ [key: string]: any }>({});
@@ -734,15 +818,15 @@ const StudioMode = () => {
     const [exportProgress, setExportProgress] = useState<ExportProgress>({
         status: 'idle', currentFrame: 0, totalFrames: 0, message: ''
     });
-    
+
     // P3-7.1: Keyboard Shortcuts Panel
     const [showShortcuts, setShowShortcuts] = useState(false);
-    
+
     // Global Keyboard Shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-            
+
             if (e.key === '?') {
                 e.preventDefault();
                 setShowShortcuts(true);
@@ -750,7 +834,7 @@ const StudioMode = () => {
                 setShowShortcuts(false);
             }
         };
-        
+
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [showShortcuts]);
@@ -769,7 +853,46 @@ const StudioMode = () => {
         setShowExportModal(true);
         const duration = getDynamicDuration();
         const fps = 30;
-        setExportProgress({ status: 'extracting', currentFrame: 0, totalFrames: Math.ceil(duration * fps), message: 'Starting...' });
+        const totalFrames = Math.ceil(duration * fps);
+        setExportProgress({ status: 'idle', currentFrame: 0, totalFrames, message: 'Starting...' });
+
+        // Try client-side WebCodecs export first (10x faster)
+        if (supportsWebCodecs()) {
+            try {
+                const result = await clientExportVideo({
+                    format: 'mp4',
+                    quality: 'high',
+                    fps,
+                    duration,
+                    stageRef,
+                    onProgress: (progress) => {
+                        const frame = Math.round(progress * totalFrames);
+                        setExportProgress({
+                            status: progress < 1 ? 'extracting' : 'done',
+                            currentFrame: frame,
+                            totalFrames,
+                            message: progress < 1 ? `Frame ${frame}/${totalFrames} (WebCodecs)...` : 'Export complete!',
+                        });
+                    },
+                });
+
+                if (result.success) {
+                    toast.success('Export hoàn tất!', { description: 'File MP4 đã được tải xuống (WebCodecs).', duration: 4000 });
+                    setExportProgress({ status: 'done', currentFrame: totalFrames, totalFrames, message: 'Export complete!' });
+                } else if (result.cancelled) {
+                    toast.info('Export đã bị hủy.');
+                    setExportProgress({ status: 'idle', currentFrame: 0, totalFrames: 0, message: '' });
+                } else {
+                    throw new Error(result.error || 'WebCodecs export failed');
+                }
+                return;
+            } catch (err: any) {
+                console.warn('WebCodecs export failed, falling back to server export:', err.message);
+                // Fall through to legacy export
+            }
+        }
+
+        // Fallback: Legacy server-side FFmpeg export
         try {
             await exportVideo(duration, fps, stageRef, (progress) => {
                 setExportProgress(progress);
@@ -803,47 +926,77 @@ const StudioMode = () => {
         return () => window.removeEventListener('resize', updateScale);
     }, [LOGICAL_WIDTH, LOGICAL_HEIGHT]); // Added missing dependencies
 
-    // P1 3.11 + 3.9: Animation Loop with Dynamic Duration + In/Out Points
+    // P1 3.11 + 3.9: Logic moved to PlaybackManager.
     useEffect(() => {
-        let animationFrameId: number;
-        let lastTime = performance.now();
+        const handlePlaybackUpdate = (_e: CustomEvent<{ time: number }>) => {
+            const time = _e.detail.time;
 
-        const loop = (time: number) => {
-            if (isPlaying) {
-                const delta = (time - lastTime) / 1000;
-                const { loopMode, inPoint } = useTimelineStore.getState();
-                const effectiveOut = getEffectiveOutPoint();
-                const maxDuration = getDynamicDuration();
+            // Handle loop logic
+            const { loopMode, inPoint } = useTimelineStore.getState();
+            const effectiveOut = getEffectiveOutPoint();
+            const maxDuration = getDynamicDuration();
 
-                setCursorTime(prev => {
-                    const next = prev + delta;
-
-                    if (loopMode === 'loopAll') {
-                        // Loop entire timeline: 0 ↔ maxDuration
-                        return next > maxDuration ? 0 : next;
-                    } else if (loopMode === 'loopSelection') {
-                        // Loop In/Out region: inPoint ↔ outPoint
-                        return next > effectiveOut ? inPoint : next;
-                    } else {
-                        // Off: pause at outPoint
-                        if (next > effectiveOut) {
-                            setIsPlaying(false);
-                            return effectiveOut;
-                        }
-                        return next;
-                    }
-                });
+            if (loopMode === 'loopAll' && time >= maxDuration) {
+                seek(0);
+            } else if (loopMode === 'loopSelection' && time >= effectiveOut) {
+                seek(inPoint);
+            } else if (loopMode === 'off' && time >= effectiveOut) {
+                pause();
+                seek(effectiveOut);
             }
-            lastTime = time;
-            animationFrameId = requestAnimationFrame(loop);
         };
 
-        if (isPlaying) {
-            lastTime = performance.now();
-            animationFrameId = requestAnimationFrame(loop);
-        }
-        return () => cancelAnimationFrame(animationFrameId);
-    }, [isPlaying]);
+        const handlePlaybackSeek = (_e: CustomEvent<{ time: number }>) => {
+            // Logic handled by interpolation-results listener
+        };
+
+        const handleInterpolation = (e: any) => {
+            const results = e.detail;
+            Object.keys(results).forEach(id => {
+                const charData = results[id];
+                const node = groupRefs.current[id];
+                if (node && !node.isDragging()) { // Removed transformerRef.current?.isTransforming()
+                    node.visible(charData.isInViewport);
+                    if (charData.isInViewport) {
+                        node.x(charData.x);
+                        node.y(charData.y);
+                        node.scaleX(charData.scaleX);
+                        node.scaleY(charData.scaleY);
+                        node.rotation(charData.rotation);
+                        node.opacity(charData.opacity);
+                        node.offsetX(charData.anchorX);
+                        node.offsetY(charData.anchorY);
+                    }
+                }
+
+                charData.visibleAssets.forEach((asset: any) => {
+                    const assetNode = assetRefs.current[asset.id];
+                    if (assetNode) {
+                        assetNode.visible(asset.visible);
+                    }
+                });
+
+                const anchorNode = anchorRefs.current[id];
+                if (anchorNode && !anchorNode.isDragging()) {
+                    anchorNode.x(charData.anchorX);
+                    anchorNode.y(charData.anchorY);
+                    const invertScale = 1 / charData.scaleX;
+                    anchorNode.scaleX(invertScale);
+                    anchorNode.scaleY(invertScale);
+                }
+            });
+        };
+
+        window.addEventListener('playback-update', handlePlaybackUpdate as EventListener);
+        window.addEventListener('playback-seek', handlePlaybackSeek as EventListener);
+        window.addEventListener('interpolation-results', handleInterpolation as EventListener);
+
+        return () => {
+            window.removeEventListener('playback-update', handlePlaybackUpdate as EventListener);
+            window.removeEventListener('playback-seek', handlePlaybackSeek as EventListener);
+            window.removeEventListener('interpolation-results', handleInterpolation as EventListener);
+        };
+    }, [seek, pause, getDynamicDuration, getEffectiveOutPoint]);
 
     // 18.1: Memoized character list — only recomputes when editorData or activeEditTargetId changes
     const renderCharacters = useMemo(() => editorData
@@ -856,95 +1009,107 @@ const StudioMode = () => {
             };
         }), [editorData, activeEditTargetId]);
 
-    // Transformer Attachment Effect
+    // Transformer Attachment Effect (now for DOM TransformHandles)
     useEffect(() => {
-        if (selectedRowId && transformerRef.current && groupRefs.current[selectedRowId]) {
-            setTimeout(() => {
-                if (transformerRef.current && groupRefs.current[selectedRowId]) {
-                    transformerRef.current.nodes([groupRefs.current[selectedRowId]]);
-                    transformerRef.current.getLayer()?.batchDraw();
-                }
-            }, 0);
-        } else if (transformerRef.current) {
-            transformerRef.current.nodes([]);
-            transformerRef.current.getLayer()?.batchDraw();
-        }
+        // The DOM TransformHandles component manages its own attachment logic
+        // This effect is no longer needed for Konva Transformer
     }, [selectedRowId, renderCharacters]);
 
-    // Transient State Sync (Performance Boost 60FPS) + 18.1 Frustum Culling
+    // 18.1: Base extent for culling — replaced by worker logic
+    // syncTransform removed in favor of worker-driven updates
+
+    // Transient State Sync (Performance Boost 60FPS)
     useEffect(() => {
-        // 18.1: Base extent for culling — multiplied by scale for accuracy
-        // Typical character art is ~500-1000px wide/tall at scale=1
-        const BASE_EXTENT = 600;
-
-        const syncTransform = (time: number, data: CharacterTrack[]) => {
-            data.forEach(char => {
-                // P2-3.4: Speed Ramp — scale time relative to track's earliest action start
-                const speed = char.speedMultiplier ?? 1;
-                const trackStart = char.actions.length > 0 ? Math.min(...char.actions.map(a => a.start)) : 0;
-                const effectiveTime = speed !== 1 ? trackStart + (time - trackStart) * speed : time;
-
-                const node = groupRefs.current[char.id];
-                if (node && !node.isDragging() && !transformerRef.current?.isTransforming()) {
-                    const interpX = getInterpolatedValue(char.transform.x, effectiveTime, LOGICAL_WIDTH / 2);
-                    const interpY = getInterpolatedValue(char.transform.y, effectiveTime, LOGICAL_HEIGHT / 2);
-                    const interpScale = getInterpolatedValue(char.transform.scale, effectiveTime, 1);
-
-                    // 18.1: Scale-aware frustum culling — padding grows with character scale
-                    const scaledPadding = BASE_EXTENT * Math.max(interpScale, 1);
-                    const isInViewport =
-                        interpX > -scaledPadding && interpX < LOGICAL_WIDTH + scaledPadding &&
-                        interpY > -scaledPadding && interpY < LOGICAL_HEIGHT + scaledPadding;
-
-                    node.visible(isInViewport);
-
-                    if (isInViewport) {
-                        node.x(interpX);
-                        node.y(interpY);
-                        node.scaleX(interpScale);
-                        node.scaleY(interpScale);
-                        node.rotation(getInterpolatedValue(char.transform.rotation, effectiveTime, 0));
-                        node.opacity(getInterpolatedValue(char.transform.opacity, effectiveTime, 100) / 100);
-                        node.offsetX(getInterpolatedValue(char.transform.anchorX, effectiveTime, 0));
-                        node.offsetY(getInterpolatedValue(char.transform.anchorY, effectiveTime, 0));
-                    }
-                }
-
-                // 18.1: Time-based asset culling — skip invisible and out-of-time-range assets
-                char.actions.forEach(action => {
-                    const assetNode = assetRefs.current[action.id];
-                    if (assetNode) {
-                        const isVisible = !action.hidden && time >= action.start && time <= action.end;
-                        assetNode.visible(isVisible);
-                    }
-                });
-
-                const anchorNode = anchorRefs.current[char.id];
-                if (anchorNode && !anchorNode.isDragging()) {
-                    anchorNode.x(getInterpolatedValue(char.transform.anchorX, effectiveTime, 0));
-                    anchorNode.y(getInterpolatedValue(char.transform.anchorY, effectiveTime, 0));
-                    const invertScale = 1 / getInterpolatedValue(char.transform.scale, effectiveTime, 1);
-                    anchorNode.scaleX(invertScale);
-                    anchorNode.scaleY(invertScale);
-                }
-            });
-        };
-
-        const unsub = useAppStore.subscribe((state, prev) => {
-            if (state.cursorTime !== prev.cursorTime || state.editorData !== prev.editorData) {
-                syncTransform(state.cursorTime, state.editorData);
+        const unsubEditor = useAppStore.subscribe((state, prev) => {
+            if (state.editorData !== prev.editorData) {
+                interpolationService.requestCalculation(transientState.cursorTime, state.editorData);
             }
         });
-        addCleanup(unsub); // 18.3: tracked for auto-cleanup
+
+        addCleanup(unsubEditor);
 
         // Trigger an initial sync
-        syncTransform(useAppStore.getState().cursorTime, useAppStore.getState().editorData);
+        interpolationService.requestCalculation(transientState.cursorTime, useAppStore.getState().editorData);
 
-        return unsub;
-    }, [addCleanup, LOGICAL_WIDTH, LOGICAL_HEIGHT]); // Added missing dependencies
+        return unsubEditor;
+    }, [addCleanup, transientState.cursorTime]);
 
     // 18.3: Cleanup Konva refs on unmount — uses actual hook (not dead code)
     useKonvaCleanup(groupRefs, assetRefs, anchorRefs);
+
+    // 18.4: Granular VRAM Cleanup on character deletion
+    useEffect(() => {
+        const currentIds = new Set(editorData.map(c => c.id));
+        [groupRefs, anchorRefs].forEach(ref => {
+            Object.keys(ref.current).forEach(id => {
+                if (!currentIds.has(id)) {
+                    const node = ref.current[id];
+                    if (node) {
+                        try {
+                            node.off();
+                            node.destroy();
+                        } catch (e) { /* ignore */ }
+                        delete ref.current[id];
+                    }
+                }
+            });
+        });
+
+        // Cleanup asset refs
+        const assetIds = new Set(editorData.flatMap(c => c.actions.map(a => a.id)));
+        Object.keys(assetRefs.current).forEach(id => {
+            if (!assetIds.has(id)) {
+                const node = assetRefs.current[id];
+                if (node) {
+                    try { node.destroy(); } catch (e) { /* ignore */ }
+                    delete assetRefs.current[id];
+                }
+            }
+        });
+    }, [editorData]);
+
+
+
+    const handleTransientTransform = useCallback((id: string, values: any) => {
+        // Zero-latency direct Konva update (No React State, No Worker)
+        const node = groupRefs.current[id];
+        if (node) {
+            if (values.x !== undefined) node.x(values.x);
+            if (values.y !== undefined) node.y(values.y);
+            if (values.scale !== undefined) {
+                node.scaleX(values.scale);
+                node.scaleY(values.scale);
+            }
+            if (values.rotation !== undefined) node.rotation(values.rotation);
+        }
+    }, []);
+
+    const handleTransformEndCommit = useCallback((id: string, values: any) => {
+        setEditorData(prev => prev.map(row => {
+            if (row.id !== id) return row;
+            const time = transientState.cursorTime;
+            const newTransform = { ...row.transform };
+
+            const props = ['x', 'y', 'scale', 'rotation'] as const;
+            props.forEach(prop => {
+                if (values[prop] !== undefined) {
+                    const keys = [...newTransform[prop]];
+                    const newValue = values[prop];
+
+                    const existingIdx = keys.findIndex(k => Math.abs(k.time - time) < 0.05);
+                    if (existingIdx >= 0) {
+                        keys[existingIdx] = { ...keys[existingIdx], value: newValue };
+                    } else {
+                        keys.push({ time, value: newValue, easing: 'linear' });
+                        keys.sort((a, b) => a.time - b.time);
+                    }
+                    newTransform[prop] = keys;
+                }
+            });
+
+            return { ...row, transform: newTransform };
+        }));
+    }, [setEditorData]);
 
     const handleAddAsset = (assetHash: string, zIndex: number) => {
         const targetId = activeEditTargetId || selectedRowId;
@@ -953,7 +1118,7 @@ const StudioMode = () => {
             return;
         }
 
-        const cursorTime = useAppStore.getState().cursorTime;
+        const cursorTime = transientState.cursorTime;
         try {
             setEditorData(prev => prev.map(row => {
                 if (row.id === targetId) {
@@ -982,7 +1147,7 @@ const StudioMode = () => {
     const handleRemoveAsset = (assetHash: string) => {
         const targetId = activeEditTargetId || selectedRowId;
         if (!targetId) return;
-        const cursorTime = useAppStore.getState().cursorTime;
+        const cursorTime = transientState.cursorTime;
         setEditorData(prev => prev.map(row => {
             if (row.id === targetId) {
                 return {
@@ -998,7 +1163,7 @@ const StudioMode = () => {
         const newId = `char_${Date.now()}`;
         const defaultActions: ActionBlock[] = [];
         let zOffset = 0;
-        const cursorTime = useAppStore.getState().cursorTime;
+        const cursorTime = transientState.cursorTime;
 
         if (char.layer_groups) {
             Object.entries(char.layer_groups).forEach(([_, assets]: [string, any]) => {
@@ -1196,7 +1361,7 @@ const StudioMode = () => {
                                     return (
                                         <div
                                             key={char.id}
-                                            className="bg-neutral-800 border border-neutral-700 rounded-lg overflow-hidden cursor-pointer hover:border-indigo-500 hover:ring-1 hover:ring-indigo-500 transition-all group flex flex-col"
+                                            className="bg-neutral-800 border border-neutral-700 rounded-lg overflow-hidden cursor-pointer hover:border-indigo-500 hover:ring-1 hover:ring-indigo-500 hover:scale-[1.02] active:scale-95 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-200 group flex flex-col"
                                             onClick={() => handleAddCharacter(char)}
                                         >
                                             <div className="aspect-square bg-neutral-900 relative p-2 flex items-center justify-center">
@@ -1349,6 +1514,19 @@ const StudioMode = () => {
                 >
                     {(!activeEditTargetId) && (
                         <div className="h-12 border-b border-neutral-800 bg-neutral-900 flex items-center px-4 justify-between">
+                            {canvasContextMenu && (
+                                <ContextMenu
+                                    x={canvasContextMenu.x}
+                                    y={canvasContextMenu.y}
+                                    onClose={() => setCanvasContextMenu(null)}
+                                    items={[
+                                        { label: 'Copy Character', icon: <Copy className="w-4 h-4" />, shortcut: 'Ctrl+C', onClick: () => console.log('Copy') },
+                                        { label: 'Paste Character', icon: <Layers className="w-4 h-4" />, shortcut: 'Ctrl+V', onClick: () => console.log('Paste') },
+                                        { label: 'Lock Layer', icon: <Lock className="w-4 h-4" />, shortcut: 'Ctrl+L', onClick: () => console.log('Lock') },
+                                        { label: 'Delete Character', icon: <Trash2 className="w-4 h-4" />, shortcut: 'Del', onClick: () => handleDeleteRow(selectedRowId), danger: true },
+                                    ]}
+                                />
+                            )}
                             <div className="flex gap-2">
                                 <button className="p-1.5 bg-neutral-800 rounded hover:bg-neutral-700 text-indigo-400 btn-press"><MousePointer2 className="w-4 h-4" /></button>
                                 <button
@@ -1388,7 +1566,7 @@ const StudioMode = () => {
                                     Logical: 1920x1080 | Zoom: {(zoomScale * 100).toFixed(0)}%
                                 </div>
                                 <button
-                                    onClick={handleExportVideo}
+                                    onClick={() => setShowExportModal(true)}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-lg text-white text-xs font-semibold transition-all shadow-lg shadow-indigo-500/20 btn-press"
                                 >
                                     <Film className="w-3.5 h-3.5" />
@@ -1408,195 +1586,274 @@ const StudioMode = () => {
                                     cursor: isSpacePressed ? (isPanning ? 'grabbing' : 'grab') : 'default'
                                 }}
                             >
-                                <Stage
-                                    ref={stageRef}
-                                    width={LOGICAL_WIDTH}
-                                    height={LOGICAL_HEIGHT}
+                                <TransformHandles
+                                    selectedId={selectedRowId}
+                                    editorData={editorData}
+                                    canvasScale={canvasScale}
+                                    zoomScale={zoomScale}
+                                    stagePos={stagePos}
+                                    onTransientTransform={handleTransientTransform}
+                                    onTransformEnd={handleTransformEndCommit}
+                                />
+                                <SnapGuides
+                                    canvasScale={canvasScale}
+                                    zoomScale={zoomScale}
+                                    stagePos={stagePos}
+                                />
+                                <div
+                                    style={{ width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT }}
                                     onWheel={(e: any) => {
-                                        e.evt.preventDefault();
+                                        e.preventDefault();
                                         const scaleBy = 1.05;
-                                        const stage = e.target.getStage();
-                                        if (!stage) return;
-
                                         const oldScale = zoomScale;
-                                        const pointer = stage.getPointerPosition();
-                                        if (!pointer) return;
+                                        const pointerX = e.nativeEvent.offsetX;
+                                        const pointerY = e.nativeEvent.offsetY;
 
                                         const mousePointTo = {
-                                            x: (pointer.x - stagePos.x) / (canvasScale * oldScale),
-                                            y: (pointer.y - stagePos.y) / (canvasScale * oldScale),
+                                            x: (pointerX - stagePos.x) / (canvasScale * oldScale),
+                                            y: (pointerY - stagePos.y) / (canvasScale * oldScale),
                                         };
 
-                                        const newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+                                        const newScale = e.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
                                         setZoomScale(newScale);
 
                                         setStagePos({
-                                            x: pointer.x - mousePointTo.x * (canvasScale * newScale),
-                                            y: pointer.y - mousePointTo.y * (canvasScale * newScale),
+                                            x: pointerX - mousePointTo.x * (canvasScale * newScale),
+                                            y: pointerY - mousePointTo.y * (canvasScale * newScale),
                                         });
                                     }}
                                     onPointerDown={(e: any) => {
-                                        if (e.evt.button === 1 || e.evt.button === 2 || e.evt.altKey || isSpacePressed) {
+                                        if (e.button === 1 || e.button === 2 || e.altKey || isSpacePressed) {
                                             setIsPanning(true);
                                             if (isSpacePressed) isDraggingRef.current = true;
-                                        } else if (e.target === e.target.getStage() || e.target.name() === 'background-rect') {
-                                            setSelectedRowId("");
-                                            if (editor.selection.clearSelection) {
-                                                editor.selection.clearSelection();
-                                            }
                                         }
                                     }}
-                                    onMouseDown={(e) => {
-                                        if (e.target === e.target.getStage()) {
-                                            editor.selection.clearSelection();
-                                            setSelectedRowId("");
-                                        }
-                                        if (canvasContextMenu) setCanvasContextMenu(null);
-                                    }}
-                                    onContextMenu={handleContextMenu}
                                     onPointerUp={() => setIsPanning(false)}
                                     onMouseLeave={() => setIsPanning(false)}
+                                    onContextMenu={handleContextMenu}
                                 >
-                                    <Layer
-                                        x={stagePos.x}
-                                        y={stagePos.y}
-                                        scaleX={canvasScale * zoomScale}
-                                        scaleY={canvasScale * zoomScale}
+                                    <Application
+                                        width={LOGICAL_WIDTH}
+                                        height={LOGICAL_HEIGHT}
+                                        backgroundAlpha={0}
+                                        antialias={true}
+                                        resolution={window.devicePixelRatio || 1}
+                                        autoDensity={true}
+                                        hello={true}
+                                        ref={pixiAppRef}
                                     >
-                                        {!activeEditTargetId && <Rect name="background-rect" width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill="#111" />}
-
-                                        {/* P3-5.3: Safe Area Overlay */}
-                                        {showSafeAreas && (
-                                            <>
-                                                {/* Action Safe Area (90% of canvas) */}
-                                                <Rect
-                                                    x={LOGICAL_WIDTH * 0.05}
-                                                    y={LOGICAL_HEIGHT * 0.05}
-                                                    width={LOGICAL_WIDTH * 0.9}
-                                                    height={LOGICAL_HEIGHT * 0.9}
-                                                    stroke="#00ff00"
-                                                    strokeWidth={1}
-                                                    dash={[5, 5]}
-                                                    listening={false}
+                                        <PContainer
+                                            x={stagePos.x}
+                                            y={stagePos.y}
+                                            scale={{ x: canvasScale * zoomScale, y: canvasScale * zoomScale }}
+                                        >
+                                            {!activeEditTargetId && (
+                                                <PGraphics
+                                                    draw={(g: any) => {
+                                                        g.clear();
+                                                        g.rect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+                                                        g.fill(0x111111);
+                                                    }}
+                                                    eventMode="static"
+                                                    pointerdown={(e: any) => {
+                                                        if (!isSpacePressed) {
+                                                            setSelectedRowId("");
+                                                            if (editor.selection.clearSelection) editor.selection.clearSelection();
+                                                            if (canvasContextMenu) setCanvasContextMenu(null);
+                                                        }
+                                                    }}
                                                 />
-                                                {/* Title Safe Area (80% of canvas) */}
-                                                <Rect
-                                                    x={LOGICAL_WIDTH * 0.1}
-                                                    y={LOGICAL_HEIGHT * 0.1}
-                                                    width={LOGICAL_WIDTH * 0.8}
-                                                    height={LOGICAL_HEIGHT * 0.8}
-                                                    stroke="#ffff00"
-                                                    strokeWidth={1}
-                                                    dash={[5, 5]}
-                                                    listening={false}
+                                            )}
+
+                                            {/* P3-5.3: Safe Area Overlay */}
+                                            {showSafeAreas && (
+                                                <PGraphics
+                                                    draw={(g: any) => {
+                                                        g.clear();
+                                                        g.rect(LOGICAL_WIDTH * 0.05, LOGICAL_HEIGHT * 0.05, LOGICAL_WIDTH * 0.9, LOGICAL_HEIGHT * 0.9);
+                                                        g.stroke({ width: 1, color: 0x00ff00 });
+                                                        g.rect(LOGICAL_WIDTH * 0.1, LOGICAL_HEIGHT * 0.1, LOGICAL_WIDTH * 0.8, LOGICAL_HEIGHT * 0.8);
+                                                        g.stroke({ width: 1, color: 0xffff00 });
+                                                    }}
                                                 />
-                                            </>
-                                        )}
+                                            )}
 
-                                        {!activeEditTargetId && editorData.length === 0 && (
-                                            <Text
-                                                text="👈 Click a Character on the left to start animating"
-                                                fontSize={32}
-                                                fontFamily="sans-serif"
-                                                fill="#555"
-                                                width={LOGICAL_WIDTH}
-                                                align="center"
-                                                y={LOGICAL_HEIGHT / 2 - 16}
-                                            />
-                                        )}
+                                            {!activeEditTargetId && editorData.length === 0 && (
+                                                <PText
+                                                    text="👈 Click a Character on the left to start animating"
+                                                    x={LOGICAL_WIDTH / 2}
+                                                    y={LOGICAL_HEIGHT / 2 - 16}
+                                                    anchor={{ x: 0.5, y: 0 }}
+                                                    style={new PIXI.TextStyle({
+                                                        fontSize: 32,
+                                                        fontFamily: 'sans-serif',
+                                                        fill: 0x555555
+                                                    })}
+                                                />
+                                            )}
 
-                                        {(!activeEditTargetId ? renderCharacters : (characterBeingEdited ? [{ ...characterBeingEdited, sortedAssets: [...characterBeingEdited.actions].sort((a, b) => a.zIndex - b.zIndex) }] : [])).map(char => (
-                                            <Group
-                                                key={char.id}
-                                                ref={(node) => { if (node) groupRefs.current[char.id] = node; }}
-                                                name="character-group"
-                                                draggable={true}
-                                                globalCompositeOperation={char.blendMode || 'source-over'}
-                                                onClick={(e) => {
-                                                    e.cancelBubble = true;
-                                                    setSelectedRowId(char.id);
-                                                    if (char.sortedAssets.length > 0) {
-                                                        editor.selection.setSelectedElements({ elements: [{ trackId: char.id, elementId: char.sortedAssets[0].id }] });
-                                                    }
-                                                }}
-                                                onTap={(e) => {
-                                                    e.cancelBubble = true;
-                                                    setSelectedRowId(char.id);
-                                                    if (char.sortedAssets.length > 0) {
-                                                        editor.selection.setSelectedElements({ elements: [{ trackId: char.id, elementId: char.sortedAssets[0].id }] });
-                                                    }
-                                                }}
-                                                onDragStart={() => {
-                                                    setSelectedRowId(char.id);
-                                                    if (char.sortedAssets.length > 0) {
-                                                        editor.selection.setSelectedElements({ elements: [{ trackId: char.id, elementId: char.sortedAssets[0].id }] });
-                                                    }
-                                                }}
-                                                onDragEnd={(e) => {
-                                                    handleTransformEnd(char.id, e.target);
-                                                }}
-                                                onTransformEnd={(e) => {
-                                                    handleTransformEnd(char.id, e.target);
-                                                }}
-                                            >
-                                                {char.sortedAssets.map(asset => (
-                                                    <CanvasAsset
-                                                        key={asset.id}
-                                                        ref={(node) => { if (node) assetRefs.current[asset.id] = node; }}
-                                                        assetHash={asset.assetHash}
-                                                        zIndex={asset.zIndex}
-                                                        locked={asset.locked}
-                                                        hidden={asset.hidden}
-                                                        onClick={(e) => {
-                                                            e.cancelBubble = true;
-                                                            setSelectedRowId(char.id);
-                                                            editor.selection.setSelectedElements({ elements: [{ trackId: activeEditTargetId ? activeEditTargetId : char.id, elementId: asset.id }] });
-                                                        }}
-                                                        onTap={(e) => {
-                                                            e.cancelBubble = true;
-                                                            setSelectedRowId(char.id);
-                                                            editor.selection.setSelectedElements({ elements: [{ trackId: activeEditTargetId ? activeEditTargetId : char.id, elementId: asset.id }] });
-                                                        }}
-                                                    />
-                                                ))}
+                                            {(!activeEditTargetId ? renderCharacters : (characterBeingEdited ? [{ ...characterBeingEdited, sortedAssets: [...characterBeingEdited.actions].sort((a, b) => a.zIndex - b.zIndex) }] : [])).map(char => (
+                                                <PContainer
+                                                    key={char.id}
+                                                    ref={(node: any) => { if (node) groupRefs.current[char.id] = (node as any); }}
+                                                    eventMode="static"
+                                                    pointerdown={(e: any) => {
+                                                        e.stopPropagation();
+                                                        setSelectedRowId(char.id);
+                                                        if (char.sortedAssets.length > 0) {
+                                                            editor.selection.setSelectedElements({ elements: [{ trackId: activeEditTargetId ? activeEditTargetId : char.id, elementId: char.sortedAssets[0].id }] });
+                                                        }
+                                                        if (isSpacePressed) return;
 
-                                                {/* Visual Anchor Crosshair */}
-                                                {selectedRowId === char.id && (
-                                                    <Group
-                                                        ref={(node) => { if (node) anchorRefs.current[char.id] = node; }}
-                                                        draggable
-                                                        onDragStart={e => e.cancelBubble = true}
-                                                        onDragMove={e => e.cancelBubble = true}
-                                                        onDragEnd={e => {
-                                                            e.cancelBubble = true;
-                                                            transientHandlePropertyChange('anchorX', e.target.x());
-                                                            transientHandlePropertyChange('anchorY', e.target.y());
-                                                        }}
-                                                    >
-                                                        <Circle radius={12} fill="rgba(255, 0, 85, 0.1)" stroke="#ff0055" strokeWidth={1.5} />
-                                                        <Line points={[-16, 0, 16, 0]} stroke="#ff0055" strokeWidth={1.5} />
-                                                        <Line points={[0, -16, 0, 16]} stroke="#ff0055" strokeWidth={1.5} />
-                                                        <Circle radius={2.5} fill="#ff0055" />
-                                                    </Group>
-                                                )}
-                                            </Group>
-                                        ))}
+                                                        const container = e.currentTarget as PIXI.Container;
+                                                        const dragData = e.data;
+                                                        const startPosition = dragData.getLocalPosition(container.parent);
+                                                        const startX = container.x;
+                                                        const startY = container.y;
 
-                                        <Transformer
-                                            ref={transformerRef}
-                                            boundBoxFunc={(oldBox, newBox) => {
-                                                if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) return oldBox;
-                                                return newBox;
+                                                        const onPointerMove = (evt: PIXI.FederatedPointerEvent) => {
+                                                            const newPosition = dragData.getLocalPosition(container.parent);
+                                                            let absX = startX + (newPosition.x - startPosition.x);
+                                                            let absY = startY + (newPosition.y - startPosition.y);
+
+                                                            const guides: { type: 'vertical' | 'horizontal', position: number }[] = [];
+                                                            const SNAP_RADIUS = 15;
+                                                            const centerX = LOGICAL_WIDTH / 2;
+                                                            const centerY = LOGICAL_HEIGHT / 2;
+
+                                                            if (Math.abs(absX - centerX) < SNAP_RADIUS) {
+                                                                absX = centerX;
+                                                                guides.push({ type: 'vertical', position: centerX });
+                                                            }
+                                                            if (Math.abs(absY - centerY) < SNAP_RADIUS) {
+                                                                absY = centerY;
+                                                                guides.push({ type: 'horizontal', position: centerY });
+                                                            }
+
+                                                            container.position.set(absX, absY);
+                                                            setSmartGuides(guides);
+                                                        };
+
+                                                        const onPointerUp = () => {
+                                                            container.off('pointermove', onPointerMove);
+                                                            container.off('pointerup', onPointerUp);
+                                                            container.off('pointerupoutside', onPointerUp);
+                                                            setSmartGuides([]);
+                                                            handleTransformEnd(char.id, container);
+                                                            updateToolbarPosition();
+                                                        };
+
+                                                        container.on('pointermove', onPointerMove);
+                                                        container.on('pointerup', onPointerUp);
+                                                        container.on('pointerupoutside', onPointerUp);
+                                                    }}
+                                                >
+                                                    {char.sortedAssets.map(asset => (
+                                                        <CanvasAsset
+                                                            key={asset.id}
+                                                            ref={(node: any) => { if (node) assetRefs.current[asset.id] = node; }}
+                                                            assetHash={asset.assetHash}
+                                                            zIndex={asset.zIndex}
+                                                            locked={asset.locked}
+                                                            hidden={asset.hidden}
+                                                            onClick={(e: PIXI.FederatedPointerEvent) => {
+                                                                e.stopPropagation();
+                                                                setSelectedRowId(char.id);
+                                                                editor.selection.setSelectedElements({ elements: [{ trackId: activeEditTargetId ? activeEditTargetId : char.id, elementId: asset.id }] });
+                                                            }}
+                                                        />
+                                                    ))}
+
+                                                    {/* Visual Anchor Crosshair */}
+                                                    {selectedRowId === char.id && (
+                                                        <PContainer
+                                                            ref={(node: any) => { if (node) anchorRefs.current[char.id] = (node as any); }}
+                                                            eventMode="static"
+                                                            pointerdown={(e: any) => {
+                                                                e.stopPropagation();
+                                                                if (isSpacePressed) return;
+                                                                const container = e.currentTarget as PIXI.Container;
+                                                                const dragData = e.data;
+                                                                const startPosition = dragData.getLocalPosition(container.parent);
+                                                                const startX = container.x;
+                                                                const startY = container.y;
+
+                                                                const onPointerMove = (evt: PIXI.FederatedPointerEvent) => {
+                                                                    const newPosition = dragData.getLocalPosition(container.parent);
+                                                                    container.position.set(startX + (newPosition.x - startPosition.x), startY + (newPosition.y - startPosition.y));
+                                                                };
+                                                                const onPointerUp = () => {
+                                                                    container.off('pointermove', onPointerMove);
+                                                                    container.off('pointerup', onPointerUp);
+                                                                    container.off('pointerupoutside', onPointerUp);
+                                                                    transientHandlePropertyChange('anchorX', container.x);
+                                                                    transientHandlePropertyChange('anchorY', container.y);
+                                                                };
+                                                                container.on('pointermove', onPointerMove);
+                                                                container.on('pointerup', onPointerUp);
+                                                                container.on('pointerupoutside', onPointerUp);
+                                                            }}
+                                                        >
+                                                            <graphics
+                                                                draw={(g: any) => {
+                                                                    g.clear();
+                                                                    g.circle(0, 0, 12);
+                                                                    g.fill({ color: 0xff0055, alpha: 0.1 });
+                                                                    g.stroke({ width: 1.5, color: 0xff0055 });
+
+                                                                    g.moveTo(-16, 0);
+                                                                    g.lineTo(16, 0);
+                                                                    g.stroke({ width: 1.5, color: 0xff0055 });
+
+                                                                    g.moveTo(0, -16);
+                                                                    g.lineTo(0, 16);
+                                                                    g.stroke({ width: 1.5, color: 0xff0055 });
+
+                                                                    g.circle(0, 0, 2.5);
+                                                                    g.fill({ color: 0xff0055, alpha: 1 });
+                                                                }}
+                                                            />
+                                                        </PContainer>
+                                                    )}
+                                                </PContainer>
+                                            ))}
+                                        </PContainer>
+                                    </Application>
+                                </div>
+
+                                {/* Context Floating Toolbar */}
+                                {selectedRowId && !activeEditTargetId && !isPlaying && (
+                                    <div
+                                        ref={floatingToolbarRef}
+                                        className="absolute top-0 left-0 z-50 flex items-center gap-1.5 p-1.5 bg-neutral-900/95 backdrop-blur-xl border border-neutral-700/50 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-opacity duration-200"
+                                        style={{ opacity: 0, pointerEvents: 'none' }}
+                                    >
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveEditTargetId(selectedRowId);
                                             }}
-                                            padding={10}
-                                            borderStroke="#6366f1"
-                                            anchorStroke="#6366f1"
-                                            anchorFill="#ffffff"
-                                            anchorSize={10}
-                                            rotateAnchorOffset={30}
-                                        />
-                                    </Layer>
-                                </Stage>
+                                            className="p-2 hover:bg-indigo-500/20 text-neutral-400 hover:text-indigo-400 rounded-lg transition-colors btn-press flex items-center gap-2"
+                                            title="Edit Character"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            <span className="text-xs font-semibold pr-1">Edit</span>
+                                        </button>
+                                        <div className="w-px h-5 bg-neutral-700/50" />
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditorData(prev => prev.filter(r => r.id !== selectedRowId));
+                                                editor.selection.clearSelection();
+                                                setSelectedRowId("");
+                                            }}
+                                            className="p-2 hover:bg-red-500/20 text-neutral-400 hover:text-red-400 rounded-lg transition-colors btn-press"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="relative w-full h-full flex items-center justify-center">
@@ -1666,10 +1923,13 @@ const StudioMode = () => {
                 <div className="flex items-center px-4 py-2 border-b border-neutral-700 bg-neutral-800 justify-between">
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => setIsPlaying(!isPlaying)}
-                            className="p-2 bg-indigo-600 hover:bg-indigo-500 rounded-full text-white transition shadow-lg btn-press"
+                            onClick={toggle}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-md px-3 py-1.5 flex items-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
                         >
-                            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                            {isPlaying ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
+                            <span className="font-semibold text-xs tracking-wide">
+                                {isPlaying ? "Tạm dừng" : "Xem thử"}
+                            </span>
                         </button>
                         {/* Dynamic Status Display — optimized with 17.2 notifications later */}
                         <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none group">
@@ -1751,6 +2011,56 @@ const StudioMode = () => {
                                 </div>
                             )}
                         </div>
+
+                        {exportProgress.status === 'idle' && (
+                            <div className="flex items-center justify-between mt-6">
+                                <button className="px-4 py-2 border border-neutral-700 text-neutral-400 rounded-md hover:bg-neutral-800 transition-colors" onClick={() => setShowExportModal(false)}>
+                                    Hủy
+                                </button>
+                                <button
+                                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md font-medium transition-colors flex items-center gap-2"
+                                    onClick={() => {
+                                        console.log('[Export] pixiAppRef.current:', pixiAppRef.current);
+                                        if (pixiAppRef.current) {
+                                            // Thorough detection for PixiJS v8 / @pixi/react
+                                            const app = (pixiAppRef.current as any).app || pixiAppRef.current;
+                                            const canvasNode = app.canvas || app.view || document.querySelector('canvas');
+
+                                            console.log('[Export] Resolved App:', app, 'Canvas:', canvasNode);
+
+                                            if (canvasNode) {
+                                                // Bind callbacks to update UI
+                                                videoExporter.onStatusChange = (status) => {
+                                                    setExportProgress(prev => ({ ...prev, status }));
+                                                };
+                                                videoExporter.onProgress = (percent) => {
+                                                    setExportProgress(prev => {
+                                                        const total = prev.totalFrames || 900;
+                                                        return {
+                                                            ...prev,
+                                                            currentFrame: Math.floor((percent / 100) * total),
+                                                        };
+                                                    });
+                                                };
+                                                videoExporter.onError = (message) => {
+                                                    setExportProgress(prev => ({ ...prev, status: 'error', message }));
+                                                };
+
+                                                videoExporter.startExport(canvasNode as HTMLCanvasElement, 60, app);
+                                            } else {
+                                                toast.error('Cannot find PixiJS Canvas element. Check console.');
+                                                console.error('[Export] Failed to resolve canvas from app instance');
+                                            }
+                                        } else {
+                                            toast.error('pixiAppRef.current is null');
+                                        }
+                                    }}
+                                >
+                                    <Film className="w-4 h-4" /> Bắt đầu Export
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             )}
@@ -1771,7 +2081,7 @@ const StudioMode = () => {
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        
+
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-3">
@@ -1789,7 +2099,7 @@ const StudioMode = () => {
                                         <kbd className="bg-neutral-700 px-2 py-1 rounded text-xs font-mono">Mouse Wheel</kbd>
                                     </div>
                                 </div>
-                                
+
                                 <div className="space-y-3">
                                     <h3 className="font-semibold text-indigo-400 border-b border-neutral-700 pb-1">Editing</h3>
                                     <div className="flex justify-between items-center py-1.5 px-2 bg-neutral-800 rounded">
@@ -1806,7 +2116,7 @@ const StudioMode = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="space-y-3 pt-4">
                                 <h3 className="font-semibold text-indigo-400 border-b border-neutral-700 pb-1">Timeline</h3>
                                 <div className="grid grid-cols-2 gap-4">
@@ -1829,7 +2139,7 @@ const StudioMode = () => {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="mt-6 text-center text-xs text-neutral-500">
                             Press <kbd className="bg-neutral-800 px-1.5 py-0.5 rounded">?</kbd> to show this panel • Press <kbd className="bg-neutral-800 px-1.5 py-0.5 rounded">Esc</kbd> to close
                         </div>

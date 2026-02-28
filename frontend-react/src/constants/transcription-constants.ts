@@ -1,9 +1,12 @@
 import { LANGUAGES } from "@/constants/language-constants";
-import type {
-	TranscriptionModel,
-	TranscriptionModelId,
-} from "@/types/transcription";
-import type { LanguageCode } from "@/types/language";
+type TranscriptionModelId = string;
+type TranscriptionModel = {
+	id: TranscriptionModelId;
+	name: string;
+	huggingFaceId: string;
+	description: string;
+};
+type LanguageCode = string;
 
 const SUPPORTED_TRANSCRIPTION_LANGS: ReadonlyArray<LanguageCode> = [
 	"en",

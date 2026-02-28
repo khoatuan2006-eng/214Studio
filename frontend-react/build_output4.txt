@@ -1,0 +1,64 @@
+
+> frontend-react@0.0.0 build
+> tsc -b && vite build
+
+src/components/ProjectManager.tsx(31,9): error TS6133: 'saveProject' is declared but its value is never read.
+src/components/studio/ProfessionalContextMenu.tsx(2,1): error TS6192: All imports in import declaration are unused.
+src/components/StudioMode.tsx(140,195): error TS6133: 'onTap' is declared but its value is never read.
+src/components/StudioMode.tsx(147,9): error TS2339: Property 'sprite' does not exist on type 'JSX.IntrinsicElements'.
+src/components/StudioMode.tsx(1626,41): error TS2339: Property 'container' does not exist on type 'JSX.IntrinsicElements'.
+src/components/StudioMode.tsx(1632,49): error TS2339: Property 'graphics' does not exist on type 'JSX.IntrinsicElements'.
+src/components/StudioMode.tsx(1639,67): error TS6133: 'e' is declared but its value is never read.
+src/components/StudioMode.tsx(1651,49): error TS2339: Property 'graphics' does not exist on type 'JSX.IntrinsicElements'.
+src/components/StudioMode.tsx(1668,53): error TS2322: Type 'TextStyle' is not assignable to type 'Properties<string | number, string & {}>'.
+  Types of property 'fill' are incompatible.
+    Type 'FillInput' is not assignable to type 'Fill | undefined'.
+      Type 'number' is not assignable to type 'Fill | undefined'.
+src/components/StudioMode.tsx(1677,49): error TS2339: Property 'container' does not exist on type 'JSX.IntrinsicElements'.
+src/components/StudioMode.tsx(1695,80): error TS6133: 'evt' is declared but its value is never read.
+src/components/StudioMode.tsx(1750,57): error TS2339: Property 'container' does not exist on type 'JSX.IntrinsicElements'.
+src/components/StudioMode.tsx(1762,88): error TS6133: 'evt' is declared but its value is never read.
+src/components/StudioMode.tsx(1778,61): error TS2339: Property 'graphics' does not exist on type 'JSX.IntrinsicElements'.
+src/components/StudioMode.tsx(1797,57): error TS2339: Property 'container' does not exist on type 'JSX.IntrinsicElements'.
+src/components/StudioMode.tsx(1799,49): error TS2339: Property 'container' does not exist on type 'JSX.IntrinsicElements'.
+src/components/StudioMode.tsx(1801,41): error TS2339: Property 'container' does not exist on type 'JSX.IntrinsicElements'.
+src/components/timeline/bookmarks.tsx(47,31): error TS2339: Property 'project' does not exist on type 'EditorCore'.
+src/components/timeline/bookmarks.tsx(48,26): error TS2339: Property 'timeline' does not exist on type 'EditorCore'.
+src/components/timeline/bookmarks.tsx(51,23): error TS2345: Argument of type '{ time: number; }' is not assignable to parameter of type 'number'.
+src/components/timeline/bookmarks.tsx(103,33): error TS2339: Property 'time' does not exist on type 'never'.
+src/components/timeline/bookmarks.tsx(150,48): error TS2741: Property 'transform' is missing in type '{ timeline: { getTracks: () => TimelineTrack[]; updateKeyframeTime: (trackId: string, oldTime: number, newTime: number) => void; removeKeyframe: (trackId: string, time: number) => void; ... 12 more ...; updateElementTrim: (_args: any) => void; }; ... 4 more ...; media: { ...; }; }' but required in type 'EditorCore'.
+src/components/timeline/bookmarks.tsx(303,17): error TS2551: Property 'removeBookmark' does not exist on type '{ getActiveScene: () => { id: string; name: string; bookmarks: never[]; }; isBookmarked: (_args: any) => boolean; moveBookmark: (_args: any) => void; }'. Did you mean 'moveBookmark'?
+src/components/timeline/bookmarks.tsx(325,17): error TS2339: Property 'updateBookmark' does not exist on type '{ getActiveScene: () => { id: string; name: string; bookmarks: never[]; }; isBookmarked: (_args: any) => boolean; moveBookmark: (_args: any) => void; }'.
+src/components/timeline/bookmarks.tsx(360,24): error TS2339: Property 'updateBookmark' does not exist on type '{ getActiveScene: () => { id: string; name: string; bookmarks: never[]; }; isBookmarked: (_args: any) => boolean; moveBookmark: (_args: any) => void; }'.
+src/components/timeline/index.tsx(11,2): error TS6133: 'Edit02Icon' is declared but its value is never read.
+src/components/timeline/index.tsx(13,2): error TS6133: 'ArrowUp01Icon' is declared but its value is never read.
+src/components/timeline/index.tsx(14,2): error TS6133: 'ArrowDown01Icon' is declared but its value is never read.
+src/components/timeline/index.tsx(43,2): error TS6133: 'getCumulativeHeightBefore' is declared but its value is never read.
+src/components/timeline/index.tsx(44,2): error TS6133: 'getTotalTracksHeight' is declared but its value is never read.
+src/components/timeline/index.tsx(381,8): error TS6133: 'setEditorData' is declared but its value is never read.
+src/components/ui/calendar.tsx(5,27): error TS2307: Cannot find module 'react-day-picker' or its corresponding type declarations.
+src/components/ui/color-picker.tsx(59,35): error TS2304: Cannot find name 'EyeDropper'.
+src/components/ui/color-picker.tsx(61,25): error TS2552: Cannot find name 'EyeDropper'. Did you mean 'dropper'?
+src/components/ui/font-picker.tsx(11,46): error TS2307: Cannot find module 'react-window' or its corresponding type declarations.
+src/components/ui/font-picker.tsx(24,8): error TS2307: Cannot find module '@/lib/fonts/google-fonts' or its corresponding type declarations.
+src/components/ui/font-picker.tsx(25,48): error TS2307: Cannot find module '@/types/fonts' or its corresponding type declarations.
+src/components/ui/font-picker.tsx(102,29): error TS7006: Parameter 'data' implicitly has an 'any' type.
+src/components/ui/font-picker.tsx(122,29): error TS7006: Parameter 'data' implicitly has an 'any' type.
+src/components/ui/form.tsx(13,8): error TS2307: Cannot find module 'react-hook-form' or its corresponding type declarations.
+src/components/ui/input-with-back.tsx(6,24): error TS2307: Cannot find module 'motion/react' or its corresponding type declarations.
+src/components/ui/number-field.tsx(5,30): error TS2307: Cannot find module '@/hooks/use-focus-lock' or its corresponding type declarations.
+src/components/ui/prose.tsx(2,25): error TS2307: Cannot find module 'rehype-parse' or its corresponding type declarations.
+src/components/ui/prose.tsx(3,25): error TS2307: Cannot find module 'unified' or its corresponding type declarations.
+src/components/ui/react-markdown-wrapper.tsx(1,27): error TS2307: Cannot find module 'react-markdown' or its corresponding type declarations.
+src/components/ui/react-markdown-wrapper.tsx(8,22): error TS7031: Binding element 'linkClassName' implicitly has an 'any' type.
+src/components/ui/react-markdown-wrapper.tsx(8,37): error TS7031: Binding element 'children' implicitly has an 'any' type.
+src/components/ui/react-markdown-wrapper.tsx(18,16): error TS7031: Binding element 'children' implicitly has an 'any' type.
+src/components/ui/resizable.tsx(3,37): error TS2307: Cannot find module 'react-resizable-panels' or its corresponding type declarations.
+src/core/managers/selection-manager.ts(12,13): error TS6133: 'core' is declared but its value is never read.
+src/core/managers/transform-manager.ts(15,13): error TS6133: 'core' is declared but its value is never read.
+src/hooks/use-editor.ts(4,26): error TS6133: 'setCursorTime' is declared but its value is never read.
+src/hooks/use-editor.ts(4,41): error TS6133: 'setScrubbing' is declared but its value is never read.
+src/hooks/use-editor.ts(478,49): error TS2341: Property 'currentTime' is private and only accessible within class 'PlaybackManager'.
+src/hooks/use-editor.ts(479,38): error TS2341: Property 'isPlaying' is private and only accessible within class 'PlaybackManager'.
+src/hooks/use-editor.ts(480,93): error TS2339: Property 'setScrubbing' does not exist on type 'PlaybackManager'.
+src/hooks/use-editor.ts(481,49): error TS2339: Property 'isScrubbing' does not exist on type 'PlaybackManager'.

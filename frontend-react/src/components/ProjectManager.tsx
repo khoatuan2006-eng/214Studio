@@ -142,47 +142,47 @@ export default function ProjectManager({ onProjectLoaded }: ProjectManagerProps)
             <>
                 {showRecoveryModal && <RecoveryModal />}
                 <div className="flex items-center gap-3 px-4 py-2 bg-neutral-800/70 border-b border-neutral-700/50 text-xs">
-                <button
-                    onClick={() => setShowProjectList(true)}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-neutral-700/60 hover:bg-neutral-600 text-neutral-200 transition-colors"
-                    title="Open Projects"
-                >
-                    <FolderOpen className="w-3.5 h-3.5" />
-                    <span className="max-w-[120px] truncate">{currentProject.name}</span>
-                </button>
+                    <button
+                        onClick={() => setShowProjectList(true)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-neutral-700/60 hover:bg-neutral-600 text-neutral-200 transition-colors"
+                        title="Open Projects"
+                    >
+                        <FolderOpen className="w-3.5 h-3.5" />
+                        <span className="max-w-[120px] truncate">{currentProject.name}</span>
+                    </button>
 
-                <button
-                    onClick={() => saveProjectWithScenes(
-                        useAppStore.getState().editorData,
-                        useAppStore.getState().scenes,
-                        useAppStore.getState().activeSceneId
-                    )}
-                    className={`flex items-center gap-1 px-2 py-1.5 rounded-md transition-colors ${isDirty
+                    <button
+                        onClick={() => saveProjectWithScenes(
+                            useAppStore.getState().editorData,
+                            useAppStore.getState().scenes,
+                            useAppStore.getState().activeSceneId
+                        )}
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-md transition-colors ${isDirty
                             ? 'bg-amber-600/80 hover:bg-amber-500 text-white'
                             : 'bg-neutral-700/40 text-neutral-400 hover:bg-neutral-600 hover:text-neutral-200'
-                        }`}
-                    title={isDirty ? 'Unsaved changes — Click to save' : 'All changes saved'}
-                >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>{isDirty ? 'Save' : 'Saved'}</span>
-                </button>
+                            }`}
+                        title={isDirty ? 'Unsaved changes — Click to save' : 'All changes saved'}
+                    >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>{isDirty ? 'Save' : 'Saved'}</span>
+                    </button>
 
-                <button
-                    onClick={() => exportProject()}
-                    className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-neutral-700/40 text-neutral-400 hover:bg-neutral-600 hover:text-neutral-200 transition-colors"
-                    title="Export .animestudio"
-                >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Export</span>
-                </button>
+                    <button
+                        onClick={() => exportProject()}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-neutral-700/40 text-neutral-400 hover:bg-neutral-600 hover:text-neutral-200 transition-colors"
+                        title="Export .animestudio"
+                    >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Export</span>
+                    </button>
 
-                {lastSavedAt && (
-                    <span className="ml-auto text-neutral-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {formatDate(lastSavedAt)}
-                    </span>
-                )}
-            </div>
+                    {lastSavedAt && (
+                        <span className="ml-auto text-neutral-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {formatDate(lastSavedAt)}
+                        </span>
+                    )}
+                </div>
             </>
         );
     }
@@ -260,8 +260,8 @@ export default function ProjectManager({ onProjectLoaded }: ProjectManagerProps)
                             key={project.id}
                             onClick={() => handleOpen(project)}
                             className={`w-full text-left px-4 py-3 rounded-lg border transition-colors group ${currentProject?.id === project.id
-                                    ? 'bg-indigo-600/20 border-indigo-600/40'
-                                    : 'bg-neutral-700/30 border-neutral-700/50 hover:bg-neutral-700/60'
+                                ? 'bg-indigo-600/20 border-indigo-600/40'
+                                : 'bg-neutral-700/30 border-neutral-700/50 hover:bg-neutral-700/60'
                                 }`}
                         >
                             <div className="flex items-center justify-between">

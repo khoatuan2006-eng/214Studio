@@ -36,7 +36,7 @@ function App() {
     if (currentProject?.data?.editorData) {
       useAppStore.getState().setEditorData(currentProject.data.editorData);
     }
-    
+
     // P3-HOTFIX: Restore scenes and activeSceneId when project loads
     if (currentProject?.data?.scenes !== undefined) {
       useAppStore.setState({

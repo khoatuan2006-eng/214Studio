@@ -1,5 +1,9 @@
-import type { TTimelineViewState } from "@/types/project";
-import type { BlendMode } from "@/types/rendering";
+export type TTimelineViewState = {
+	zoomLevel: number;
+	scrollLeft: number;
+	playheadTime: number;
+};
+// Removed unused BlendMode import
 import type { TrackType, Transform } from "@/types/timeline";
 import {
 	Happy01Icon,
@@ -11,12 +15,13 @@ import { Video, ChevronRight } from "lucide-react";
 
 export const DEFAULT_TRANSFORM: Transform = {
 	scale: 1,
-	position: { x: 0, y: 0 },
-	rotate: 0,
+	x: 0,
+	y: 0,
+	rotation: 0,
 };
 
 export const DEFAULT_OPACITY = 1;
-export const DEFAULT_BLEND_MODE: BlendMode = "normal";
+export const DEFAULT_BLEND_MODE = "normal" as import("@/store/useAppStore").BlendMode;
 export const DEFAULT_BOOKMARK_COLOR = "#009dff";
 
 export const TRACK_COLORS: Record<TrackType, { background: string }> = {

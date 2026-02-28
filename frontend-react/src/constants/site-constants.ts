@@ -1,4 +1,4 @@
-import { OcDataBuddyIcon, OcMarbleIcon } from "@opencut/ui/icons";
+// Icons removed for Anime Studio context
 
 export const SITE_URL = "https://opencut.app";
 
@@ -19,21 +19,7 @@ export type ExternalTool = {
 	icon: React.ElementType;
 };
 
-export const EXTERNAL_TOOLS: ExternalTool[] = [
-	{
-		name: "Marble",
-		description:
-			"Modern headless CMS for content management and the blog for OpenCut",
-		url: "https://marblecms.com?utm_source=opencut",
-		icon: OcMarbleIcon,
-	},
-	{
-		name: "Databuddy",
-		description: "GDPR compliant analytics and user insights for OpenCut",
-		url: "https://databuddy.cc?utm_source=opencut",
-		icon: OcDataBuddyIcon,
-	},
-];
+export const EXTERNAL_TOOLS: ExternalTool[] = [];
 
 export const DEFAULT_LOGO_URL = "/logos/opencut/svg/logo.svg";
 

@@ -30,6 +30,7 @@ import {
 	ViewOffSlashIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useRef, useEffect } from "react";
 
 interface TimelineElementProps {
 	element: TimelineElementType;
@@ -59,6 +60,9 @@ export function TimelineElement({
 	const editor = useEditor();
 	const { selectedElements } = useElementSelection();
 
+	const elementRef = useRef<HTMLDivElement>(null);
+	const transientPos = useRef<{ left: number; transform: string } | null>(null);
+
 	const { handleResizeStart, isResizing, currentStartTime, currentDuration } =
 		useTimelineElementResize({
 			element,
@@ -74,6 +78,35 @@ export function TimelineElement({
 	);
 
 	const isBeingDragged = dragState.elementId === element.id;
+
+	useEffect(() => {
+		if (isBeingDragged && dragState.isDragging) {
+			const handleTransientDrag = (e: Event) => {
+				const customEvent = e as CustomEvent;
+				if (customEvent.detail.elementId === element.id && elementRef.current) {
+					const zoom = zoomLevel; // captured from closure
+					const newTime = customEvent.detail.currentTime;
+					const newLeft = newTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoom;
+					const dragOffsetY = customEvent.detail.currentMouseY - customEvent.detail.startMouseY;
+
+					const leftStr = `${newLeft}px`;
+					const transformStr = `translate3d(0, ${dragOffsetY}px, 0)`;
+
+					transientPos.current = { left: newLeft, transform: transformStr };
+
+					elementRef.current.style.left = leftStr;
+					elementRef.current.style.transform = transformStr;
+				}
+			};
+
+			window.addEventListener('transient-element-drag', handleTransientDrag);
+			return () => {
+				window.removeEventListener('transient-element-drag', handleTransientDrag);
+				transientPos.current = null;
+			};
+		}
+	}, [isBeingDragged, dragState.isDragging, element.id, zoomLevel]);
+
 	const dragOffsetY =
 		isBeingDragged && dragState.isDragging
 			? dragState.currentMouseY - dragState.startMouseY
@@ -92,14 +125,14 @@ export function TimelineElement({
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
 				<div
+					ref={elementRef}
 					className={`absolute top-0 h-full select-none`}
 					style={{
-						left: `${elementLeft}px`,
+						left: transientPos.current ? `${transientPos.current.left}px` : `${elementLeft}px`,
 						width: `${elementWidth}px`,
-						transform:
-							isBeingDragged && dragState.isDragging
-								? `translate3d(0, ${dragOffsetY}px, 0)`
-								: undefined,
+						transform: transientPos.current ? transientPos.current.transform : (isBeingDragged && dragState.isDragging
+							? `translate3d(0, ${dragOffsetY}px, 0)`
+							: undefined),
 					}}
 				>
 					<ElementInner
@@ -188,11 +221,11 @@ function ElementInner({
 }) {
 	return (
 		<div
-			className={`group relative h-full cursor-pointer overflow-hidden rounded-[0.5rem] transition-all ${getTrackClasses(
+			className={`group relative h-full cursor-pointer overflow-hidden rounded-[0.5rem] transition-all duration-200 ${getTrackClasses(
 				{
 					type: track.type,
 				},
-			)} ${canElementBeHidden(element) && element.hidden ? "opacity-50" : ""} ${isSelected ? "ring-2 ring-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)] z-20" : "hover:ring-1 hover:ring-white/30"}`}
+			)} ${canElementBeHidden(element) && element.hidden ? "opacity-50" : ""} ${isSelected ? "ring-2 ring-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.5)] z-20" : "hover:ring-1 hover:ring-white/30"}`}
 		>
 			<button
 				type="button"
@@ -261,14 +294,14 @@ function ElementContent({
 	const imageUrl = mediaId ? `${STATIC_BASE}/${getAssetPath(characters, mediaId)}` : null;
 
 	return (
-		<div className="flex size-full items-center justify-start pl-2 bg-indigo-600/50 gap-2 overflow-hidden relative">
+		<div className="flex size-full items-center justify-start pl-2 bg-gradient-to-r from-indigo-500/40 to-purple-500/40 backdrop-blur-md gap-2 border border-white/20 overflow-hidden relative transition-colors duration-200">
 			{imageUrl && (
-				<img src={imageUrl} crossOrigin="anonymous" className="h-[80%] aspect-square object-contain rounded bg-black/40 p-0.5 pointer-events-none border border-white/10" alt="" />
+				<img src={imageUrl} crossOrigin="anonymous" className="h-[80%] aspect-square object-contain rounded bg-black/40 p-0.5 pointer-events-none shadow-sm" alt="" />
 			)}
-			<span className="truncate text-xs text-white px-1 font-medium">{element.name}</span>
+			<span className="truncate text-xs text-white px-1 font-semibold drop-shadow-sm">{element.name}</span>
 			{isSelected && (
-				<div className="absolute right-2 top-1/2 -translate-y-1/2 bg-yellow-400 text-black text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm pointer-events-none">
-					In Use Track
+				<div className="absolute right-2 top-1/2 -translate-y-1/2 bg-indigo-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm pointer-events-none">
+					Selected
 				</div>
 			)}
 		</div>

@@ -1,14 +1,17 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useEditor } from "@/hooks/use-editor";
 
 type ElementRef = { trackId: string; elementId: string };
 
 export function useElementSelection() {
 	const editor = useEditor();
-	const selectedElements = useSyncExternalStore(
-		(listener) => editor.selection.subscribe(listener),
-		() => editor.selection.getSelectedElements(),
-	);
+	const [selectedElements, setSelectedElements] = useState<{ trackId: string; elementId: string }[]>(() => editor.selection.getSelectedElements());
+
+	useEffect(() => {
+		return editor.selection.subscribe(() => {
+			setSelectedElements(editor.selection.getSelectedElements());
+		});
+	}, [editor.selection]);
 
 	const isElementSelected = useCallback(
 		({ trackId, elementId }: ElementRef) =>

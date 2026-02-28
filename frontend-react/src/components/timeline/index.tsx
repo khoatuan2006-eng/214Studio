@@ -24,6 +24,7 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { useTimelineZoom } from "@/hooks/timeline/use-timeline-zoom";
+import { ChevronLeft } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect } from "react";
 import { TimelineTrackContent } from "./timeline-track";
 import { TimelinePlayhead } from "./timeline-playhead";
@@ -382,21 +383,6 @@ export function Timeline() {
 		? editorData.find(c => c.id === activeEditTargetId)?.name
 		: null;
 
-	const moveLayer = (trackId: string, direction: number) => {
-		const actionId = trackId.replace('nested_', '');
-		setEditorData(prev => prev.map(row => {
-			if (row.id === activeEditTargetId) {
-				const actions = [...row.actions];
-				const idx = actions.findIndex(a => a.id === actionId);
-				if (idx > -1) {
-					actions[idx] = { ...actions[idx], zIndex: actions[idx].zIndex + direction };
-				}
-				return { ...row, actions };
-			}
-			return row;
-		}));
-	};
-
 	return (
 		<section
 			className={
@@ -488,8 +474,20 @@ export function Timeline() {
 															)}
 															<span className={`text-xs text-muted-foreground font-medium truncate flex-1 text-left ${track.type === "property" ? "pl-5" : ""}`}>{track.name}</span>
 															{import.meta.env?.DEV && isMainTrack(track) && (<div className="bg-red-500 size-1.5 rounded-full" />)}
-															{canTracktHaveAudio(track) && (<TrackToggleIcon isOff={track.muted} icons={{ on: VolumeHighIcon, off: VolumeOffIcon }} onClick={() => editor.timeline.toggleTrackMute({ trackId: track.id })} />)}
-															{canTrackBeHidden(track) && (<TrackToggleIcon isOff={track.hidden} icons={{ on: ViewIcon, off: ViewOffSlashIcon }} onClick={() => editor.timeline.toggleTrackVisibility({ trackId: track.id })} />)}
+															{canTracktHaveAudio(track) && (
+																<TrackToggleIcon
+																	isOff={!!(track as any).muted}
+																	icons={{ on: VolumeHighIcon, off: VolumeOffIcon }}
+																	onClick={() => editor.timeline.toggleTrackMute({ trackId: track.id })}
+																/>
+															)}
+															{canTrackBeHidden(track) && (
+																<TrackToggleIcon
+																	isOff={!!(track as any).hidden}
+																	icons={{ on: ViewIcon, off: ViewOffSlashIcon }}
+																	onClick={() => editor.timeline.toggleTrackVisibility({ trackId: track.id })}
+																/>
+															)}
 															<TrackIcon track={track} />
 														</div>
 													</div>
@@ -599,30 +597,41 @@ export function Timeline() {
 								<div
 									className="relative"
 									style={{
-										height: `${Math.max(
-											tracksContainerHeight.min,
-											getTotalTracksHeight({ tracks }),
-										)}px`,
+										height: `${(() => {
+											const groups = useAppStore.getState().trackGroups || [];
+											let h = 0;
+											groups.forEach(g => {
+												h += 32; // Header
+												if (!g.isCollapsed) {
+													const groupTracks = tracks.filter(t => (t as any).groupId === g.id);
+													h += groupTracks.length * 32;
+												}
+											});
+											const ungrouped = tracks.filter(t => !(t as any).groupId);
+											h += ungrouped.length * 32;
+											return Math.max(tracksContainerHeight.min, h);
+										})()}px`,
 									}}
 								>
 									{/* P1 Sprint 3: In/Out overlay on track area */}
 									<InOutTrackOverlay zoomLevel={zoomLevel} />
-									{tracks.length === 0 ? (
-										<div />
-									) : (
-										tracks.map((track, index) => (
+									{(() => {
+										if (tracks.length === 0) return <div />;
+
+										const trackGroups = useAppStore.getState().trackGroups || [];
+										let currentOffset = 0;
+
+										// Plan: Iterate through groups, then ungrouped tracks.
+										// Calculate dynamic Y positions based on collapse state.
+
+										const renderTrack = (track: TimelineTrack, y: number) => (
 											<ContextMenu key={track.id}>
 												<ContextMenuTrigger asChild>
 													<div
 														className="absolute right-0 left-0"
 														style={{
-															top: `${getCumulativeHeightBefore({
-																tracks,
-																trackIndex: index,
-															})}px`,
-															height: `${getTrackHeight({
-																type: track.type,
-															})}px`,
+															top: `${y}px`,
+															height: `${getTrackHeight({ type: track.type })}px`,
 														}}
 													>
 														<TimelineTrackContent
@@ -658,70 +667,21 @@ export function Timeline() {
 													<ContextMenuItem
 														onClick={(e) => {
 															e.stopPropagation();
-															timeline.toggleTrackMute({
-																trackId: track.id,
-															});
+															timeline.toggleTrackMute({ trackId: track.id });
 														}}
 													>
 														<HugeiconsIcon icon={VolumeHighIcon} />
-														<span>
-															{canTracktHaveAudio(track) && track.muted
-																? "Unmute track"
-																: "Mute track"}
-														</span>
+														<span>{canTracktHaveAudio(track) && track.muted ? "Unmute track" : "Mute track"}</span>
 													</ContextMenuItem>
 													<ContextMenuItem
 														onClick={(e) => {
 															e.stopPropagation();
-															timeline.toggleTrackVisibility({
-																trackId: track.id,
-															});
+															timeline.toggleTrackVisibility({ trackId: track.id });
 														}}
 													>
 														<HugeiconsIcon icon={ViewIcon} />
-														<span>
-															{canTrackBeHidden(track) && track.hidden
-																? "Show track"
-																: "Hide track"}
-														</span>
+														<span>{canTrackBeHidden(track) && track.hidden ? "Show track" : "Hide track"}</span>
 													</ContextMenuItem>
-
-													{/* Feature: Dive Into Character */}
-													{!activeEditTargetId && track.elements.length > 0 && !track.id.startsWith("nested_") && (
-														<ContextMenuItem
-															onClick={(e) => {
-																e.stopPropagation();
-																setActiveEditTargetId(track.id);
-															}}
-														>
-															<HugeiconsIcon icon={Edit02Icon} />
-															<span>Edit Character Scene</span>
-														</ContextMenuItem>
-													)}
-
-													{/* Feature: Z-Index Reordering for Dressing Room Mode */}
-													{activeEditTargetId && track.id.startsWith("nested_") && (
-														<>
-															<ContextMenuItem
-																onClick={(e) => {
-																	e.stopPropagation();
-																	moveLayer(track.id, 1);
-																}}
-															>
-																<HugeiconsIcon icon={ArrowUp01Icon} />
-																<span>Bring Forward</span>
-															</ContextMenuItem>
-															<ContextMenuItem
-																onClick={(e) => {
-																	e.stopPropagation();
-																	moveLayer(track.id, -1);
-																}}
-															>
-																<HugeiconsIcon icon={ArrowDown01Icon} />
-																<span>Send Backward</span>
-															</ContextMenuItem>
-														</>
-													)}
 													<ContextMenuItem
 														onClick={(e) => {
 															e.stopPropagation();
@@ -734,8 +694,50 @@ export function Timeline() {
 													</ContextMenuItem>
 												</ContextMenuContent>
 											</ContextMenu>
-										))
-									)}
+										);
+
+										const elements: React.ReactNode[] = [];
+
+										// 1. Grouped Tracks
+										trackGroups.forEach(group => {
+											const groupTracks = tracks.filter(t => (t as any).groupId === group.id);
+											const headerHeight = 32;
+											const y = currentOffset;
+											currentOffset += headerHeight;
+
+											elements.push(
+												<div
+													key={group.id}
+													className="absolute left-0 right-0 bg-neutral-800/80 backdrop-blur-md border-y border-white/5 flex items-center px-4 gap-3 cursor-pointer hover:bg-neutral-700/80 transition-all z-10"
+													style={{ top: `${y}px`, height: `${headerHeight}px` }}
+													onClick={() => useAppStore.getState().updateTrackGroup(group.id, { isCollapsed: !group.isCollapsed })}
+												>
+													<div className={`transition-transform duration-200 ${group.isCollapsed ? '-rotate-90' : ''}`}>
+														<ChevronLeft className="w-4 h-4 text-indigo-400" />
+													</div>
+													<div className="w-1.5 h-4 rounded-full" style={{ backgroundColor: group.color || '#6366f1' }} />
+													<span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">{group.name}</span>
+													<span className="text-[10px] text-neutral-500 ml-auto">{groupTracks.length} tracks</span>
+												</div>
+											);
+
+											if (!group.isCollapsed) {
+												groupTracks.forEach(track => {
+													elements.push(renderTrack(track, currentOffset));
+													currentOffset += getTrackHeight({ type: track.type });
+												});
+											}
+										});
+
+										// 2. Ungrouped Tracks
+										const ungroupedTracks = tracks.filter(t => !(t as any).groupId);
+										ungroupedTracks.forEach(track => {
+											elements.push(renderTrack(track, currentOffset));
+											currentOffset += getTrackHeight({ type: track.type });
+										});
+
+										return elements;
+									})()}
 								</div>
 							</div>
 						</ScrollArea>

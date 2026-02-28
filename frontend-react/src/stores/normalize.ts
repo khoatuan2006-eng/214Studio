@@ -10,7 +10,7 @@
  * - denormalizeEditorData() — when saving to backend
  */
 
-import type { CharacterTrack, ActionBlock, TransformData, TimelineKeyframe, BlendMode } from '@/store/useAppStore';
+import type { CharacterTrack, ActionBlock, TransformData, BlendMode } from '@/store/useAppStore';
 
 // --- Normalized Types ---
 

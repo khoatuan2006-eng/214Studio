@@ -631,9 +631,10 @@ Clicking a card → handlePropertyChange('easing', value) → updates keyframe e
 
 | # | Việc cần làm | Độ phức tạp |
 |---|---|---|
-| 5.1 | **WebGL 2/WebGPU Renderer**: Chuyển Konva canvas render từ 2D Context sang WebGL shader để bứt tốc render (nhất là khi scale to). | 🔴 Cao | ⏳ PENDING |
+| 5.1 | **WebGL 2/WebGPU Renderer (OmniClip Architecture)**: Chuyển Konva canvas render từ 2D Context sang WebGL shader (PixiJS) để bứt tốc render (học từ Github omiclip). | 🔴 Cao | ⏳ PENDING |
 | 5.2 | **Resolution Preview Modes**: Dropdown chọn chất lượng khung nhìn 25%, 50%, 100% để tối ưu RAM cho máy yếu. | 🟢 Thấp | ✅ DONE |
 | 5.3 | **Safe Area Overlay**: Toggle overlay khung an toàn (title safe/action safe) 16:9 / 9:16 trên canvas. | 🟢 Thấp | ✅ DONE |
+| 5.4 | **Timeline Transient Rendering**: Bỏ React Tree re-render khi kéo thả clip trên Timeline (giống OmniClip dùng Lit), thay bằng sửa trực tiếp inline CSS transform để đạt 60fps. | 🔴 Cao | ⏳ PENDING |
 
 ### 6. Dressing Room UX
 

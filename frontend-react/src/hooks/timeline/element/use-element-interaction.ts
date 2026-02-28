@@ -178,6 +178,7 @@ export function useElementInteraction({
 	const pendingDragRef = useRef<PendingDragState | null>(null);
 	const lastMouseXRef = useRef(0);
 	const mouseDownLocationRef = useRef<{ x: number; y: number } | null>(null);
+	const transientDragStateRef = useRef({ currentTime: 0, currentMouseY: 0 });
 
 	const startDrag = useCallback(
 		({
@@ -190,6 +191,7 @@ export function useElementInteraction({
 			initialCurrentTime,
 			initialCurrentMouseY,
 		}: StartDragParams) => {
+			transientDragStateRef.current = { currentTime: initialCurrentTime, currentMouseY: initialCurrentMouseY };
 			setDragState({
 				isDragging: true,
 				elementId,
@@ -343,11 +345,21 @@ export function useElementInteraction({
 				frameSnappedTime,
 				movingElement,
 			});
-			setDragState((previousDragState) => ({
-				...previousDragState,
-				currentTime: snappedTime,
-				currentMouseY: clientY,
-			}));
+
+			transientDragStateRef.current = { currentTime: snappedTime, currentMouseY: clientY };
+
+			if (dragState.elementId) {
+				window.dispatchEvent(new CustomEvent('transient-element-drag', {
+					detail: {
+						elementId: dragState.elementId,
+						currentTime: snappedTime,
+						currentMouseY: clientY,
+						startMouseY: dragState.startMouseY,
+						startElementTime: dragState.startElementTime,
+					}
+				}));
+			}
+
 			onSnapPointChange?.(snapPoint);
 
 			if (dragState.elementId && dragState.trackId) {
@@ -422,7 +434,7 @@ export function useElementInteraction({
 				tracksScrollRef,
 				headerRef,
 				zoomLevel,
-				snappedTime: dragState.currentTime,
+				snappedTime: transientDragStateRef.current.currentTime,
 				verticalDragDirection: getVerticalDragDirection({
 					startMouseY: dragState.startMouseY,
 					currentMouseY: clientY,
@@ -433,7 +445,7 @@ export function useElementInteraction({
 				onSnapPointChange?.(null);
 				return;
 			}
-			const snappedTime = dragState.currentTime;
+			const snappedTime = transientDragStateRef.current.currentTime;
 
 			const sourceTrack = tracks.find(({ id }) => id === dragState.trackId);
 			if (!sourceTrack) {
@@ -475,7 +487,6 @@ export function useElementInteraction({
 		dragState.elementId,
 		dragState.startMouseY,
 		dragState.trackId,
-		dragState.currentTime,
 		zoomLevel,
 		tracks,
 		endDrag,

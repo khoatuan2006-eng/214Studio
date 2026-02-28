@@ -1,4 +1,8 @@
-import type { ExportOptions } from "@/types/export";
+export type ExportOptions = {
+	format: "mp4" | "webm";
+	quality: "low" | "medium" | "high";
+	includeAudio: boolean;
+};
 
 export const DEFAULT_EXPORT_OPTIONS = {
 	format: "mp4",

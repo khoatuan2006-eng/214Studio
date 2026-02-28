@@ -2,8 +2,8 @@ import { useAppStore } from "@/store/useAppStore";
 import { useCallback, useMemo } from "react";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { transientState, setCursorTime, setScrubbing, setActiveEditTargetId } from "@/stores/transient-store";
-import { useEditorDataStore } from "@/stores/editor-data-store";
-import { commandHistory, createMoveActionCommand, createDeleteActionsCommand, createAddKeyframeCommand, createRemoveKeyframeCommand, createDeleteTrackCommand, createAddTrackCommand, createBatchCommand } from "@/stores/command-history";
+import { commandHistory, createMoveActionCommand, createDeleteActionsCommand, createAddKeyframeCommand, createRemoveKeyframeCommand, createDeleteTrackCommand, createBatchCommand } from "@/stores/command-history";
+import { EditorCore } from '../core';
 import type { TimelineTrack, VideoElement, TimelineElement } from "../types/timeline";
 
 // Selection mock state globally
@@ -14,6 +14,7 @@ const notifySelection = () => selectionListeners.forEach(l => l());
 // Mock EditorCore that bridges OpenCut UI with our Zustand store
 export function useEditor() {
     const editorData = useAppStore(state => state.editorData);
+    const core = EditorCore.getInstance();
 
     // Map our RowData (Characters) to OpenCut's TimelineTrack
     const getTracks = useCallback((): TimelineTrack[] => {
@@ -360,7 +361,7 @@ export function useEditor() {
                         const oldEnd = action.end;
                         return createMoveActionCommand(action.id, oldStart, oldEnd, oldStart + delta, oldEnd + delta);
                     });
-                    
+
                     const batchCmd = createBatchCommand(`Move character ${sourceRow.name}`, commands);
                     commandHistory.execute(batchCmd);
                 } else {
@@ -472,12 +473,12 @@ export function useEditor() {
         },
         playback: {
             seek: ({ time }: { time: number }) => {
-                setCursorTime(time);
+                core.playback.seek(time);
             },
-            getCurrentTime: () => transientState.cursorTime,
-            isPlaying: false,
-            setScrubbing: ({ isScrubbing: val }: { isScrubbing: boolean }) => setScrubbing(val),
-            getIsScrubbing: () => transientState.isScrubbing,
+            getCurrentTime: () => core.playback.currentTime,
+            isPlaying: core.playback.isPlaying,
+            setScrubbing: ({ isScrubbing: val }: { isScrubbing: boolean }) => core.playback.setScrubbing(val),
+            getIsScrubbing: () => core.playback.isScrubbing,
         },
         project: {
             getActive: () => ({ id: "project-1", resolution: { width: 1920, height: 1080 }, settings: { fps: 30 } }),
