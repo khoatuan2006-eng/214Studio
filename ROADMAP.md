@@ -292,6 +292,7 @@ save_to_db() → Project ID
   ```
 - **Benefit:** Client khác (CLI, Mobile) có thể dùng cùng logic mà không cần re-implement.
 - **WebSocket:** Consider adding WebSocket support for real-time sync.
+</details>
 
 ---
 
