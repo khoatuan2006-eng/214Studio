@@ -843,3 +843,18 @@ Nhằm đo lường giá trị thực tế của Anime Studio hiện tại so v�
 
 > **Tóm tắt Metrics:** Hệ thống hiện tại có thể được rank ở mức **Bêta-ready** cho các animation 2D dạng block-based. Độ ổn định RAM đã tăng đáng kể (giảm 80% bandwidth asset, patch-based undo/redo). Trải nghiệm người dùng đã được cải thiện với hotkeys và safe area.
 > **Mục tiêu tiếp theo:** Khắc phục triệt để lỗi in-memory (Scene Persistence), thực sự downscale pixel của Canvas khi dùng Resolution Preview, và triển khai WebGL (P3-5.1) để xử lý mượt mà trên 60FPS.
+
+---
+
+## 🚀 P5 — Đỉnh Cao Trải Nghiệm & Hiệu Năng (UX & System Optimization)
+
+> **Nhận xét từ Tech Lead (Chuyên gia System Design & UX):** "Các cậu đã qua được giai đoạn 'sống sót' với P0-P4. Nhưng nhìn ra thị trường đi, người dùng không trả tiền cho một cái hộp đen không lỗi. Họ trả tiền cho sự MƯỢT MÀ và TRỰC QUAN. Đã đến lúc tối ưu đến từng byte bộ nhớ và từng pixel hiển thị."
+
+| # | Việc cần làm | Độ phức tạp | Trạng thái |
+|---|---|---|---|
+| 9.1 | **Frustum Culling & Virtualized Timeline**: Chỉ render những keyframe/action block và canvas element nằm trong viewport hiển thị. Đừng bắt Browser nhai những timeline-block/pixel đang nằm che khuất ngoài màn hình. | 🔴 Cao | ⏳ PENDING |
+| 9.2 | **Web Workers cho Heavy Computation**: Offload việc tính toán path, nội suy keyframe, parse JSON nặng sang Web Worker. Main thread chỉ dành để vẽ UI, đảm bảo 60FPS! | 🔴 Cực Cao | ⏳ PENDING |
+| 9.3 | **Pre-fetch & Lazy Load Assets**: Đừng bắt user chờ tải tệp PSD 50MB. Load thumbnail trước, background stream texture, ưu tiên texture đang hiển thị trên canvas. | 🟡 Trung bình | ⏳ PENDING |
+| 9.4 | **Contextual Floating UI**: Context Menu/Toolbar mọc ra ngay tại con trỏ chuột khi click chọn element thay vì bắt user liếc mắt nhìn tít sang màn hình bên phải (After Effects/Blender style). Cung cấp Snap mượt mà. | 🟡 Trung bình | ⏳ PENDING |
+| 9.5 | **Zero-Layout-Shift (ZLS) & Micro-interactions**: Đảm bảo khi thao tác kéo thả/expand group, UI không bị giật cục. Mọi animation UI (Drag/Drop/Hover) phải dùng CSS Transform/Opacity (GPU), không dùng margin/padding/width để tránh trigger repaint. | 🟢 Thấp | ⏳ PENDING |
+| 9.6 | **Memory Leak Profiling & Cleanup**: Cleanup hoàn toàn Textures khỏi VRAM (GPU) NGAY LẬP TỨC khi Element/Scene không còn tồn tại. Unsubscribe chặt chẽ mọi Listeners dư thừa. | 🟡 Trung bình | ⏳ PENDING |
