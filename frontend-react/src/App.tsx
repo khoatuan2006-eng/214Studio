@@ -1,16 +1,18 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Palette, Shirt, Video, Menu, Loader2 } from 'lucide-react';
+import { Palette, Shirt, Video, Menu, Loader2, GitBranch } from 'lucide-react';
 import { StudioErrorBoundary } from './components/StudioErrorBoundary';
 import ProjectManager from './components/ProjectManager';
 import { useProjectStore } from './store/useProjectStore';
 import { useAppStore } from './store/useAppStore';
 import { startEditorDataSync, stopEditorDataSync } from './stores/editor-data-store';
+import { useSuppressBrowserDefaults } from './hooks/useSuppressBrowserDefaults';
 const OnboardingOverlay = lazy(() => import('./components/OnboardingOverlay'));
 
 // 18.4: Lazy-load heavy tab components — only fetched when user switches to that tab
 const BaseMode = lazy(() => import('./components/BaseMode'));
 const DressingRoomMode = lazy(() => import('./components/DressingRoomMode'));
 const StudioMode = lazy(() => import('./components/StudioMode'));
+const WorkflowMode = lazy(() => import('./components/workflow/WorkflowMode'));
 
 // Shared loading fallback
 function TabLoadingFallback() {
@@ -24,9 +26,12 @@ function TabLoadingFallback() {
   );
 }
 
-type Tab = 'base' | 'dressing' | 'studio';
+type Tab = 'base' | 'dressing' | 'studio' | 'workflow';
 
 function App() {
+  // Suppress browser defaults (Ctrl+S, Ctrl+P, zoom, drag, etc.)
+  useSuppressBrowserDefaults();
+
   const [activeTab, setActiveTab] = useState<Tab>('base'); // Start on base mode for now
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { currentProject, startAutoSave, stopAutoSave, markDirty } = useProjectStore();
@@ -76,76 +81,120 @@ function App() {
   }, [currentProject?.id]);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-neutral-900 text-neutral-100 font-sans">
-      {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-[72px]' : 'w-64'} transition-all duration-300 bg-neutral-800 border-r border-neutral-700 flex flex-col items-center py-6 h-full flex-shrink-0 relative`}>
+    <div className="flex h-screen w-full overflow-hidden text-neutral-100 font-sans" style={{ background: 'var(--surface-base)' }}>
+      {/* ═══ Premium Glass Sidebar ═══ */}
+      <aside className={`${isSidebarCollapsed ? 'w-[72px]' : 'w-64'} transition-all duration-300 glass-panel-heavy flex flex-col items-center py-6 h-full flex-shrink-0 relative z-10`}
+        style={{ borderRight: '1px solid var(--glass-border)' }}
+      >
+        {/* Ambient gradient decoration */}
+        <div className="absolute top-0 left-0 right-0 h-32 pointer-events-none opacity-40"
+          style={{ background: 'linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%)' }} />
+
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute top-4 right-4 p-1.5 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-lg btn-ghost"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className={`flex flex-col items-center mb-8 ${isSidebarCollapsed ? 'mt-8' : 'mt-2'}`}>
-          <Palette className="w-10 h-10 text-indigo-400 mb-2" />
+        {/* Logo with glow */}
+        <div className={`flex flex-col items-center mb-8 ${isSidebarCollapsed ? 'mt-8' : 'mt-2'} relative`}>
+          <div className="relative">
+            <Palette className="w-10 h-10 mb-2 relative z-10" style={{ color: 'var(--accent-400)' }} />
+            {/* Logo ambient glow */}
+            <div className="absolute inset-0 blur-xl opacity-50 animate-pulse" style={{ background: 'var(--accent-glow)' }} />
+          </div>
           {!isSidebarCollapsed && (
             <>
-              <h1 className="text-xl font-bold tracking-wider">Anime Studio</h1>
-              <p className="text-xs text-neutral-400">2D Character Builder</p>
+              <h1 className="text-xl font-bold tracking-wider gradient-text">Anime Studio</h1>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>2D Character Builder</p>
             </>
           )}
         </div>
 
-        <div className="flex flex-col w-full px-4 gap-2">
-          <button
-            onClick={() => setActiveTab('base')}
-            className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3 px-4'} py-3 rounded-lg transition-colors ${activeTab === 'base' ? 'bg-indigo-600 text-white' : 'hover:bg-neutral-700 text-neutral-300'
-              }`}
-            title="Base Characters"
-          >
-            <Palette className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Base Characters</span>}
-          </button>
+        {/* Navigation Items with Active Indicator */}
+        <nav className="flex flex-col w-full px-3 gap-1 relative">
+          {([
+            { id: 'base' as Tab, label: 'Base Characters', icon: Palette },
+            { id: 'dressing' as Tab, label: 'Dressing Room', icon: Shirt },
+            { id: 'studio' as Tab, label: 'Studio', icon: Video },
+            { id: 'workflow' as Tab, label: 'Workflow', icon: GitBranch },
+          ]).map(item => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`relative flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3 px-4'} py-3 rounded-xl transition-all duration-200 group
+                  ${isActive
+                    ? 'text-white'
+                    : 'text-neutral-400 hover:text-neutral-200'
+                  }`}
+                style={isActive ? {
+                  background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.08))',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 0 20px -8px var(--accent-glow)',
+                  border: '1px solid rgba(99,102,241,0.2)',
+                } : {}}
+                title={item.label}
+              >
+                {/* Active left accent bar */}
+                {isActive && (
+                  <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
+                    style={{ background: 'linear-gradient(180deg, var(--accent-400), var(--accent-600))', boxShadow: '0 0 8px var(--accent-glow)' }} />
+                )}
+                <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? '' : 'group-hover:text-neutral-300'}`}
+                  style={isActive ? { color: 'var(--accent-300)', filter: 'drop-shadow(0 0 4px var(--accent-glow))' } : {}} />
+                {!isSidebarCollapsed && (
+                  <span className={`text-sm font-medium transition-colors ${isActive ? 'text-white' : ''}`}>{item.label}</span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-          <button
-            onClick={() => setActiveTab('dressing')}
-            className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3 px-4'} py-3 rounded-lg transition-colors ${activeTab === 'dressing' ? 'bg-indigo-600 text-white' : 'hover:bg-neutral-700 text-neutral-300'
-              }`}
-            title="Dressing Room"
-          >
-            <Shirt className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Dressing Room</span>}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('studio')}
-            className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3 px-4'} py-3 rounded-lg transition-colors ${activeTab === 'studio' ? 'bg-indigo-600 text-white' : 'hover:bg-neutral-700 text-neutral-300'
-              }`}
-            title="Studio"
-          >
-            <Video className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Studio</span>}
-          </button>
+        {/* Bottom decoration */}
+        <div className="mt-auto pt-4 px-4 w-full">
+          {!isSidebarCollapsed && (
+            <div className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
+              v2.0 — Premium Edition
+            </div>
+          )}
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 min-h-0 flex flex-col relative overflow-hidden bg-neutral-900">
+      {/* ═══ Main Content Area ═══ */}
+      <main className="flex-1 min-h-0 flex flex-col relative overflow-hidden" style={{ background: 'var(--surface-base)' }}>
+        {/* Ambient background blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-[0.03] animate-blob"
+            style={{ background: 'radial-gradient(circle, var(--accent-500), transparent 70%)' }} />
+          <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full opacity-[0.02] animate-blob"
+            style={{ background: 'radial-gradient(circle, #a78bfa, transparent 70%)', animationDelay: '-7s' }} />
+        </div>
+
         {/* Project Header Bar */}
-        <ProjectManager />
+        <div className="relative z-10">
+          <ProjectManager />
+        </div>
 
-        {/* 18.4: Suspense-wrapped lazy tabs */}
-        <Suspense fallback={<TabLoadingFallback />}>
-          {activeTab === 'base' && <BaseMode />}
-          {activeTab === 'dressing' && <DressingRoomMode />}
-          {activeTab === 'studio' && (
-            <StudioErrorBoundary>
-              <StudioMode />
-            </StudioErrorBoundary>
-          )}
-        </Suspense>
+        {/* Suspense-wrapped lazy tabs */}
+        <div className="flex-1 min-h-0 relative z-10">
+          <Suspense fallback={<TabLoadingFallback />}>
+            <div className="h-full animate-tab-enter" key={activeTab}>
+              {activeTab === 'base' && <BaseMode />}
+              {activeTab === 'dressing' && <DressingRoomMode />}
+              {activeTab === 'studio' && (
+                <StudioErrorBoundary>
+                  <StudioMode />
+                </StudioErrorBoundary>
+              )}
+              {activeTab === 'workflow' && <WorkflowMode />}
+            </div>
+          </Suspense>
+        </div>
 
-        {/* Onboarding Tour — shown on first visit (now lazy loaded) */}
+        {/* Onboarding Tour */}
         <Suspense fallback={null}>
           <OnboardingOverlay />
         </Suspense>

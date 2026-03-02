@@ -9,10 +9,7 @@ export class SelectionManager {
     private selectedRowId: string = '';
     private listeners = new Set<() => void>();
 
-    private core: EditorCore;
-
-    constructor(core: EditorCore) {
-        this.core = core;
+    constructor(_core: EditorCore) {
     }
 
     setSelectedRowId(id: string): void {

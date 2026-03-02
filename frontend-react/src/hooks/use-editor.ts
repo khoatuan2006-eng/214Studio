@@ -1,7 +1,7 @@
 import { useAppStore } from "@/store/useAppStore";
 import { useCallback, useMemo } from "react";
-import { useTimelineStore } from "@/stores/timeline-store";
-import { transientState, setCursorTime, setScrubbing, setActiveEditTargetId } from "@/stores/transient-store";
+import { useTimelineStore, getDynamicDuration } from "@/stores/timeline-store";
+import { transientState, setActiveEditTargetId } from "@/stores/transient-store";
 import { commandHistory, createMoveActionCommand, createDeleteActionsCommand, createAddKeyframeCommand, createRemoveKeyframeCommand, createDeleteTrackCommand, createBatchCommand } from "@/stores/command-history";
 import { EditorCore } from '../core';
 import type { TimelineTrack, VideoElement, TimelineElement } from "../types/timeline";
@@ -214,7 +214,9 @@ export function useEditor() {
             getTracks,
             updateKeyframeTime: bridge.updateKeyframeTime,
             removeKeyframe: bridge.removeKeyframe,
+            getDuration: getDynamicDuration,
             getTotalDuration: () => 60, // 60 seconds default timeline for now
+            addMarker: (_time: number) => { },
             toggleTrackMute: (_params: { trackId: string }) => { },
             toggleTrackVisibility: (_params: { trackId: string }) => { },
             removeTrack: (trackId: string) => {
@@ -475,10 +477,11 @@ export function useEditor() {
             seek: ({ time }: { time: number }) => {
                 core.playback.seek(time);
             },
-            getCurrentTime: () => core.playback.currentTime,
-            isPlaying: core.playback.isPlaying,
-            setScrubbing: ({ isScrubbing: val }: { isScrubbing: boolean }) => core.playback.setScrubbing(val),
-            getIsScrubbing: () => core.playback.isScrubbing,
+            getCurrentTime: () => core.playback.getCurrentTime(),
+            isPlaying: core.playback.getIsPlaying(),
+            toggle: () => core.playback.toggle(),
+            setScrubbing: ({ isScrubbing: _val }: { isScrubbing: boolean }) => { }, // Mock
+            getIsScrubbing: () => false,
         },
         project: {
             getActive: () => ({ id: "project-1", resolution: { width: 1920, height: 1080 }, settings: { fps: 30 } }),
@@ -511,6 +514,12 @@ export function useEditor() {
         },
         media: {
             getAssets: (): any[] => [], // We will adapt this to return our CharacterAssets
+        },
+        undo: () => commandHistory.undo(),
+        redo: () => commandHistory.redo(),
+        clipboard: {
+            copy: () => { },
+            paste: () => { }
         }
     };
 }

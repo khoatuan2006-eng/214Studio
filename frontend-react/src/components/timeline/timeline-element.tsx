@@ -31,6 +31,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useRef, useEffect } from "react";
+import LazyImage from "@/components/ui/LazyImage";
 
 interface TimelineElementProps {
 	element: TimelineElementType;
@@ -126,13 +127,14 @@ export function TimelineElement({
 			<ContextMenuTrigger asChild>
 				<div
 					ref={elementRef}
-					className={`absolute top-0 h-full select-none`}
+					className={`absolute top-0 h-full select-none group`}
 					style={{
 						left: transientPos.current ? `${transientPos.current.left}px` : `${elementLeft}px`,
 						width: `${elementWidth}px`,
 						transform: transientPos.current ? transientPos.current.transform : (isBeingDragged && dragState.isDragging
 							? `translate3d(0, ${dragOffsetY}px, 0)`
 							: undefined),
+						zIndex: isCurrentElementSelected ? 30 : 20,
 					}}
 				>
 					<ElementInner
@@ -225,8 +227,16 @@ function ElementInner({
 				{
 					type: track.type,
 				},
-			)} ${canElementBeHidden(element) && element.hidden ? "opacity-50" : ""} ${isSelected ? "ring-2 ring-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.5)] z-20" : "hover:ring-1 hover:ring-white/30"}`}
+			)} ${canElementBeHidden(element) && element.hidden ? "opacity-50" : ""} ${isSelected
+					? "ring-2 ring-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.5)] z-20"
+					: "hover:ring-1 hover:ring-white/30"
+				}`}
 		>
+			{/* Selection highlight overlay */}
+			{isSelected && (
+				<div className="absolute inset-0 border-2 border-indigo-400 rounded-[0.5rem] pointer-events-none animate-pulse" />
+			)}
+
 			<button
 				type="button"
 				className="absolute inset-0 size-full cursor-pointer"
@@ -273,11 +283,20 @@ function ResizeHandle({
 	return (
 		<button
 			type="button"
-			className={`absolute top-0 bottom-0 flex w-3 items-center justify-center cursor-col-resize z-30 opacity-0 group-hover:opacity-100 transition-opacity ${isLeft ? "left-0" : "right-0"}`}
+			className={`absolute top-0 bottom-0 flex items-center justify-center cursor-col-resize z-30 opacity-0 group-hover:opacity-100 transition-opacity ${isLeft ? "left-0" : "right-0"
+				} ${isLeft ? "w-4" : "w-4"}`}
 			onMouseDown={(event) => handleResizeStart({ event, elementId, side })}
-			aria-label={`${isLeft ? "Left" : "Right"} resize handle`}
+			aria-label={`${isLeft ? "Left" : "Right"} trim handle`}
 		>
-			<div className="bg-white/80 h-[1.5rem] w-1 rounded-full shadow-sm hover:bg-yellow-400 hover:scale-y-110 transition-all pointer-events-none" />
+			<div className={`flex items-center justify-center h-full py-1 ${isLeft
+					? "bg-gradient-to-r from-indigo-500/60 to-transparent rounded-l-md"
+					: "bg-gradient-to-l from-indigo-500/60 to-transparent rounded-r-md"
+				} hover:from-indigo-400 hover:to-indigo-500/40 transition-all`}>
+				<div className={`w-0.5 h-6 rounded-full bg-white/90 shadow-sm ${isLeft ? "mr-1" : "ml-1"
+					}`} />
+				<div className={`w-0.5 h-4 rounded-full bg-white/60 ${isLeft ? "mr-0.5" : "ml-0.5"
+					}`} />
+			</div>
 		</button>
 	);
 }
@@ -296,7 +315,7 @@ function ElementContent({
 	return (
 		<div className="flex size-full items-center justify-start pl-2 bg-gradient-to-r from-indigo-500/40 to-purple-500/40 backdrop-blur-md gap-2 border border-white/20 overflow-hidden relative transition-colors duration-200">
 			{imageUrl && (
-				<img src={imageUrl} crossOrigin="anonymous" className="h-[80%] aspect-square object-contain rounded bg-black/40 p-0.5 pointer-events-none shadow-sm" alt="" />
+				<LazyImage src={imageUrl} className="h-[80%] aspect-square object-contain rounded bg-black/40 p-0.5 pointer-events-none shadow-sm" alt="" rootMargin="50px" />
 			)}
 			<span className="truncate text-xs text-white px-1 font-semibold drop-shadow-sm">{element.name}</span>
 			{isSelected && (

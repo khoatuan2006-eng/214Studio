@@ -2,22 +2,6 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-	ViewIcon,
-	ViewOffSlashIcon,
-	VolumeHighIcon,
-	VolumeOffIcon,
-	TaskAdd02Icon,
-	Delete02Icon,
-	Edit02Icon,
-	ArrowLeft01Icon,
-	ArrowUp01Icon,
-	ArrowDown01Icon,
-	ArrowRight01Icon
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { useAppStore } from "@/store/useAppStore";
-import { setActiveEditTargetId, useTransientSnapshot } from "@/stores/transient-store";
-import {
 	ContextMenu,
 	ContextMenuContent,
 	ContextMenuItem,
@@ -50,19 +34,32 @@ import {
 } from "@/lib/timeline";
 import { TimelineToolbar } from "./timeline-toolbar";
 import { TrackGroupHeader } from "./track-group-header";
-import { useScrollSync } from "@/hooks/timeline/use-scroll-sync";
-import { useElementSelection } from "@/hooks/timeline/element/use-element-selection";
-import { useTimelineSeek } from "@/hooks/timeline/use-timeline-seek";
-import { useTimelineDragDrop } from "@/hooks/timeline/use-timeline-drag-drop";
 import { TimelineRuler } from "./timeline-ruler";
 import { TimelineBookmarksRow } from "./bookmarks";
 import { useBookmarkDrag } from "@/hooks/timeline/use-bookmark-drag";
 import { useEdgeAutoScroll } from "@/hooks/timeline/use-edge-auto-scroll";
 import { useTimelineStore, getProjectFps, getDynamicDuration } from "@/stores/timeline-store";
 import { useEditor } from "@/hooks/use-editor";
+import { useElementSelection } from "@/hooks/timeline/element/use-element-selection";
 import { useTimelinePlayhead } from "@/hooks/timeline/use-timeline-playhead";
+import { useTimelineDragDrop } from "@/hooks/timeline/use-timeline-drag-drop";
+import { useTimelineSeek } from "@/hooks/timeline/use-timeline-seek";
+import { useScrollSync } from "@/hooks/timeline/use-scroll-sync";
 import { DragLine } from "./drag-line";
 import { invokeAction } from "@/lib/actions";
+import { useAppStore, setActiveEditTargetId, useTransientSnapshot } from "@/store/useAppStore";
+import { VirtualizedTrackList, TRACK_HEIGHT } from "./VirtualizedTrackList";
+import {
+	ViewIcon,
+	ViewOffSlashIcon,
+	VolumeHighIcon,
+	VolumeOffIcon,
+	TaskAdd02Icon,
+	Delete02Icon,
+	ArrowRight01Icon,
+	ArrowLeft01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 export function Timeline() {
 	const tracksContainerHeight = { min: 0, max: 800 };
@@ -77,14 +74,17 @@ export function Timeline() {
 	const timelineRef = useRef<HTMLDivElement>(null);
 	const timelineHeaderRef = useRef<HTMLDivElement>(null);
 	const rulerRef = useRef<HTMLDivElement>(null);
+	const rulerScrollRef = useRef<HTMLDivElement>(null);
 	const tracksContainerRef = useRef<HTMLDivElement>(null);
 	const tracksScrollRef = useRef<HTMLDivElement>(null);
 	const trackLabelsRef = useRef<HTMLDivElement>(null);
 	const playheadRef = useRef<HTMLDivElement>(null);
 	const trackLabelsScrollRef = useRef<HTMLDivElement>(null);
+	const lastMouseXRef = useRef<number>(0);
 
 	// state
 	const [isResizing, setIsResizing] = useState(false);
+	const [scrollTop, setScrollTop] = useState(0);
 	const [currentSnapPoint, setCurrentSnapPoint] = useState<SnapPoint | null>(
 		null,
 	);
@@ -92,6 +92,11 @@ export function Timeline() {
 	const handleSnapPointChange = useCallback((snapPoint: SnapPoint | null) => {
 		setCurrentSnapPoint(snapPoint);
 	}, []);
+	
+	const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+		setScrollTop(e.currentTarget.scrollTop);
+	}, []);
+	
 	const handleResizeStateChange = useCallback(
 		({ isResizing: nextIsResizing }: { isResizing: boolean }) => {
 			setIsResizing(nextIsResizing);
@@ -272,7 +277,6 @@ export function Timeline() {
 		dragDropTarget,
 		handleElementMouseDown,
 		handleElementClick,
-		lastMouseXRef,
 	} = useElementInteraction({
 		zoomLevel,
 		timelineRef,
@@ -595,149 +599,39 @@ export function Timeline() {
 									}
 								/>
 								<div
-									className="relative"
+									className="relative overflow-auto"
+									ref={tracksScrollRef}
+									onScroll={handleScroll}
 									style={{
-										height: `${(() => {
-											const groups = useAppStore.getState().trackGroups || [];
-											let h = 0;
-											groups.forEach(g => {
-												h += 32; // Header
-												if (!g.isCollapsed) {
-													const groupTracks = tracks.filter(t => (t as any).groupId === g.id);
-													h += groupTracks.length * 32;
-												}
-											});
-											const ungrouped = tracks.filter(t => !(t as any).groupId);
-											h += ungrouped.length * 32;
-											return Math.max(tracksContainerHeight.min, h);
-										})()}px`,
+										height: `${Math.max(tracksContainerHeight.min, tracks.length * TRACK_HEIGHT)}px`,
 									}}
 								>
 									{/* P1 Sprint 3: In/Out overlay on track area */}
 									<InOutTrackOverlay zoomLevel={zoomLevel} />
-									{(() => {
-										if (tracks.length === 0) return <div />;
-
-										const trackGroups = useAppStore.getState().trackGroups || [];
-										let currentOffset = 0;
-
-										// Plan: Iterate through groups, then ungrouped tracks.
-										// Calculate dynamic Y positions based on collapse state.
-
-										const renderTrack = (track: TimelineTrack, y: number) => (
-											<ContextMenu key={track.id}>
-												<ContextMenuTrigger asChild>
-													<div
-														className="absolute right-0 left-0"
-														style={{
-															top: `${y}px`,
-															height: `${getTrackHeight({ type: track.type })}px`,
-														}}
-													>
-														<TimelineTrackContent
-															track={track}
-															zoomLevel={zoomLevel}
-															dragState={dragState}
-															rulerScrollRef={tracksScrollRef}
-															tracksScrollRef={tracksScrollRef}
-															lastMouseXRef={lastMouseXRef}
-															onSnapPointChange={handleSnapPointChange}
-															onResizeStateChange={handleResizeStateChange}
-															onElementMouseDown={handleElementMouseDown}
-															onElementClick={handleElementClick}
-															onTrackMouseDown={(event) => {
-																handleSelectionMouseDown(event);
-																handleTracksMouseDown(event);
-															}}
-															onTrackClick={handleTracksClick}
-															shouldIgnoreClick={shouldIgnoreClick}
-														/>
-													</div>
-												</ContextMenuTrigger>
-												<ContextMenuContent className="w-40">
-													<ContextMenuItem
-														icon={<HugeiconsIcon icon={TaskAdd02Icon} />}
-														onClick={(e) => {
-															e.stopPropagation();
-															invokeAction("paste-copied");
-														}}
-													>
-														Paste elements
-													</ContextMenuItem>
-													<ContextMenuItem
-														onClick={(e) => {
-															e.stopPropagation();
-															timeline.toggleTrackMute({ trackId: track.id });
-														}}
-													>
-														<HugeiconsIcon icon={VolumeHighIcon} />
-														<span>{canTracktHaveAudio(track) && track.muted ? "Unmute track" : "Mute track"}</span>
-													</ContextMenuItem>
-													<ContextMenuItem
-														onClick={(e) => {
-															e.stopPropagation();
-															timeline.toggleTrackVisibility({ trackId: track.id });
-														}}
-													>
-														<HugeiconsIcon icon={ViewIcon} />
-														<span>{canTrackBeHidden(track) && track.hidden ? "Show track" : "Hide track"}</span>
-													</ContextMenuItem>
-													<ContextMenuItem
-														onClick={(e) => {
-															e.stopPropagation();
-															timeline.removeTrack(track.id);
-														}}
-														variant="destructive"
-													>
-														<HugeiconsIcon icon={Delete02Icon} />
-														Delete track
-													</ContextMenuItem>
-												</ContextMenuContent>
-											</ContextMenu>
-										);
-
-										const elements: React.ReactNode[] = [];
-
-										// 1. Grouped Tracks
-										trackGroups.forEach(group => {
-											const groupTracks = tracks.filter(t => (t as any).groupId === group.id);
-											const headerHeight = 32;
-											const y = currentOffset;
-											currentOffset += headerHeight;
-
-											elements.push(
-												<div
-													key={group.id}
-													className="absolute left-0 right-0 bg-neutral-800/80 backdrop-blur-md border-y border-white/5 flex items-center px-4 gap-3 cursor-pointer hover:bg-neutral-700/80 transition-all z-10"
-													style={{ top: `${y}px`, height: `${headerHeight}px` }}
-													onClick={() => useAppStore.getState().updateTrackGroup(group.id, { isCollapsed: !group.isCollapsed })}
-												>
-													<div className={`transition-transform duration-200 ${group.isCollapsed ? '-rotate-90' : ''}`}>
-														<ChevronLeft className="w-4 h-4 text-indigo-400" />
-													</div>
-													<div className="w-1.5 h-4 rounded-full" style={{ backgroundColor: group.color || '#6366f1' }} />
-													<span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">{group.name}</span>
-													<span className="text-[10px] text-neutral-500 ml-auto">{groupTracks.length} tracks</span>
-												</div>
-											);
-
-											if (!group.isCollapsed) {
-												groupTracks.forEach(track => {
-													elements.push(renderTrack(track, currentOffset));
-													currentOffset += getTrackHeight({ type: track.type });
-												});
-											}
-										});
-
-										// 2. Ungrouped Tracks
-										const ungroupedTracks = tracks.filter(t => !(t as any).groupId);
-										ungroupedTracks.forEach(track => {
-											elements.push(renderTrack(track, currentOffset));
-											currentOffset += getTrackHeight({ type: track.type });
-										});
-
-										return elements;
-									})()}
+									
+									{/* Virtualized Track List - Only renders visible tracks */}
+									{tracks.length > 0 ? (
+										<VirtualizedTrackList
+											tracks={tracks}
+											zoomLevel={zoomLevel}
+											dragState={dragState}
+											rulerScrollRef={rulerScrollRef}
+											tracksScrollRef={tracksScrollRef}
+											lastMouseXRef={lastMouseXRef}
+											scrollTop={scrollTop}
+											containerHeight={tracksContainerHeight.max}
+											onSnapPointChange={handleSnapPointChange}
+											onResizeStateChange={handleResizeStateChange}
+											onElementMouseDown={handleElementMouseDown}
+											onElementClick={handleElementClick}
+											onTrackMouseDown={(event) => {
+												handleSelectionMouseDown?.(event);
+											}}
+											shouldIgnoreClick={shouldIgnoreClick}
+										/>
+									) : (
+										<div />
+									)}
 								</div>
 							</div>
 						</ScrollArea>
@@ -811,4 +705,4 @@ function InOutTrackOverlay({ zoomLevel }: { zoomLevel: number }) {
 			/>
 		</>
 	);
-}
+} 

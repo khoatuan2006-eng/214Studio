@@ -82,6 +82,41 @@ export interface TransformData {
 
 export type BlendMode = "source-over" | "multiply" | "screen" | "overlay" | "darken" | "lighten";
 
+// P3-FILTER: Filter definitions
+export interface FilterConfig {
+    id: string;
+    type: FilterType;
+    enabled: boolean;
+    settings: Record<string, number | string | boolean>;
+}
+
+export type FilterType = 
+    | 'brightness'
+    | 'contrast'
+    | 'saturation'
+    | 'hue'
+    | 'blur'
+    | 'sharpen'
+    | 'sepia'
+    | 'grayscale'
+    | 'invert'
+    | 'vignette'
+    | 'noise';
+
+export const FILTER_PRESETS: { type: FilterType; name: string; defaultSettings: Record<string, number | string | boolean> }[] = [
+    { type: 'brightness', name: 'Brightness', defaultSettings: { value: 100 } },
+    { type: 'contrast', name: 'Contrast', defaultSettings: { value: 100 } },
+    { type: 'saturation', name: 'Saturation', defaultSettings: { value: 100 } },
+    { type: 'hue', name: 'Hue', defaultSettings: { angle: 0 } },
+    { type: 'blur', name: 'Blur', defaultSettings: { amount: 0 } },
+    { type: 'sharpen', name: 'Sharpen', defaultSettings: { amount: 0 } },
+    { type: 'sepia', name: 'Sepia', defaultSettings: { amount: 0 } },
+    { type: 'grayscale', name: 'Grayscale', defaultSettings: { amount: 0 } },
+    { type: 'invert', name: 'Invert', defaultSettings: { amount: 0 } },
+    { type: 'vignette', name: 'Vignette', defaultSettings: { amount: 0, radius: 50 } },
+    { type: 'noise', name: 'Noise', defaultSettings: { amount: 0 } },
+];
+
 // P2-3.2: Track Group definition
 export interface TrackGroup {
     id: string;
@@ -102,6 +137,8 @@ export interface CharacterTrack {
     groupId?: string;
     // P2-3.4: Speed Ramp — playback speed multiplier (0.1 – 4.0, default 1.0)
     speedMultiplier?: number;
+    // P3-FILTER: Per-track filters
+    filters?: FilterConfig[];
 }
 
 // P2-3.1: Multi-scene management
@@ -142,6 +179,13 @@ interface AppState {
     removeTrackGroup: (groupId: string) => void;
     updateTrackGroup: (groupId: string, patch: Partial<TrackGroup>) => void;
     assignTracksToGroup: (trackIds: string[], groupId: string | null) => void;
+
+    // P3-FILTER: Filter operations
+    addFilterToTrack: (trackId: string, filterType: FilterType) => void;
+    removeFilterFromTrack: (trackId: string, filterId: string) => void;
+    updateFilterOnTrack: (trackId: string, filterId: string, settings: Partial<FilterConfig>) => void;
+    toggleFilterOnTrack: (trackId: string, filterId: string) => void;
+    duplicateFilterOnTrack: (trackId: string, filterId: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -271,6 +315,86 @@ export const useAppStore = create<AppState>()(
                     : t
             ),
         })),
+
+        // P3-FILTER: Filter operations
+        addFilterToTrack: (trackId, filterType) => set((state) => {
+            const preset = FILTER_PRESETS.find(p => p.type === filterType);
+            if (!preset) return {};
+            
+            const newFilter: FilterConfig = {
+                id: `filter_${Date.now()}`,
+                type: filterType,
+                enabled: true,
+                settings: { ...preset.defaultSettings },
+            };
+
+            return {
+                editorData: state.editorData.map(t =>
+                    t.id === trackId
+                        ? { ...t, filters: [...(t.filters ?? []), newFilter] }
+                        : t
+                ),
+            };
+        }),
+
+        removeFilterFromTrack: (trackId, filterId) => set((state) => ({
+            editorData: state.editorData.map(t =>
+                t.id === trackId
+                    ? { ...t, filters: t.filters?.filter(f => f.id !== filterId) }
+                    : t
+            ),
+        })),
+
+        updateFilterOnTrack: (trackId, filterId, settings) => set((state) => ({
+            editorData: state.editorData.map(t =>
+                t.id === trackId
+                    ? {
+                        ...t,
+                        filters: t.filters?.map(f =>
+                            f.id === filterId ? { ...f, ...settings } : f
+                        ),
+                    }
+                    : t
+            ),
+        })),
+
+        toggleFilterOnTrack: (trackId, filterId) => set((state) => ({
+            editorData: state.editorData.map(t =>
+                t.id === trackId
+                    ? {
+                        ...t,
+                        filters: t.filters?.map(f =>
+                            f.id === filterId ? { ...f, enabled: !f.enabled } : f
+                        ),
+                    }
+                    : t
+            ),
+        })),
+
+        duplicateFilterOnTrack: (trackId, filterId) => set((state) => {
+            const track = state.editorData.find(t => t.id === trackId);
+            const filter = track?.filters?.find(f => f.id === filterId);
+            if (!filter) return {};
+
+            const duplicated: FilterConfig = {
+                ...filter,
+                id: `filter_${Date.now()}`,
+            };
+
+            return {
+                editorData: state.editorData.map(t =>
+                    t.id === trackId
+                        ? {
+                            ...t,
+                            filters: [
+                                ...(t.filters ?? []),
+                                duplicated,
+                            ],
+                        }
+                        : t
+                ),
+            };
+        }),
 
         fetchCharacters: async () => {
             set({ isLoading: true, error: null });

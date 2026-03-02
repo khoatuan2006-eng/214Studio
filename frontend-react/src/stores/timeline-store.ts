@@ -4,12 +4,13 @@
  */
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { ClipboardItem } from "@/types/timeline";
 import { useAppStore } from "@/store/useAppStore";
 import { DEFAULT_FPS } from "@/constants/project-constants";
 
 export type LoopMode = "off" | "loopAll" | "loopSelection";
+export type TrimMode = "rolling" | "ripple" | "stick";
+export type EditMode = "select" | "trim" | "slip" | "slide";
 
 interface KeyframeClipboardData {
 	trackId: string;
@@ -22,6 +23,13 @@ interface TimelineStore {
 	toggleSnapping: () => void;
 	rippleEditingEnabled: boolean;
 	toggleRippleEditing: () => void;
+
+	// P3-TRIM: Trim mode
+	trimMode: TrimMode;
+	setTrimMode: (mode: TrimMode) => void;
+	editMode: EditMode;
+	setEditMode: (mode: EditMode) => void;
+
 	clipboard: {
 		items: ClipboardItem[];
 	} | null;
@@ -78,65 +86,55 @@ export function getProjectFps(): number {
 	return DEFAULT_FPS;
 }
 
-/** Get effective outPoint: stored value or dynamic duration */
+/**
+ * Get the effective out point for playback/export
+ * Returns outPoint if set, otherwise returns the dynamic duration
+ */
 export function getEffectiveOutPoint(): number {
-	const { outPoint } = useTimelineStore.getState();
-	return outPoint ?? getDynamicDuration();
+	const state = useTimelineStore.getState();
+	if (state.outPoint !== null) {
+		return state.outPoint;
+	}
+	return getDynamicDuration();
 }
 
 export const useTimelineStore = create<TimelineStore>()(
-	persist(
-		(set) => ({
-			snappingEnabled: true,
+	(set) => ({
+		snappingEnabled: true,
+		toggleSnapping: () =>
+			set((state) => ({ snappingEnabled: !state.snappingEnabled })),
 
-			toggleSnapping: () => {
-				set((state) => ({ snappingEnabled: !state.snappingEnabled }));
-			},
+		rippleEditingEnabled: false,
+		toggleRippleEditing: () =>
+			set((state) => ({ rippleEditingEnabled: !state.rippleEditingEnabled })),
 
-			rippleEditingEnabled: false,
+		// P3-TRIM: Trim mode defaults
+		trimMode: "rolling",
+		setTrimMode: (mode) => set({ trimMode: mode }),
+		editMode: "select",
+		setEditMode: (mode) => set({ editMode: mode }),
 
-			toggleRippleEditing: () => {
-				set((state) => ({
-					rippleEditingEnabled: !state.rippleEditingEnabled,
-				}));
-			},
+		clipboard: null,
+		setClipboard: (clipboard) => set({ clipboard }),
 
-			clipboard: null,
+		loopMode: "off",
+		cycleLoopMode: () =>
+			set((state) => ({
+				loopMode:
+					state.loopMode === "off"
+						? "loopAll"
+						: state.loopMode === "loopAll"
+							? "loopSelection"
+							: "off",
+			})),
 
-			setClipboard: (clipboard) => {
-				set({ clipboard });
-			},
+		inPoint: 0,
+		outPoint: null,
+		setInPoint: (time) => set({ inPoint: Math.max(0, time) }),
+		setOutPoint: (time) => set({ outPoint: time }),
+		resetInOutPoints: () => set({ inPoint: 0, outPoint: null }),
 
-			// P1 3.11: Loop Mode — cycle off → loopAll → loopSelection → off
-			loopMode: "off",
-			cycleLoopMode: () => {
-				set((state) => {
-					const modes: LoopMode[] = ["off", "loopAll", "loopSelection"];
-					const idx = modes.indexOf(state.loopMode);
-					return { loopMode: modes[(idx + 1) % modes.length] };
-				});
-			},
-
-			// P1 3.9: In/Out Points
-			inPoint: 0,
-			outPoint: null,
-			setInPoint: (time) => set({ inPoint: Math.max(0, time) }),
-			setOutPoint: (time) => set({ outPoint: time }),
-			resetInOutPoints: () => set({ inPoint: 0, outPoint: null }),
-
-			// P1 4.4: Keyframe Clipboard
-			keyframeClipboard: null,
-			setKeyframeClipboard: (data) => {
-				set({ keyframeClipboard: data });
-			},
-		}),
-		{
-			name: "timeline-store",
-			partialize: (state) => ({
-				snappingEnabled: state.snappingEnabled,
-				rippleEditingEnabled: state.rippleEditingEnabled,
-				loopMode: state.loopMode,
-			}),
-		},
-	),
+		keyframeClipboard: null,
+		setKeyframeClipboard: (data) => set({ keyframeClipboard: data }),
+	}),
 );

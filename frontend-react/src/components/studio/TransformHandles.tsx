@@ -9,6 +9,9 @@ interface TransformHandlesProps {
     canvasScale: number;
     zoomScale: number;
     stagePos: { x: number, y: number };
+    naturalWidth: number;
+    naturalHeight: number;
+    groupRefs: React.MutableRefObject<Record<string, any>>;
     onTransientTransform: (id: string, values: any) => void;
     onTransformEnd: (id: string, values: any) => void;
 }
@@ -25,30 +28,58 @@ export const TransformHandles: React.FC<TransformHandlesProps> = ({
     canvasScale,
     zoomScale,
     stagePos,
+    naturalWidth,
+    naturalHeight,
+    groupRefs,
     onTransientTransform,
     onTransformEnd
 }) => {
-    const rect = useRef({ x: 0, y: 0, width: 200, height: 200, rotation: 0 });
+    const baseW = naturalWidth || 200;
+    const baseH = naturalHeight || 200;
+    const rect = useRef({ x: 0, y: 0, width: baseW, height: baseH, rotation: 0 });
     const isDragging = useRef(false);
     const startPos = useRef({ x: 0, y: 0 });
-    const startLogical = useRef({ x: 0, y: 0, scale: 1, rotation: 0 }); // Logical values at start of drag
-    const startRect = useRef({ x: 0, y: 0, width: 200, height: 200, rotation: 0 });
+    const startLogical = useRef({ x: 0, y: 0, scale: 1, rotation: 0 });
+    const startRect = useRef({ x: 0, y: 0, width: baseW, height: baseH, rotation: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
 
     const character = editorData.find(c => c.id === selectedId);
 
     // Sync with worker results for 60fps positioning
     useEffect(() => {
+        // Immediately update with latest interpolation data when dimensions change
+        // (fixes the timing gap where textures load after the initial interpolation event)
+        const lastResults = (window as any).__lastInterpolationResults;
+        if (lastResults && lastResults[selectedId] && containerRef.current) {
+            const charData = lastResults[selectedId];
+            const physicalScale = canvasScale * zoomScale;
+            rect.current = {
+                x: charData.x * physicalScale + stagePos.x,
+                y: charData.y * physicalScale + stagePos.y,
+                width: baseW * charData.scaleX * physicalScale,
+                height: baseH * charData.scaleY * physicalScale,
+                rotation: charData.rotation
+            };
+            const el = containerRef.current;
+            el.style.left = `${rect.current.x}px`;
+            el.style.top = `${rect.current.y}px`;
+            el.style.width = `${rect.current.width}px`;
+            el.style.height = `${rect.current.height}px`;
+            el.style.transform = `translate(-50%, -50%) rotate(${rect.current.rotation}deg)`;
+        }
+
         const handleInterpolation = (e: any) => {
             if (!selectedId || isDragging.current) return;
             const charData = e.detail[selectedId];
             if (charData && containerRef.current) {
                 const physicalScale = canvasScale * zoomScale;
+                // Store latest results globally for dimension-change recalculation
+                (window as any).__lastInterpolationResults = e.detail;
                 rect.current = {
                     x: charData.x * physicalScale + stagePos.x,
                     y: charData.y * physicalScale + stagePos.y,
-                    width: 200 * charData.scaleX * physicalScale,
-                    height: 200 * charData.scaleY * physicalScale,
+                    width: baseW * charData.scaleX * physicalScale,
+                    height: baseH * charData.scaleY * physicalScale,
                     rotation: charData.rotation
                 };
 
@@ -64,7 +95,7 @@ export const TransformHandles: React.FC<TransformHandlesProps> = ({
 
         window.addEventListener('interpolation-results', handleInterpolation as EventListener);
         return () => window.removeEventListener('interpolation-results', handleInterpolation as EventListener);
-    }, [selectedId, canvasScale, zoomScale, stagePos]);
+    }, [selectedId, canvasScale, zoomScale, stagePos, baseW, baseH, groupRefs]);
 
     if (!selectedId || !character) return null;
 
@@ -115,8 +146,8 @@ export const TransformHandles: React.FC<TransformHandlesProps> = ({
                 finalValues = { scale: startLogical.current.scale * uniformScale };
 
                 // Keep handles stable
-                rect.current.width = 200 * finalValues.scale * physicalScale;
-                rect.current.height = 200 * finalValues.scale * physicalScale;
+                rect.current.width = baseW * finalValues.scale * physicalScale;
+                rect.current.height = baseH * finalValues.scale * physicalScale;
             }
 
             // Sync DOM immediately
@@ -152,7 +183,7 @@ export const TransformHandles: React.FC<TransformHandlesProps> = ({
             } else if (type === 'rotate') {
                 finalValues.rotation = rect.current.rotation;
             } else if (['nw', 'ne', 'sw', 'se'].includes(type)) {
-                finalValues.scale = rect.current.width / (200 * canvasScale * zoomScale);
+                finalValues.scale = rect.current.width / (baseW * canvasScale * zoomScale);
             }
 
             onTransformEnd(selectedId, finalValues);

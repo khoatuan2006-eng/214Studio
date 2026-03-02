@@ -1,6 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-html, body {
+/* ═══════════════════════════════════════════════
+   ANIME STUDIO — PREMIUM DESIGN TOKENS
+   ═══════════════════════════════════════════════ */
+
+:root {
+  /* ── Surface Palette (Rich Blacks) ── */
+  --surface-base: #0a0a0f;
+  --surface-raised: #111118;
+  --surface-overlay: #16161f;
+  --surface-card: #1a1a25;
+  --surface-elevated: #1e1e2a;
+  --surface-hover: #252535;
+  --surface-active: #2a2a3d;
+
+  /* ── Accent Palette (Indigo → Violet Gradient) ── */
+  --accent-50: #eef2ff;
+  --accent-100: #e0e7ff;
+  --accent-200: #c7d2fe;
+  --accent-300: #a5b4fc;
+  --accent-400: #818cf8;
+  --accent-500: #6366f1;
+  --accent-600: #4f46e5;
+  --accent-700: #4338ca;
+  --accent-glow: rgba(99, 102, 241, 0.35);
+  --accent-glow-strong: rgba(99, 102, 241, 0.5);
+
+  /* ── Supporting Colors ── */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #06b6d4;
+
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(17, 17, 24, 0.65);
+  --glass-bg-heavy: rgba(17, 17, 24, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-border-hover: rgba(255, 255, 255, 0.1);
+  --glass-blur: 20px;
+
+  /* ── Text ── */
+  --text-primary: #f0f0f5;
+  --text-secondary: #a1a1b5;
+  --text-muted: #6b6b80;
+  --text-accent: var(--accent-400);
+
+  /* ── Borders & Shadows ── */
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --shadow-ambient: 0 0 80px -20px rgba(99, 102, 241, 0.08);
+  --shadow-elevated: 0 8px 32px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-card: 0 4px 16px -4px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px -4px var(--accent-glow);
+
+  /* ── Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* ── Transitions ── */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-fast: 150ms var(--ease-out-expo);
+  --transition-normal: 250ms var(--ease-out-expo);
+  --transition-slow: 400ms var(--ease-out-expo);
+}
+
+html,
+body {
   height: 100%;
   min-height: 100%;
   margin: 0;
@@ -8,7 +78,128 @@ html, body {
 }
 
 body {
-  font-family: 'Outfit', sans-serif;
-  background-color: #1a1a1a;
-  color: #ededed;
+  font-family: 'Inter', 'Outfit', system-ui, sans-serif;
+  background-color: var(--surface-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar Styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Selection ── */
+::selection {
+  background-color: var(--accent-600);
+  color: white;
+}
+
+/* ═══════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════ */
+
+/* Glass Panel */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-panel-heavy {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-300), var(--accent-500), #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow Ring */
+.glow-ring {
+  box-shadow: 0 0 0 1px var(--accent-500), var(--shadow-glow);
+}
+
+/* Surface Cards */
+.surface-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.surface-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+
+/* Ambient Glow Background */
+.ambient-glow {
+  position: relative;
+}
+
+.ambient-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--accent-glow), transparent 50%);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.ambient-glow:hover::before {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════
+   APP-LEVEL INTERACTION OVERRIDES
+   Prevents browser defaults that conflict with
+   creative tool UX (selection, drag, etc.)
+   ═══════════════════════════════════════════════ */
+
+/* Prevent text selection on interactive areas */
+canvas,
+[data-no-select],
+.timeline-container,
+.transform-handles,
+.pixi-app-container {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent image drag ghost across the entire app */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* Lazy image placeholder pulse */
+img[src=""] {
+  background: rgba(255, 255, 255, 0.05);
 }

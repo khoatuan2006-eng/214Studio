@@ -12,12 +12,10 @@ export interface SnapLine {
  * Decouples complex math from the main component.
  */
 export class TransformManager {
-    private core: EditorCore;
     private smartGuides: SnapLine[] = [];
     private listeners = new Set<() => void>();
 
-    constructor(core: EditorCore) {
-        this.core = core;
+    constructor(_core: EditorCore) {
     }
 
     setSmartGuides(guides: SnapLine[]): void {

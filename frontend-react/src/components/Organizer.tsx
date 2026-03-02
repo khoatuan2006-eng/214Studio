@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore, API_BASE, STATIC_BASE, getAssetPath } from '../store/useAppStore';
 import axios from 'axios';
+import LazyImage from './ui/LazyImage';
 import { Folder, FolderOpen, Plus, Trash, X } from 'lucide-react';
 
 interface OrganizerProps {
@@ -196,7 +197,7 @@ const Organizer: React.FC<OrganizerProps> = ({ onClose }) => {
                                                 >
                                                     {sub.assets.map(asset => (
                                                         <div key={asset.hash} className="w-16 h-16 rounded border border-neutral-700 bg-neutral-800 overflow-hidden relative group" title={asset.name}>
-                                                            <img src={`${STATIC_BASE}/${getAssetPath(characters, asset.hash)}`} alt={asset.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                                                            <LazyImage src={`${STATIC_BASE}/${getAssetPath(characters, asset.hash)}`} alt={asset.name} className="w-full h-full object-cover" />
                                                         </div>
                                                     ))}
                                                     {sub.assets.length === 0 && <span className="text-xs text-neutral-600 w-full text-center mt-6">Drag folders here</span>}

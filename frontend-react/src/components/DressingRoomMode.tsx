@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAppStore, STATIC_BASE, type Character } from '../store/useAppStore';
 import { API_BASE_URL } from '../config/api';
 import Organizer from './Organizer';
+import LazyImage from './ui/LazyImage';
 import { Layers, ChevronLeft, Trash2, UserCheck, Users, Eye, EyeOff } from 'lucide-react';
 
 const DressingRoomMode: React.FC = () => {
@@ -17,7 +18,7 @@ const DressingRoomMode: React.FC = () => {
 
     // State: selected asset hashes per layer group. Record<groupName, { hash: string, z_index: number }>
     const [selections, setSelections] = useState<Record<string, { hash: string, z_index: number }>>({});
-    
+
     // P3-6.1: State for asset visibility per asset
     const [assetVisibility, setAssetVisibility] = useState<Record<string, boolean>>({});
 
@@ -68,6 +69,7 @@ const DressingRoomMode: React.FC = () => {
                                     // P1-2.3: Thumbnail Integration
                                     // Use 128x128 thumbnail instead of full-size PNG for the character card
                                     let thumbPath = "";
+                                    let fallbackPath = "";
                                     let charName = char.name;
                                     if (char.layer_groups && Object.keys(char.layer_groups).length > 0) {
                                         const firstGroup = Object.values(char.layer_groups)[0] as any[];
@@ -76,9 +78,9 @@ const DressingRoomMode: React.FC = () => {
                                             if (firstAsset.hash) {
                                                 // Prefer thumbnail URL (128x128) over full-size asset
                                                 thumbPath = `${API_BASE_URL}/thumbnails/${firstAsset.hash}_thumb.png`;
-                                            } else {
-                                                thumbPath = `${STATIC_BASE}/${firstAsset.path}`;
                                             }
+                                            // Always set fallback to full-size asset
+                                            fallbackPath = `${STATIC_BASE}/${firstAsset.path}`;
                                         }
                                     }
 
@@ -92,12 +94,12 @@ const DressingRoomMode: React.FC = () => {
                                             className="relative flex flex-col items-center gap-2 p-3 bg-black/40 rounded-xl border-2 border-transparent hover:border-[#5b4bc4] cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg group"
                                         >
                                             <div className="w-20 h-20 bg-white/5 rounded-lg overflow-hidden flex items-center justify-center p-2 mb-1">
-                                                {thumbPath ? (
-                                                    <img
-                                                        src={thumbPath}
+                                                {thumbPath || fallbackPath ? (
+                                                    <LazyImage
+                                                        src={thumbPath || fallbackPath}
+                                                        fallbackSrc={fallbackPath}
                                                         alt={char.name}
                                                         className="w-full h-full object-contain"
-                                                        crossOrigin="anonymous"
                                                     />
                                                 ) : (
                                                     <UserCheck className="w-8 h-8 text-neutral-500" />
@@ -158,7 +160,7 @@ const DressingRoomMode: React.FC = () => {
                                                     const assetHash = asset.hash || asset.path; // Use path as fallback
                                                     const isSelected = selectedHash === assetHash;
                                                     const isVisible = assetVisibility[assetHash] !== false; // Default to true
-                                                    
+
                                                     const toggleVisibility = (e: React.MouseEvent) => {
                                                         e.stopPropagation();
                                                         setAssetVisibility(prev => ({
@@ -166,7 +168,7 @@ const DressingRoomMode: React.FC = () => {
                                                             [assetHash]: !isVisible
                                                         }));
                                                     };
-                                                    
+
                                                     return (
                                                         <div
                                                             key={assetHash}
@@ -175,11 +177,11 @@ const DressingRoomMode: React.FC = () => {
                                                                 }`}
                                                             title={asset.name}
                                                         >
-                                                            <img
+                                                            <LazyImage
                                                                 src={`${STATIC_BASE}/${asset.path}`}
                                                                 className={`w-full h-full object-contain ${!isVisible ? 'opacity-30' : ''}`}
-                                                                crossOrigin="anonymous"
                                                                 alt={asset.name}
+                                                                rootMargin="100px"
                                                             />
                                                             {isSelected && (
                                                                 <div
@@ -239,13 +241,13 @@ const DressingRoomMode: React.FC = () => {
                                 }
 
                                 return (
-                                    <img
+                                    <LazyImage
                                         key={sel.hash}
                                         src={`${STATIC_BASE}/${path}`}
                                         className="absolute w-full h-full object-contain pointer-events-none drop-shadow-sm"
                                         style={{ zIndex: sel.z_index }}
                                         alt="selected piece"
-                                        crossOrigin="anonymous"
+                                        rootMargin="0px"
                                     />
                                 );
                             })

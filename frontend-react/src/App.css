@@ -1,14 +1,13 @@
-/* === Anime Studio Global Styles === */
+/* ═══════════════════════════════════════════════
+   ANIME STUDIO — PREMIUM ANIMATION SYSTEM
+   ═══════════════════════════════════════════════ */
 
-/* Base resets */
 #root {
   width: 100%;
   height: 100vh;
 }
 
-/* === 17.4: Micro-Animations & Visual Feedback === */
-
-/* Fade in */
+/* ── Fade In ── */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -20,10 +19,10 @@
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+  animation: fade-in 0.3s var(--ease-out-expo);
 }
 
-/* Fade + scale in — used by modals, context menus, onboarding */
+/* ── Fade + Scale In (modals, popovers) ── */
 @keyframes fade-scale-in {
   from {
     opacity: 0;
@@ -37,10 +36,10 @@
 }
 
 .animate-fade-scale-in {
-  animation: fade-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fade-scale-in 0.25s var(--ease-out-expo);
 }
 
-/* Slide in from bottom — panels, drawers */
+/* ── Slide Up (panels, drawers) ── */
 @keyframes slide-up {
   from {
     opacity: 0;
@@ -54,19 +53,36 @@
 }
 
 .animate-slide-up {
-  animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slide-up 0.35s var(--ease-out-expo);
 }
 
-/* Pulse glow — active/recording indicators */
+/* ── Slide In Right (sidebars) ── */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s var(--ease-out-expo);
+}
+
+/* ── Pulse Glow (active indicators, recording) ── */
 @keyframes pulse-glow {
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 0 0 var(--accent-glow);
   }
 
   50% {
-    box-shadow: 0 0 12px 4px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 16px 4px var(--accent-glow);
   }
 }
 
@@ -74,45 +90,92 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Subtle bounce for interactive feedback */
-@keyframes bounce-subtle {
+/* ── Gradient Shimmer (loading, skeleton) ── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg,
+      var(--surface-card) 0%,
+      var(--surface-hover) 40%,
+      var(--surface-card) 80%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ── Gradient Border Rotation ── */
+@keyframes gradient-rotate {
+  0% {
+    --angle: 0deg;
+  }
+
+  100% {
+    --angle: 360deg;
+  }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.gradient-border {
+  border: 1px solid transparent;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-image:
+    linear-gradient(var(--surface-card), var(--surface-card)),
+    conic-gradient(from var(--angle), var(--accent-600), var(--accent-400), transparent, var(--accent-600));
+  animation: gradient-rotate 4s linear infinite;
+}
+
+/* ── Ambient Blob (decorative background) ── */
+@keyframes blob-float {
 
   0%,
   100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+
+  66% {
+    transform: translate(-20px, 15px) scale(0.95);
+  }
+}
+
+.animate-blob {
+  animation: blob-float 20s ease-in-out infinite;
+}
+
+/* ── Tab Content Transition ── */
+@keyframes tab-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
     transform: translateY(0);
   }
-
-  50% {
-    transform: translateY(-2px);
-  }
 }
 
-/* Button press effect */
-.btn-press {
-  transition: transform 0.1s ease, box-shadow 0.15s ease;
+.animate-tab-enter {
+  animation: tab-enter 0.3s var(--ease-out-expo);
 }
 
-.btn-press:active {
-  transform: scale(0.96);
-}
-
-/* Card hover lift */
-.card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Smooth transitions for interactive elements */
-button,
-[role="button"] {
-  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
-}
-
-/* Spinner */
+/* ── Spinner ── */
 @keyframes spin-smooth {
   from {
     transform: rotate(0deg);
@@ -127,7 +190,142 @@ button,
   animation: spin-smooth 0.8s linear infinite;
 }
 
-/* Toast entrance enhancement */
+/* ── Dot Pulse (save indicator) ── */
+@keyframes dot-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(0.75);
+  }
+}
+
+.animate-dot-pulse {
+  animation: dot-pulse 1.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════
+   INTERACTIVE ELEMENTS
+   ═══════════════════════════════════════════════ */
+
+/* Button Press Effect */
+.btn-press {
+  transition: transform 0.1s ease, box-shadow var(--transition-fast);
+}
+
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+/* Premium Card Hover */
+.card-hover {
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+/* Button Base Styles */
+button,
+[role="button"] {
+  transition: background-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform 0.1s ease, box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+/* ── Accent Button (primary CTA) ── */
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent-600), var(--accent-500));
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  font-weight: 500;
+}
+
+.btn-accent:hover {
+  background: linear-gradient(135deg, var(--accent-500), var(--accent-400));
+  box-shadow: 0 4px 12px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-accent:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ── Ghost Button (secondary) ── */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+}
+
+.btn-ghost:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+/* ── Keyframe Diamond Indicator ── */
+.keyframe-diamond {
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  transition: all var(--transition-fast);
+}
+
+.keyframe-diamond.active {
+  background: var(--accent-500);
+  border-color: var(--accent-300);
+  box-shadow: 0 0 10px var(--accent-glow-strong);
+}
+
+/* ── Toast Enhancement ── */
 [data-sonner-toaster] [data-sonner-toast] {
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  background: var(--glass-bg-heavy) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+/* ── Input Premium Styling ── */
+.input-premium {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input-premium:focus {
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  outline: none;
+}
+
+/* ── Navigation Tab Active Indicator ── */
+.nav-active-indicator {
+  position: absolute;
+  left: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--accent-400), var(--accent-600));
+  border-radius: 0 4px 4px 0;
+  transition: top var(--transition-normal), height var(--transition-normal);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+/* ── Section Label ── */
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
 }

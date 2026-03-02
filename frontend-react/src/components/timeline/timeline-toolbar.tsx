@@ -23,6 +23,7 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { useAppStore } from "@/store/useAppStore";
 import { useTransientSnapshot, toggleAutoKeyframe } from "@/stores/transient-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TrimModeToolbar } from "./TrimModeToolbar";
 import {
 	Bookmark02Icon,
 	Delete02Icon,
@@ -63,7 +64,11 @@ export function TimelineToolbar({
 	return (
 		<ScrollArea className="scrollbar-hidden">
 			<div className="flex h-10 items-center justify-between border-b px-2 py-1">
-				<ToolbarLeftSection />
+				<div className="flex items-center gap-2">
+					<ToolbarLeftSection />
+					<div className="bg-border mx-1 h-6 w-px" />
+					<TrimModeToolbar />
+				</div>
 
 				<SceneSelector />
 

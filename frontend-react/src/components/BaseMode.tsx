@@ -104,15 +104,16 @@ const BaseMode: React.FC = () => {
     };
 
     return (
-        <div className="flex h-full w-full">
+        <div className="flex h-full w-full animate-tab-enter">
             {/* Sidebar Controls */}
-            <div className="w-80 bg-neutral-900 border-r border-neutral-700 p-6 flex flex-col gap-6 overflow-y-auto shrink-0">
+            <div className="w-80 glass-panel-heavy p-6 flex flex-col gap-6 overflow-y-auto shrink-0"
+                style={{ borderRight: '1px solid var(--glass-border)' }}>
 
                 {/* Character Selection */}
                 <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-neutral-300">1. Choose Character</label>
+                    <label className="section-label">1. Choose Character</label>
                     <select
-                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg p-2.5 text-neutral-100 outline-none focus:border-indigo-500"
+                        className="w-full rounded-xl p-2.5 text-sm input-premium"
                         value={selectedCharId}
                         onChange={(e) => setSelectedCharId(e.target.value)}
                     >
@@ -128,16 +129,18 @@ const BaseMode: React.FC = () => {
                     <div className="flex flex-col gap-6">
                         {selectedChar.group_order.map((groupName, idx) => (
                             <div key={groupName} className="flex flex-col gap-2">
-                                <label className="text-sm font-semibold text-neutral-300">{idx + 2}. Select {groupName}</label>
+                                <label className="section-label">{idx + 2}. Select {groupName}</label>
                                 <div className="grid grid-cols-4 gap-2">
 
                                     {/* "None" option */}
                                     <div
                                         onClick={() => handleLayerSelect(groupName, '')}
-                                        className={`aspect-square rounded border cursor-pointer flex flex-col items-center justify-center transition-all ${activeLayers[groupName] === '' ? 'border-indigo-500 bg-indigo-500/20' : 'border-neutral-700 hover:border-neutral-500 bg-neutral-800'
+                                        className={`aspect-square rounded-xl cursor-pointer flex flex-col items-center justify-center transition-all duration-200 ${activeLayers[groupName] === ''
+                                            ? 'glow-ring'
+                                            : 'surface-card hover:!transform-none'
                                             }`}
                                     >
-                                        <span className="text-xs text-neutral-500">None</span>
+                                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>None</span>
                                     </div>
 
                                     {/* Actual sub-layers */}
@@ -145,7 +148,9 @@ const BaseMode: React.FC = () => {
                                         <div
                                             key={layer.path}
                                             onClick={() => handleLayerSelect(groupName, layer.path)}
-                                            className={`aspect-square rounded border cursor-pointer overflow-hidden transition-all bg-neutral-800 flex items-center justify-center ${activeLayers[groupName] === layer.path ? 'border-indigo-500 ring-2 ring-indigo-500/50' : 'border-neutral-700 hover:border-neutral-500'
+                                            className={`aspect-square rounded-xl cursor-pointer overflow-hidden transition-all duration-200 flex items-center justify-center ${activeLayers[groupName] === layer.path
+                                                ? 'glow-ring'
+                                                : 'surface-card hover:!transform-none'
                                                 }`}
                                             title={layer.name}
                                         >
@@ -164,20 +169,23 @@ const BaseMode: React.FC = () => {
                 )}
 
                 {/* Divider */}
-                <div className="h-px bg-neutral-700"></div>
+                <div className="h-px" style={{ background: 'var(--border-subtle)' }}></div>
 
                 {/* Upload Area */}
                 <UploadModule />
             </div>
 
             {/* Main Preview Area */}
-            <div className="flex-1 bg-neutral-950 p-8 relative flex items-center justify-center overflow-hidden">
+            <div className="flex-1 p-8 relative flex items-center justify-center overflow-hidden" style={{ background: 'var(--surface-base)' }}>
+                {/* Ambient canvas glow */}
+                <div className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.03) 0%, transparent 70%)' }} />
 
                 {/* Download BTN Overlay */}
                 {selectedChar && (
                     <button
                         onClick={handleDownload}
-                        className="absolute top-6 right-6 bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-105"
+                        className="absolute top-6 right-6 btn-accent p-3 rounded-full shadow-lg z-20"
                         title="Download Character"
                     >
                         <Download className="w-5 h-5" />
@@ -185,9 +193,11 @@ const BaseMode: React.FC = () => {
                 )}
 
                 {selectedChar ? (
-                    <div className="relative w-full h-full flex items-center justify-center max-w-2xl bg-neutral-900/50 rounded-xl border border-neutral-800 shadow-inner">
+                    <div className="relative w-full h-full flex items-center justify-center max-w-2xl rounded-2xl overflow-hidden"
+                        style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-subtle)', boxShadow: 'inset 0 2px 40px -12px rgba(0,0,0,0.5)' }}>
                         {/* Debug Info Overlay */}
-                        <div className="absolute top-4 left-4 text-[10px] text-neutral-500 font-mono z-50 pointer-events-none">
+                        <div className="absolute top-4 left-4 z-50 pointer-events-none"
+                            style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'var(--text-muted)', opacity: 0.6 }}>
                             {selectedChar.group_order.map(g => (
                                 <div key={g}>{g}: {activeLayers[g] ? 'LOADED' : 'NONE'}</div>
                             ))}
@@ -210,10 +220,15 @@ const BaseMode: React.FC = () => {
                         })}
                     </div>
                 ) : (
-                    <div className="text-center text-neutral-500 flex flex-col items-center gap-4">
-                        <Layers className="w-16 h-16 opacity-30" />
-                        <h2 className="text-xl font-semibold opacity-50">No Character Selected</h2>
-                        <p className="text-sm opacity-50">Upload a PSD or select an existing character from the sidebar.</p>
+                    <div className="text-center flex flex-col items-center gap-4">
+                        <div className="relative">
+                            <Layers className="w-20 h-20 opacity-20" />
+                            <div className="absolute inset-0 blur-2xl opacity-30" style={{ background: 'var(--accent-glow)' }} />
+                        </div>
+                        <h2 className="text-2xl font-bold gradient-text opacity-70">No Character Selected</h2>
+                        <p className="text-sm max-w-xs" style={{ color: 'var(--text-muted)' }}>
+                            Upload a PSD or select an existing character from the sidebar to begin.
+                        </p>
                     </div>
                 )}
             </div>

@@ -23,7 +23,8 @@ import { interpolationService } from '../core/services/interpolation-service';
 import { TransformHandles } from './studio/TransformHandles';
 import { SnapGuides } from './studio/SnapGuides';
 import { ProfessionalContextMenu as ContextMenu } from './studio/ProfessionalContextMenu';
-import { videoExporter } from '../services/video-export';
+import LazyImage from './ui/LazyImage';
+
 import { extend } from '@pixi/react';
 import { Container, Sprite, Graphics, Text as PixiText } from 'pixi.js';
 
@@ -122,7 +123,7 @@ const PropertyInput = ({ label, value, onChange, hasKeyframe, onToggleKeyframe, 
         <div className={`flex flex-col gap-1 ${className}`}>
             <div className="flex items-center justify-between gap-1">
                 <label
-                    className={`text-xs text-neutral-400 select-none ${type === 'number' ? 'cursor-ew-resize hover:text-indigo-400 transition-colors' : ''}`}
+                    className={`section-label select-none ${type === 'number' ? 'cursor-ew-resize hover:!text-indigo-400 transition-colors' : ''}`}
                     onMouseDown={handleScrubStart}
                     title={type === 'number' ? "Drag horizontally to change value" : ""}
                 >
@@ -134,14 +135,14 @@ const PropertyInput = ({ label, value, onChange, hasKeyframe, onToggleKeyframe, 
                         className="p-1 hover:bg-neutral-700 rounded transition-colors"
                         title={hasKeyframe ? "Remove Keyframe" : "Add Keyframe"}
                     >
-                        <div className={`w-2.5 h-2.5 rotate-45 border transition-colors ${hasKeyframe ? 'bg-indigo-500 border-indigo-300 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-transparent border-neutral-600 hover:border-neutral-400'}`} />
+                        <div className={`keyframe-diamond ${hasKeyframe ? 'active' : ''}`} />
                     </button>
                 )}
             </div>
             <input
                 type={type}
                 step={step}
-                className={`w-full bg-neutral-800 border ${hasKeyframe ? 'border-indigo-500/50' : 'border-neutral-700'} rounded p-1.5 text-sm outline-none focus:border-indigo-500 transition-colors`}
+                className={`w-full rounded-lg p-2 text-sm input-premium ${hasKeyframe ? '!border-indigo-500/50' : ''}`}
                 value={localVal}
                 onChange={e => setLocalVal(e.target.value)}
                 onBlur={handleCommit}
@@ -152,10 +153,16 @@ const PropertyInput = ({ label, value, onChange, hasKeyframe, onToggleKeyframe, 
 };
 
 // Component to render a Canvas Image
-const CanvasAsset = React.forwardRef<any, { assetHash: string; zIndex: number; onClick?: (e: any) => void; onTap?: (e: any) => void; locked?: boolean; hidden?: boolean }>(({ assetHash, onClick, onTap, locked, hidden }, ref) => {
+const CanvasAsset = React.forwardRef<any, { assetHash: string; zIndex: number; onClick?: (e: any) => void; onTap?: (e: any) => void; locked?: boolean; hidden?: boolean; onTextureLoad?: (w: number, h: number) => void }>(({ assetHash, onClick, onTap, locked, hidden, onTextureLoad }, ref) => {
     const characters = useAppStore(s => s.characters);
     const url = `${STATIC_BASE}/${getAssetPath(characters, assetHash)}`;
     const texture = usePixiTexture(url);
+
+    useEffect(() => {
+        if (texture && onTextureLoad) {
+            onTextureLoad(texture.width, texture.height);
+        }
+    }, [texture, onTextureLoad]);
 
     if (!texture) return null;
     return (
@@ -180,7 +187,7 @@ CanvasAsset.displayName = 'CanvasAsset';
 // Quick standalone component that subscribes to time rapidly
 const PlayheadTimeDisplay = () => {
     const snap = useTransientSnapshot();
-    return <div className="font-mono text-xl text-indigo-400 w-24">{snap.cursorTime.toFixed(2)}s</div>;
+    return <div className="w-28 text-xl font-semibold gradient-text" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{snap.cursorTime.toFixed(2)}s</div>;
 };
 
 // Separated Right Sidebar to isolate re-renders away from Konva
@@ -297,35 +304,36 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
     };
 
     return (
-        <div className="w-64 bg-neutral-900 border-l border-neutral-700 flex flex-col shrink-0">
-            <div className="flex border-b border-neutral-700 bg-neutral-800 shrink-0">
-                <button
-                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${inspectorTab === 'keyframes' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-neutral-400 hover:text-neutral-300'}`}
-                    onClick={() => setInspectorTab('keyframes')}
-                >
-                    Keyframes
-                </button>
-                <button
-                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${inspectorTab === 'settings' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-neutral-400 hover:text-neutral-300'}`}
-                    onClick={() => setInspectorTab('settings')}
-                >
-                    Settings
-                </button>
+        <div className="w-64 glass-panel-heavy flex flex-col shrink-0 animate-slide-in-right" style={{ borderLeft: '1px solid var(--glass-border)' }}>
+            <div className="flex shrink-0 relative" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                {['keyframes', 'settings'].map(tab => (
+                    <button
+                        key={tab}
+                        className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 relative ${inspectorTab === tab ? '' : 'hover:text-neutral-300'}`}
+                        style={inspectorTab === tab ? { color: 'var(--accent-400)' } : { color: 'var(--text-secondary)' }}
+                        onClick={() => setInspectorTab(tab as 'keyframes' | 'settings')}
+                    >
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        {inspectorTab === tab && (
+                            <div className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg, var(--accent-500), var(--accent-400))' }} />
+                        )}
+                    </button>
+                ))}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 {selectedRow ? (
                     <div className="space-y-4">
-                        <div className="flex border-b border-neutral-800 mb-4 pb-2 items-center justify-between">
-                            <div className="text-sm font-semibold text-indigo-400 truncate">
+                        <div className="flex mb-4 pb-3 items-center justify-between" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                            <div className="text-sm font-semibold gradient-text truncate">
                                 {selectedRow.name || selectedRow.id}
                             </div>
                             {selectedRow.characterId && (
                                 <button
                                     onClick={() => toggleCharacterEditMode(selectedRowId)}
-                                    className="p-1 px-2 text-xs bg-indigo-600 hover:bg-indigo-500 rounded text-white flex items-center gap-1 transition btn-press"
+                                    className="px-2.5 py-1 text-xs rounded-lg flex items-center gap-1 btn-accent"
                                 >
-                                    <Edit className="w-3 h-3" /> Edit Character
+                                    <Edit className="w-3 h-3" /> Edit
                                 </button>
                             )}
                         </div>
@@ -393,11 +401,11 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                         {inspectorTab === 'settings' && (
                             <div className="space-y-4">
                                 <div className="space-y-2 mb-6">
-                                    <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Blend Mode</h4>
+                                    <h4 className="section-label">Blend Mode</h4>
                                     <select
                                         value={selectedRow.blendMode || "source-over"}
                                         onChange={(e) => handleBlendModeChange(e.target.value as BlendMode)}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded p-1.5 text-sm outline-none focus:border-indigo-500 text-neutral-200"
+                                        className="w-full rounded-lg p-2 text-sm input-premium"
                                     >
                                         <option value="source-over">Normal</option>
                                         <option value="multiply">Multiply</option>
@@ -409,7 +417,7 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                                 </div>
                                 {/* P2-3.4: Speed Ramp */}
                                 <div className="space-y-2 mb-6">
-                                    <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Playback Speed</h4>
+                                    <h4 className="section-label">Playback Speed</h4>
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="range"
@@ -437,7 +445,7 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                                         ))}
                                     </div>
                                 </div>
-                                <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Layer Tree</h4>
+                                <h4 className="section-label mb-2">Layer Tree</h4>
                                 {selectedRow.actions.length === 0 ? (
                                     <div className="text-xs text-neutral-500 italic p-3 bg-neutral-800/50 rounded-md">
                                         No layers applied.
@@ -449,7 +457,7 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                                             const isLocked = action.locked;
                                             const assetName = action.assetHash.split('/').pop() || "Layer";
                                             return (
-                                                <div key={action.id} className="flex items-center justify-between p-2 bg-neutral-800 border border-neutral-700 rounded text-sm hover:border-neutral-500 transition-colors">
+                                                <div key={action.id} className="flex items-center justify-between p-2.5 rounded-lg text-sm transition-all duration-200 surface-card">
                                                     <span className={`truncate mr-2 ${isHidden ? 'text-neutral-500 line-through' : 'text-neutral-200'} ${isLocked ? 'opacity-50' : ''}`} title={action.assetHash}>
                                                         Z:{action.zIndex} - {assetName}
                                                     </span>
@@ -485,13 +493,13 @@ const PropertiesSidebar = ({ selectedRowId, LOGICAL_WIDTH, LOGICAL_HEIGHT }: { s
                         )}
 
                         {inspectorTab === 'keyframes' && (
-                            <div className="bg-indigo-900/20 text-indigo-400 text-xs p-3 rounded mt-4 border border-indigo-500/20">
-                                Changing these values will magically create or update a keyframe at the current time: <strong>{cursorTime.toFixed(2)}s</strong>
+                            <div className="text-xs p-3 rounded-lg mt-4" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)', color: 'var(--accent-400)' }}>
+                                Keyframe auto-set at <strong style={{ fontFamily: 'JetBrains Mono, monospace' }}>{cursorTime.toFixed(2)}s</strong>
                             </div>
                         )}
                     </div>
                 ) : (
-                    <div className="text-sm text-neutral-500">Pick a track in the timeline to edit properties.</div>
+                    <div className="text-sm text-center py-8" style={{ color: 'var(--text-muted)' }}>Select a track to edit properties</div>
                 )}
             </div>
         </div>
@@ -521,10 +529,10 @@ const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
 
     return (
         <div
-            className="fixed z-[100] min-w-[180px] bg-neutral-800 border border-neutral-600 rounded-lg shadow-2xl py-1.5 animate-fade-scale-in"
-            style={{ left: x, top: y }}
+            className="fixed z-[100] min-w-[200px] rounded-xl py-1.5 animate-fade-scale-in"
+            style={{ left: x, top: y, background: 'var(--glass-bg-heavy)', backdropFilter: 'blur(20px)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-elevated)' }}
             onMouseDown={(e) => e.stopPropagation()}
-            onClick={onClose} // Close on any menu item click
+            onClick={onClose}
         >
             <button
                 className="w-full text-left px-4 py-2 text-sm text-neutral-200 hover:bg-indigo-600 hover:text-white transition-colors flex items-center gap-2.5 btn-press"
@@ -578,6 +586,7 @@ const StudioMode = () => {
     const activeEditTargetId = snapT.activeEditTargetId;
 
     const pixiAppRef = useRef<any>(null);
+    const [spriteDims, setSpriteDims] = useState<Record<string, { w: number; h: number }>>({}); // Track natural texture dims per character
 
     const editor = useEditor();
     useUndoRedo(); // P0-0.3: Registers Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y globally
@@ -1366,7 +1375,7 @@ const StudioMode = () => {
                                         >
                                             <div className="aspect-square bg-neutral-900 relative p-2 flex items-center justify-center">
                                                 {previewUrl ? (
-                                                    <img src={previewUrl} className="w-full h-full object-contain" crossOrigin="anonymous" alt={char.name} />
+                                                    <LazyImage src={previewUrl} className="w-full h-full object-contain" alt={char.name} />
                                                 ) : (
                                                     <div className="text-4xl">👤</div>
                                                 )}
@@ -1592,6 +1601,9 @@ const StudioMode = () => {
                                     canvasScale={canvasScale}
                                     zoomScale={zoomScale}
                                     stagePos={stagePos}
+                                    naturalWidth={spriteDims[selectedRowId]?.w || 200}
+                                    naturalHeight={spriteDims[selectedRowId]?.h || 200}
+                                    groupRefs={groupRefs}
                                     onTransientTransform={handleTransientTransform}
                                     onTransformEnd={handleTransformEndCommit}
                                 />
@@ -1696,6 +1708,10 @@ const StudioMode = () => {
                                                 <PContainer
                                                     key={char.id}
                                                     ref={(node: any) => { if (node) groupRefs.current[char.id] = (node as any); }}
+                                                    x={char.transform?.x?.[0]?.value ?? LOGICAL_WIDTH / 2}
+                                                    y={char.transform?.y?.[0]?.value ?? LOGICAL_HEIGHT / 2}
+                                                    scale={{ x: char.transform?.scale?.[0]?.value ?? 1, y: char.transform?.scale?.[0]?.value ?? 1 }}
+                                                    rotation={char.transform?.rotation?.[0]?.value ?? 0}
                                                     eventMode="static"
                                                     pointerdown={(e: any) => {
                                                         e.stopPropagation();
@@ -1748,7 +1764,7 @@ const StudioMode = () => {
                                                         container.on('pointerupoutside', onPointerUp);
                                                     }}
                                                 >
-                                                    {char.sortedAssets.map(asset => (
+                                                    {char.sortedAssets.map((asset, idx) => (
                                                         <CanvasAsset
                                                             key={asset.id}
                                                             ref={(node: any) => { if (node) assetRefs.current[asset.id] = node; }}
@@ -1756,6 +1772,15 @@ const StudioMode = () => {
                                                             zIndex={asset.zIndex}
                                                             locked={asset.locked}
                                                             hidden={asset.hidden}
+                                                            onTextureLoad={(w: number, h: number) => {
+                                                                setSpriteDims(prev => {
+                                                                    const existing = prev[char.id];
+                                                                    const newW = Math.max(existing?.w || 0, w);
+                                                                    const newH = Math.max(existing?.h || 0, h);
+                                                                    if (existing && existing.w === newW && existing.h === newH) return prev;
+                                                                    return { ...prev, [char.id]: { w: newW, h: newH } };
+                                                                });
+                                                            }}
                                                             onClick={(e: PIXI.FederatedPointerEvent) => {
                                                                 e.stopPropagation();
                                                                 setSelectedRowId(char.id);
