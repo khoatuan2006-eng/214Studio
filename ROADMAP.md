@@ -24,13 +24,6 @@
 - [x] **Duration Input** — sửa duration từng pose frame
 - [x] **Drag-to-Move** — kéo nhân vật trên canvas
 
-### Keyframe Timeline
-- [x] **Multi-track Timeline** — thay progress bar cũ bằng timeline chuyên nghiệp
-- [x] **Time Ruler** — thanh thước thời gian (0s, 1s, 2s...), click để scrub
-- [x] **Track Rows** — mỗi nhân vật 1 hàng với keyframe blocks proportional
-- [x] **Add/Delete Keyframes** — nút + / 🗑️ trên mỗi track
-- [x] **Playhead** — đường dọc trắng chạy theo thời gian
-
 ### CapCut-Style Position Animation
 - [x] **PositionKeyframe System** — `positionKeyframes[]` trên CharacterNodeData
 - [x] **Auto-Create Keyframe** — scrub timeline + drag character → tự động tạo KF tại currentTime
@@ -38,6 +31,9 @@
 - [x] **Diamond Markers** ◇ — hiển thị trên timeline, click để nhảy đến KF
 - [x] **Path Preview** — chấm tròn + đường nét đứt nối các vị trí KF trên canvas
 - [x] **Sidebar KF List** — danh sách keyframe với thời gian, tọa độ, nút xóa
+
+### Cleanup
+- [x] **Xóa Studio Mode** — loại bỏ tab Studio (StudioMode.tsx, useStudioStore, StudioMain) để gom toàn bộ tính năng vào Workflow. Code lưu tại branch `archive/studio-mode`.
 
 ---
 
@@ -55,19 +51,22 @@
 
 ---
 
-## 🟡 P2 — Timeline & Editing UX
+## 🟡 P2 — Workflow Canvas UX & Timeline
 
-> Mục tiêu: Timeline chuyên nghiệp hơn, UX mượt mà
+> Mục tiêu: Canvas chuyên nghiệp hơn, UX mượt mà — tích hợp components từ Studio cũ
 
 | # | Việc cần làm | Độ phức tạp | Trạng thái |
 |---|---|---|---|
-| 2.1 | **Drag Keyframe Diamonds** — kéo ◇ trên timeline để đổi thời gian KF | 🟡 Trung bình | ⏳ |
-| 2.2 | **Drag Pose Blocks** — kéo resize block duration trên timeline | 🟡 Trung bình | ⏳ |
-| 2.3 | **Timeline Zoom** — scroll wheel zoom in/out timeline (giống Premiere) | 🟡 Trung bình | ⏳ |
-| 2.4 | **Snap-to-Grid** — KF snap vào grid thời gian (0.25s, 0.5s, 1s) | 🟢 Thấp | ⏳ |
-| 2.5 | **Undo/Redo** — Ctrl+Z / Ctrl+Shift+Z cho mọi thao tác trên timeline | 🟡 Trung bình | ⏳ |
-| 2.6 | **Multi-select KF** — chọn nhiều keyframe, di chuyển cùng lúc | 🟡 Trung bình | ⏳ |
-| 2.7 | **Copy/Paste Pose Frame** — sao chép pose frame giữa các keyframe | 🟢 Thấp | ⏳ |
+| 2.1 | **TransformHandles → Workflow** — Tích hợp `TransformHandles.tsx` vào `WorkflowPreview.tsx`: viền chọn, handle xoay/scale/di chuyển trên canvas preview. Hiện component đã có tại `components/studio/TransformHandles.tsx`. | 🟡 Trung bình | ⏳ |
+| 2.2 | **SnapGuides → Workflow** — Tích hợp `SnapGuides.tsx` vào `WorkflowPreview.tsx`: hiển thị đường snap (center, 1/3, 2/3) khi kéo nhân vật. Hiện component đã có tại `components/studio/SnapGuides.tsx`. | 🟢 Thấp | ⏳ |
+| 2.3 | **ContextMenu → Workflow** — Tích hợp `ProfessionalContextMenu.tsx` vào Workflow canvas + timeline: right-click → Delete, Duplicate, Reset Position, Add Keyframe. Hiện component đã có tại `components/studio/ProfessionalContextMenu.tsx`. | 🟢 Thấp | ⏳ |
+| 2.4 | **Drag Keyframe Diamonds** — kéo ◇ trên timeline để đổi thời gian KF | 🟡 Trung bình | ⏳ |
+| 2.5 | **Drag Pose Blocks** — kéo resize block duration trên timeline | 🟡 Trung bình | ⏳ |
+| 2.6 | **Timeline Zoom** — scroll wheel zoom in/out timeline (giống Premiere) | 🟡 Trung bình | ⏳ |
+| 2.7 | **Snap-to-Grid** — KF snap vào grid thời gian (0.25s, 0.5s, 1s) | 🟢 Thấp | ⏳ |
+| 2.8 | **Undo/Redo** — Ctrl+Z / Ctrl+Shift+Z cho mọi thao tác trên timeline | 🟡 Trung bình | ⏳ |
+| 2.9 | **Multi-select KF** — chọn nhiều keyframe, di chuyển cùng lúc | 🟡 Trung bình | ⏳ |
+| 2.10 | **Copy/Paste Pose Frame** — sao chép pose frame giữa các keyframe | 🟢 Thấp | ⏳ |
 
 ---
 
@@ -119,12 +118,11 @@
 
 | # | Việc cần làm | Độ phức tạp | Trạng thái |
 |---|---|---|---|
-| 6.1 | **Contextual Menu** — right-click trên canvas/timeline hiện menu context | 🟢 Thấp | ⏳ |
-| 6.2 | **Keyboard Shortcuts** — Space=play, S=split, D=delete, K=add KF, số=speed | 🟢 Thấp | ⏳ |
-| 6.3 | **Character Presets** — lưu bộ trang phục mix-match để tái sử dụng | 🟡 Trung bình | ⏳ |
-| 6.4 | **Onion Skinning** — hiện ghost frame trước/sau trên canvas | 🟡 Trung bình | ⏳ |
-| 6.5 | **Auto-Save & Version History** — lưu tự động + quay lại phiên bản cũ | 🟡 Trung bình | ⏳ |
-| 6.6 | **Dark/Light Theme** — hỗ trợ theme cho editor | 🟢 Thấp | ⏳ |
+| 6.1 | **Keyboard Shortcuts** — Space=play, S=split, D=delete, K=add KF, số=speed | 🟢 Thấp | ⏳ |
+| 6.2 | **Character Presets** — lưu bộ trang phục mix-match để tái sử dụng | 🟡 Trung bình | ⏳ |
+| 6.3 | **Onion Skinning** — hiện ghost frame trước/sau trên canvas | 🟡 Trung bình | ⏳ |
+| 6.4 | **Auto-Save & Version History** — lưu tự động + quay lại phiên bản cũ | 🟡 Trung bình | ⏳ |
+| 6.5 | **Dark/Light Theme** — hỗ trợ theme cho editor | 🟢 Thấp | ⏳ |
 
 ---
 
@@ -133,14 +131,22 @@
 ```
 frontend-react/src/
 ├── store/
-│   └── useWorkflowStore.ts      # Zustand store: nodes, edges, PoseFrame, PositionKeyframe
-├── components/workflow/
-│   ├── WorkflowMode.tsx          # Node graph editor (React Flow)
-│   └── WorkflowPreview.tsx       # Preview canvas + sidebar + timeline
+│   ├── useAppStore.ts           # Zustand: characters, library, editorData
+│   ├── useWorkflowStore.ts      # Zustand: nodes, edges, PoseFrame, PositionKeyframe
+│   └── useProjectStore.ts       # Zustand: project CRUD, auto-save
+├── components/
+│   ├── workflow/
+│   │   ├── WorkflowMode.tsx     # Node graph editor (React Flow)
+│   │   └── WorkflowPreview.tsx  # Preview canvas + sidebar + timeline
+│   ├── studio/                  # Reusable components (to be integrated into Workflow)
+│   │   ├── TransformHandles.tsx # Scale/rotate/move handles
+│   │   ├── SnapGuides.tsx       # Magnetic snap guidelines
+│   │   └── ProfessionalContextMenu.tsx  # Right-click context menu
+│   └── timeline/               # Multi-track timeline system
 └── core/
-    └── workflowExecutor.ts       # Logic resolve workflow → render data
+    └── workflowExecutor.ts     # Logic resolve workflow → render data
 ```
 
 ---
 
-*Cập nhật: 2026-03-02. Maintainer: @khoatuan2006-eng*
+*Cập nhật: 2026-03-03. Maintainer: @khoatuan2006-eng*

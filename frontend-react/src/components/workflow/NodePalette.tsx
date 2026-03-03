@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Image, Film, CloudRain, Wrench, Music, Video } from 'lucide-react';
+import { User, Image, Film, CloudRain, Wrench, Music, Video, MapPin } from 'lucide-react';
 import type { WorkflowNodeType } from '@/store/useWorkflowStore';
 
 interface NodeTypeConfig {
@@ -75,6 +75,15 @@ const NODE_TYPES: NodeTypeConfig[] = [
         icon: Video,
         color: 'text-sky-400',
         bgGradient: 'from-sky-500/20 to-blue-500/10',
+        available: true,
+    },
+    {
+        type: 'map',
+        label: 'Map',
+        description: 'Interactive world map with countries',
+        icon: MapPin,
+        color: 'text-green-400',
+        bgGradient: 'from-green-500/20 to-emerald-500/10',
         available: true,
     },
 ];

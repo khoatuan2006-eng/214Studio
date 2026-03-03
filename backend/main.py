@@ -804,6 +804,128 @@ async def export_finish(body: ExportFinishRequest):
 
 
 # ============================================================
+# SCENE ANALYZER — AI Scene Recognition (Workflow Context)
+# ============================================================
+
+class SceneAnalyzeRequest(BaseModel):
+    """Request body for scene analysis."""
+    nodes: list[dict]
+    edges: list[dict]
+    currentTime: float | None = None
+
+
+@app.post("/api/scene/analyze")
+async def analyze_scene_endpoint(body: SceneAnalyzeRequest):
+    """
+    Analyze a workflow node graph and return a structured SceneContext.
+    Identifies characters, positions, background, camera, layer order, etc.
+    """
+    from backend.core.scene_analyzer import analyze_scene
+
+    try:
+        context = analyze_scene(body.nodes, body.edges, body.currentTime)
+        return JSONResponse(content=context.to_dict())
+    except Exception as e:
+        logger.error(f"Scene analysis failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Scene analysis failed: {str(e)}")
+
+
+# ============================================================
+# AI AGENT TEAM — Multi-Agent Scene Generation Pipeline
+# ============================================================
+
+class AIGenerateRequest(BaseModel):
+    """Request to generate a scene via AI Agent Team."""
+    prompt: str
+    available_characters: list[dict] = []
+    available_backgrounds: list[dict] = []
+
+
+class AIReviewRequest(BaseModel):
+    """Request to review a scene via Vision AI."""
+    nodes: list[dict]
+    edges: list[dict]
+    original_prompt: str
+    screenshot_base64: str | None = None
+    review_round: int = 1
+
+
+class AIConfigUpdate(BaseModel):
+    """Update AI configuration."""
+    api_key: str | None = None
+    provider: str | None = None
+    model: str | None = None
+    vision_model: str | None = None
+    max_review_rounds: int | None = None
+    temperature: float | None = None
+
+
+@app.post("/api/ai/generate-scene")
+async def ai_generate_scene(body: AIGenerateRequest):
+    """
+    Run the full AI Agent Team pipeline:
+    Director → Builder → Review Loop → Final Workflow
+    """
+    from backend.core.agents.orchestrator import run_pipeline
+
+    try:
+        result = await run_pipeline(
+            prompt=body.prompt,
+            available_characters=body.available_characters,
+            available_backgrounds=body.available_backgrounds,
+        )
+        return JSONResponse(content=result.to_dict())
+    except Exception as e:
+        logger.error(f"AI generate-scene failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+
+
+@app.post("/api/ai/review-scene")
+async def ai_review_scene(body: AIReviewRequest):
+    """
+    Review a scene using Vision AI (standalone, outside full pipeline).
+    """
+    from backend.core.scene_analyzer import analyze_scene
+    from backend.core.agents.reviewer_agent import review_scene
+
+    try:
+        context = analyze_scene(body.nodes, body.edges)
+        result = await review_scene(
+            scene_context_text=context.arrangement_description,
+            screenshot_base64=body.screenshot_base64,
+            original_prompt=body.original_prompt,
+            nodes=body.nodes,
+            review_round=body.review_round,
+        )
+        return JSONResponse(content=result.to_dict())
+    except Exception as e:
+        logger.error(f"AI review-scene failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Review failed: {str(e)}")
+
+
+@app.get("/api/ai/config")
+async def ai_get_config():
+    """Get current AI configuration (without exposing API key)."""
+    from backend.core.ai_config import get_ai_config
+    return JSONResponse(content=get_ai_config().to_dict())
+
+
+@app.put("/api/ai/config")
+async def ai_update_config(body: AIConfigUpdate):
+    """Update AI configuration (API key, provider, model, etc.)."""
+    from backend.core.ai_config import update_ai_config
+    config = update_ai_config(
+        api_key=body.api_key,
+        provider=body.provider,
+        model=body.model,
+        vision_model=body.vision_model,
+        max_review_rounds=body.max_review_rounds,
+        temperature=body.temperature,
+    )
+    return JSONResponse(content=config.to_dict())
+
+
+# ============================================================
 # AI GATEWAY — Automation API (P3 Sprint 2 — Roadmap 9.2/9.5)
 # ============================================================
 

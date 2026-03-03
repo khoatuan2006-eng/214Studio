@@ -1,6 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Palette, Shirt, Video, Menu, Loader2, GitBranch } from 'lucide-react';
-import { StudioErrorBoundary } from './components/StudioErrorBoundary';
+import { Palette, Shirt, Menu, Loader2, GitBranch } from 'lucide-react';
 import ProjectManager from './components/ProjectManager';
 import { useProjectStore } from './store/useProjectStore';
 import { useAppStore } from './store/useAppStore';
@@ -8,10 +7,9 @@ import { startEditorDataSync, stopEditorDataSync } from './stores/editor-data-st
 import { useSuppressBrowserDefaults } from './hooks/useSuppressBrowserDefaults';
 const OnboardingOverlay = lazy(() => import('./components/OnboardingOverlay'));
 
-// 18.4: Lazy-load heavy tab components — only fetched when user switches to that tab
+// Lazy-load heavy tab components — only fetched when user switches to that tab
 const BaseMode = lazy(() => import('./components/BaseMode'));
 const DressingRoomMode = lazy(() => import('./components/DressingRoomMode'));
-const StudioMode = lazy(() => import('./components/StudioMode'));
 const WorkflowMode = lazy(() => import('./components/workflow/WorkflowMode'));
 
 // Shared loading fallback
@@ -26,7 +24,7 @@ function TabLoadingFallback() {
   );
 }
 
-type Tab = 'base' | 'dressing' | 'studio' | 'workflow';
+type Tab = 'base' | 'dressing' | 'workflow';
 
 function App() {
   // Suppress browser defaults (Ctrl+S, Ctrl+P, zoom, drag, etc.)
@@ -117,7 +115,6 @@ function App() {
           {([
             { id: 'base' as Tab, label: 'Base Characters', icon: Palette },
             { id: 'dressing' as Tab, label: 'Dressing Room', icon: Shirt },
-            { id: 'studio' as Tab, label: 'Studio', icon: Video },
             { id: 'workflow' as Tab, label: 'Workflow', icon: GitBranch },
           ]).map(item => {
             const Icon = item.icon;
@@ -184,11 +181,6 @@ function App() {
             <div className="h-full animate-tab-enter" key={activeTab}>
               {activeTab === 'base' && <BaseMode />}
               {activeTab === 'dressing' && <DressingRoomMode />}
-              {activeTab === 'studio' && (
-                <StudioErrorBoundary>
-                  <StudioMode />
-                </StudioErrorBoundary>
-              )}
               {activeTab === 'workflow' && <WorkflowMode />}
             </div>
           </Suspense>

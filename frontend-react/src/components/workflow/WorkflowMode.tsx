@@ -19,15 +19,18 @@ import { PropNode } from './nodes/PropNode';
 import { AudioNode } from './nodes/AudioNode';
 import { CameraNode } from './nodes/CameraNode';
 import { ForegroundNode } from './nodes/ForegroundNode';
+import { MapNode } from './nodes/MapNode';
 import NodePalette from './NodePalette';
 import NodeInspector from './NodeInspector';
 import PoseSequenceEditor from './PoseSequenceEditor';
+import MapSequenceEditor from './MapSequenceEditor';
 import SaveLoadDialog from './SaveLoadDialog';
 import WorkflowPreview from './WorkflowPreview';
+import AIGeneratePanel from './AIGeneratePanel';
 import { executeWorkflow } from '@/core/workflowExecutor';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Save, FolderOpen, Trash2, Undo2, Redo2, Workflow } from 'lucide-react';
+import { Save, FolderOpen, Trash2, Undo2, Redo2, Workflow, Sparkles } from 'lucide-react';
 
 // Register custom node types
 const nodeTypes: NodeTypes = {
@@ -38,6 +41,7 @@ const nodeTypes: NodeTypes = {
     audio: AudioNode,
     camera: CameraNode,
     foreground: ForegroundNode,
+    map: MapNode,
 };
 
 const WorkflowMode: React.FC = () => {
@@ -61,6 +65,9 @@ const WorkflowMode: React.FC = () => {
 
     // Preview state
     const [showPreview, setShowPreview] = useState(false);
+
+    // AI Generate panel state
+    const [showAIPanel, setShowAIPanel] = useState(false);
 
     // Load saved workflows on mount
     useEffect(() => {
@@ -152,11 +159,17 @@ const WorkflowMode: React.FC = () => {
         [selectNode]
     );
 
+    // Map Sequence Editor state
+    const [editingMapNodeId, setEditingMapNodeId] = useState<string | null>(null);
+
     // Handle double-click on character nodes to open PoseSequenceEditor
+    // Handle double-click on map nodes to open MapSequenceEditor
     const handleNodeDoubleClick = useCallback(
         (_event: React.MouseEvent, node: any) => {
             if (node.type === 'character' && node.data?.characterId) {
                 setEditingNodeId(node.id);
+            } else if (node.type === 'map') {
+                setEditingMapNodeId(node.id);
             }
         },
         []
@@ -176,6 +189,8 @@ const WorkflowMode: React.FC = () => {
                 return '#10b981';
             case 'scene':
                 return '#f59e0b';
+            case 'map':
+                return '#22c55e';
             default:
                 return '#6b7280';
         }
@@ -193,6 +208,11 @@ const WorkflowMode: React.FC = () => {
             >
                 <NodePalette onAddNode={handleAddFromPalette} />
             </div>
+
+            {/* ═══ AI Generate Panel (left of canvas) ═══ */}
+            {showAIPanel && (
+                <AIGeneratePanel onClose={() => setShowAIPanel(false)} />
+            )}
 
             {/* ═══ Center: ReactFlow Canvas ═══ */}
             <div className="flex-1 relative" ref={reactFlowWrapper}>
@@ -261,6 +281,18 @@ const WorkflowMode: React.FC = () => {
                                 onClick={clearWorkflow}
                                 danger
                             />
+                            <div className="w-px h-5 bg-white/10 mx-1" />
+                            <button
+                                onClick={() => setShowAIPanel(!showAIPanel)}
+                                className={`px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-[11px] font-bold transition-all ${showAIPanel
+                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                        : 'hover:bg-white/5 text-neutral-400 hover:text-white'
+                                    }`}
+                                title="AI Scene Generator"
+                            >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                AI
+                            </button>
                         </div>
                     </Panel>
 
@@ -307,6 +339,14 @@ const WorkflowMode: React.FC = () => {
             {/* Workflow Preview */}
             {showPreview && (
                 <WorkflowPreview onClose={() => setShowPreview(false)} />
+            )}
+
+            {/* Map Sequence Editor Modal */}
+            {editingMapNodeId && (
+                <MapSequenceEditor
+                    nodeId={editingMapNodeId}
+                    onClose={() => setEditingMapNodeId(null)}
+                />
             )}
         </div>
     );

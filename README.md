@@ -1,22 +1,37 @@
-# 2D Character Builder (AnimeStudio)
+# AnimeStudio — 2D Animation Workflow Platform
 
-A web-based 2D character avatar creation tool built with a Python backend (FastAPI) and a vanilla JavaScript/HTML/CSS frontend. It allows users to upload structured Photoshop (`.psd`) files, automatically parses and extracts their layers, prevents duplicate assets via MD5 hashing, and provides an interactive "Dressing Room" UI to mix, match, and export custom character designs.
+A web-based platform for creating 2D character animations. Upload Photoshop (`.psd`) files, build custom characters from extracted layers, then compose animated scenes using a **node-based workflow editor** with keyframe animation and MP4 export.
 
 ## Features
 
-- **PSD Parsing:** Automatically extracts nested groups and layers from Photoshop files (.psd) using `psd-tools`.
-- **Smart Asset Library:** Hashes extracted layer images using MD5 to ensure deduplication. Only unique assets are saved to the server.
-- **Library Organizer:** Allows users to create custom taxonomy (Categories like "Face", "Body", "Hair"), assign fixed Z-indexes, and create nested Subfolders (e.g., specific character sets).
-- **Drag & Drop:** Fully supports HTML5 Drag & Drop to organize raw PSD layers into categorized Subfolders.
-- **Dressing Room UI:** A streamlined avatar creation interface. Features a nested folder navigation system tailored to save screen real estate. Selected assets display dynamic visual feedback and a "remove" trash bin overlay.
-- **Canvas Rendering:** Combines transparent PNG layers on an HTML5 `<canvas>` strictly according to their assigned Z-indexes. Supports exporting the final composition as a high-quality PNG.
-- **Responsive Flexbox Layout:** The workspace is dynamically split, affording a massive 2/3rds of the screen to library organization while precisely anchoring the 1/3rd character preview to the side.
+### Character Asset Pipeline
+- **PSD Parsing** — Automatically extracts nested groups and layers from `.psd` files using `psd-tools`.
+- **Smart Deduplication** — Hashes extracted layer images (MD5/SHA-256) to prevent duplicate assets.
+- **Library Organizer** — Create custom categories (Face, Body, Hair…), assign Z-indexes, and organize layers into subfolders via drag & drop.
+- **Dressing Room** — Mix & match character parts with visual preview and one-click PNG export.
+
+### Workflow Video Pipeline
+- **Node Graph Editor** — React Flow-based editor with Character, Background, and Scene Output nodes.
+- **Keyframe Animation** — CapCut-style position keyframes: scrub timeline → drag character → auto-create keyframe with smooth interpolation.
+- **Multi-Track Timeline** — Time ruler, per-character tracks, diamond keyframe markers ◇, and playhead scrubbing.
+- **Preview Canvas** — Real-time 800×450 preview with layer stacking and playback controls.
+- **Export MP4** — Server-side FFmpeg render from workflow data.
+
+### AI Agent Team (Experimental)
+- **Director Agent** — Interprets text prompts and creates scene plans.
+- **Builder Agent** — Translates scene plans into workflow nodes.
+- **Reviewer Agent** — Vision AI analyzes scene previews and suggests corrections.
 
 ## Tech Stack
 
-- **Backend:** Python 3, FastAPI, Uvicorn, psd-tools, Pillow
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript, FontAwesome
-- **Data Storage:** JSON Files (`database.json`, `custom_library.json`) and local file system for images.
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 19, Vite, TypeScript, Zustand, TailwindCSS 4 |
+| **Node Editor** | React Flow (`@xyflow/react`) |
+| **Canvas** | PixiJS 8 |
+| **Backend** | Python 3, FastAPI, Uvicorn, psd-tools, Pillow |
+| **Database** | SQLAlchemy + SQLite (aiosqlite) |
+| **Video Export** | FFmpeg (server-side) |
 
 ## Setup & Installation
 
@@ -26,27 +41,61 @@ git clone https://github.com/khoatuan2006-eng/214Studio.git
 cd 214Studio
 ```
 
-**2. Install Backend Dependencies:**
-Ensure you have Python 3 installed. Install the requirements via pip:
+**2. Install Backend:**
 ```bash
+pip install -r requirements.txt
+```
+
+**3. Install Frontend:**
+```bash
+cd frontend-react
+npm install
+```
+
+**4. Run:**
+```bash
+# Terminal 1 — Backend
 cd backend
-pip install -r ../requirements.txt
-```
-
-**3. Run the Backend Server:**
-The backend uses FastAPI and Uvicorn to serve both the API endpoints and the static frontend UI.
-```bash
 python main.py
-```
-*The server will start locally on `http://localhost:8001`.*
+# → http://localhost:8001
 
-**4. Access the Application:**
-Open your web browser and navigate to `http://localhost:8001` to use the application UI.
+# Terminal 2 — Frontend
+cd frontend-react
+npm run dev
+# → http://localhost:5173
+```
 
 ## Usage
 
-1. **Upload PSD:** Navigate to the "Base Mode" tab, drag and drop a `.psd` file into the upload zone to parse its layers.
-2. **Organize Assets:** Open the "Library Organizer" modal. Create custom categories (e.g., Background, Body, Hair) and adjust their drawing order (Z-Index).
-3. **Sort Layers:** Drag the freshly parsed layers from the raw lists into your custom Categories and Subfolders.
-4. **Mix & Match:** Switch to the "Dressing Room" tab. Browse your organized taxonomy and click on items to assemble your character avatar.
-5. **Download:** Click the "Download Character" button. The image will be composited on the canvas and saved to your device.
+1. **Base Characters** — Upload `.psd` files, organize extracted layers into categories.
+2. **Dressing Room** — Mix & match character parts to build avatars.
+3. **Workflow** — Create node graphs: connect Character + Background → Scene Output. Add keyframe animations, preview in real-time, and export to MP4.
+
+## Project Structure
+
+```
+AnimeStudio/
+├── backend/                 # FastAPI server
+│   ├── main.py              # API endpoints
+│   ├── core/                # Business logic
+│   │   ├── agents/          # AI agents (Director, Builder, Reviewer)
+│   │   ├── psd_processor.py # PSD parsing
+│   │   ├── models.py        # SQLAlchemy models
+│   │   └── ...
+│   └── data/                # JSON databases
+├── frontend-react/          # React + Vite app
+│   └── src/
+│       ├── components/      # UI components
+│       │   ├── workflow/    # Node editor + preview
+│       │   ├── timeline/    # Multi-track timeline
+│       │   └── ui/          # Shared UI components
+│       ├── store/           # Zustand stores
+│       ├── core/            # Engine (executor, renderer)
+│       └── hooks/           # Custom React hooks
+├── scripts/                 # Utility scripts
+└── requirements.txt         # Python dependencies
+```
+
+---
+
+*Maintainer: [@khoatuan2006-eng](https://github.com/khoatuan2006-eng)*

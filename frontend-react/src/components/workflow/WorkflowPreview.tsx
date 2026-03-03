@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useWorkflowStore, type CharacterNodeData, type BackgroundNodeData, type PoseFrame, type PositionKeyframe } from '@/store/useWorkflowStore';
 import { useAppStore, STATIC_BASE, type Character } from '@/store/useAppStore';
 import { API_BASE_URL } from '@/config/api';
-import { X, Play, Pause, Square, SkipBack, SkipForward, Maximize2, Download, Move, Settings2, Plus, Trash2, Diamond } from 'lucide-react';
+import { X, Play, Pause, Square, SkipBack, SkipForward, Maximize2, Download, Move, Settings2, Plus, Trash2, Diamond, Layers } from 'lucide-react';
+import SceneContextPanel from './SceneContextPanel';
 
 interface WorkflowPreviewProps {
     onClose: () => void;
@@ -58,6 +59,9 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
     // Inline editing state
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [editFrameIdx, setEditFrameIdx] = useState(0);
+
+    // Scene Context Panel toggle
+    const [showSceneContext, setShowSceneContext] = useState(false);
 
     // Helper: get canvas coords from mouse event
     const getCanvasCoords = useCallback((e: React.MouseEvent) => {
@@ -706,6 +710,11 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
                     )}
                 </div>
 
+                {/* Scene Context Panel */}
+                {showSceneContext && (
+                    <SceneContextPanel onClose={() => setShowSceneContext(false)} />
+                )}
+
                 {/* ══════ INLINE EDITING SIDEBAR ══════ */}
                 {selectedNodeId && !isPlaying && (() => {
                     const selNode = nodes.find(n => n.id === selectedNodeId);
@@ -1069,10 +1078,23 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
                 </div>
 
                 {/* Export */}
+                {/* Scene Context Toggle */}
+                <button
+                    onClick={() => setShowSceneContext(!showSceneContext)}
+                    className={`ml-4 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${showSceneContext
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                            : 'text-neutral-400 hover:text-white hover:bg-white/5 border border-white/10'
+                        }`}
+                    title="Toggle Scene Context Panel"
+                >
+                    <Layers className="w-4 h-4" />
+                    Context
+                </button>
+
                 <button
                     onClick={exportVideo}
                     disabled={exporting || tracks.length === 0}
-                    className="ml-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold shadow-lg shadow-emerald-500/30 hover:from-emerald-500 hover:to-teal-500 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="ml-2 flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold shadow-lg shadow-emerald-500/30 hover:from-emerald-500 hover:to-teal-500 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                     <Download className="w-4 h-4" />
                     Export MP4

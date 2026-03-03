@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useWorkflowStore, type CharacterNodeData, type BackgroundNodeData, type SceneNodeData } from '@/store/useWorkflowStore';
+import { useWorkflowStore, type CharacterNodeData, type BackgroundNodeData, type SceneNodeData, type MapNodeData } from '@/store/useWorkflowStore';
 import { useAppStore, STATIC_BASE } from '@/store/useAppStore';
 import { API_BASE_URL } from '@/config/api';
-import { X, User, Image, Film, Trash2, Upload, Check } from 'lucide-react';
+import { X, User, Image, Film, Trash2, Upload, Check, MapPin } from 'lucide-react';
 
 const NodeInspector: React.FC = () => {
     const { nodes, selectedNodeId, updateNodeData, removeNode, selectNode } = useWorkflowStore();
@@ -31,6 +31,7 @@ const NodeInspector: React.FC = () => {
                     {nodeType === 'character' && <User className="w-4 h-4 text-indigo-400" />}
                     {nodeType === 'background' && <Image className="w-4 h-4 text-emerald-400" />}
                     {nodeType === 'scene' && <Film className="w-4 h-4 text-amber-400" />}
+                    {nodeType === 'map' && <MapPin className="w-4 h-4 text-green-400" />}
                     <span className="text-xs font-bold text-white/90 capitalize">{nodeType} Properties</span>
                 </div>
                 <button onClick={() => selectNode(null)} className="p-1 hover:bg-white/5 rounded">
@@ -209,6 +210,34 @@ const NodeInspector: React.FC = () => {
                         </FieldGroup>
                     </>
                 )}
+
+                {/* MAP-SPECIFIC */}
+                {nodeType === 'map' && (
+                    <>
+                        <FieldGroup label="Map Style">
+                            <select
+                                value={(data as MapNodeData).mapStyle || 'dark'}
+                                onChange={(e) => updateNodeData(selectedNode.id, { mapStyle: e.target.value })}
+                                className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-green-500/50 transition-colors"
+                            >
+                                <option value="dark">🌑 Dark Matter</option>
+                                <option value="positron">☀️ Positron (Light)</option>
+                                <option value="voyager">🗺️ Voyager</option>
+                                <option value="darkNoLabels">🌑 Dark (No Labels)</option>
+                            </select>
+                        </FieldGroup>
+                        <div className="text-[10px] text-blue-400/60 bg-blue-500/5 border border-blue-500/10 rounded-lg p-2 text-center">
+                            🌍 3D WebGL Map · Zoom, tilt, rotate with mouse
+                        </div>
+                        <div className="text-[10px] text-green-400/60 bg-green-500/5 border border-green-500/10 rounded-lg p-2 text-center">
+                            Double-click the Map node to edit animation sequence
+                        </div>
+                        <div className="text-[10px] text-neutral-500">
+                            Steps: {((data as MapNodeData).sequence || []).length} ·
+                            Duration: {((data as MapNodeData).sequence || []).reduce((sum: number, s: any) => sum + (s.duration || 0), 0).toFixed(1)}s
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Delete button */}
@@ -226,7 +255,7 @@ const NodeInspector: React.FC = () => {
                     Delete Node
                 </button>
             </div>
-        </div>
+        </div >
     );
 };
 
@@ -351,8 +380,8 @@ function BackgroundPicker({ selectedPath, onSelect }: { selectedPath: string; on
                             key={bg.name}
                             onClick={() => onSelect(bg.path)}
                             className={`aspect-video rounded-lg overflow-hidden border-2 transition-all ${selectedPath === bg.path
-                                    ? 'border-emerald-500 shadow-lg shadow-emerald-500/30 scale-[1.02]'
-                                    : 'border-transparent hover:border-white/20'
+                                ? 'border-emerald-500 shadow-lg shadow-emerald-500/30 scale-[1.02]'
+                                : 'border-transparent hover:border-white/20'
                                 }`}
                         >
                             <img

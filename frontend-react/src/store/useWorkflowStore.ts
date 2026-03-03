@@ -117,11 +117,38 @@ export interface ForegroundNodeData {
     [key: string]: unknown;
 }
 
+/** A single step in the map animation sequence */
+export interface MapStep {
+    id: string;
+    duration: number;              // seconds this step is displayed
+    highlightedProvinces: string[]; // region IDs to highlight
+    zoomLevel: number;             // 0-22 (MapLibre zoom)
+    cameraX: number;               // longitude (-180 to 180)
+    cameraY: number;               // latitude (-90 to 90)
+    pitch: number;                 // 3D tilt angle (0-85 degrees)
+    bearing: number;               // compass rotation (0-360 degrees)
+    provinceColor: string;         // highlight color e.g. "#ef4444"
+    label: string;                 // user label e.g. "Zoom vào Hà Giang"
+}
+
+/** Data payload for a Map Node */
+export interface MapNodeData {
+    label: string;
+    mapType: 'world' | 'vietnam';  // extensible later: 'asia', 'europe'...
+    mapStyle: 'dark' | 'positron' | 'voyager' | 'darkNoLabels';
+    sequence: MapStep[];           // ordered animation steps
+    backgroundColor: string;       // map background color
+    borderColor: string;           // province/country border color  
+    defaultColor: string;          // default fill color
+    highlightColor: string;        // default highlight color
+    [key: string]: unknown;
+}
+
 // Union type for all node data
-export type WorkflowNodeData = CharacterNodeData | BackgroundNodeData | SceneNodeData | PropNodeData | AudioNodeData | CameraNodeData | ForegroundNodeData;
+export type WorkflowNodeData = CharacterNodeData | BackgroundNodeData | SceneNodeData | PropNodeData | AudioNodeData | CameraNodeData | ForegroundNodeData | MapNodeData;
 
 // Node type identifiers
-export type WorkflowNodeType = 'character' | 'background' | 'scene' | 'prop' | 'audio' | 'camera' | 'foreground';
+export type WorkflowNodeType = 'character' | 'background' | 'scene' | 'prop' | 'audio' | 'camera' | 'foreground' | 'map';
 
 /** A saved workflow snapshot */
 export interface SavedWorkflow {
@@ -250,6 +277,17 @@ const createDefaultData = (type: WorkflowNodeType): WorkflowNodeData => {
                 opacity: 0.7,
                 zIndex: 50,
                 assetPath: '',
+            };
+        case 'map':
+            return {
+                label: 'World Map',
+                mapType: 'world',
+                mapStyle: 'dark',
+                sequence: [],
+                backgroundColor: '#0a1628',
+                borderColor: '#334155',
+                defaultColor: '#1e3a5f',
+                highlightColor: '#ef4444',
             };
     }
 };
