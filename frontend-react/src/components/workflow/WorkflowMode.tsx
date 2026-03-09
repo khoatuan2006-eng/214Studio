@@ -11,36 +11,41 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import { useWorkflowStore, type WorkflowNodeType } from '@/store/useWorkflowStore';
+import { useWorkflowStore, type WorkflowNodeType } from '@/stores/useWorkflowStore';
 import { CharacterNode } from './nodes/CharacterNode';
+import { CharacterV2Node } from './nodes/CharacterV2Node';
 import { BackgroundNode } from './nodes/BackgroundNode';
 import { SceneNode } from './nodes/SceneNode';
 import { PropNode } from './nodes/PropNode';
 import { AudioNode } from './nodes/AudioNode';
 import { CameraNode } from './nodes/CameraNode';
 import { ForegroundNode } from './nodes/ForegroundNode';
+import { StageNode } from './nodes/StageNode';
 import { MapNode } from './nodes/MapNode';
 import NodePalette from './NodePalette';
 import NodeInspector from './NodeInspector';
 import PoseSequenceEditor from './PoseSequenceEditor';
+import ActionExpressionEditor from './ActionExpressionEditor';
 import MapSequenceEditor from './MapSequenceEditor';
 import SaveLoadDialog from './SaveLoadDialog';
 import WorkflowPreview from './WorkflowPreview';
 import AIGeneratePanel from './AIGeneratePanel';
 import { executeWorkflow } from '@/core/workflowExecutor';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/stores/useAppStore';
 import { toast } from 'sonner';
 import { Save, FolderOpen, Trash2, Undo2, Redo2, Workflow, Sparkles } from 'lucide-react';
 
 // Register custom node types
 const nodeTypes: NodeTypes = {
     character: CharacterNode,
+    characterV2: CharacterV2Node,
     background: BackgroundNode,
     scene: SceneNode,
     prop: PropNode,
     audio: AudioNode,
     camera: CameraNode,
     foreground: ForegroundNode,
+    stage: StageNode,
     map: MapNode,
 };
 
@@ -59,6 +64,9 @@ const WorkflowMode: React.FC = () => {
 
     // Pose Sequence Editor modal state
     const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+
+    // Action/Expression Editor modal state (V2)
+    const [editingV2NodeId, setEditingV2NodeId] = useState<string | null>(null);
 
     // Save/Load dialog state
     const [dialogMode, setDialogMode] = useState<'save' | 'load' | null>(null);
@@ -168,6 +176,8 @@ const WorkflowMode: React.FC = () => {
         (_event: React.MouseEvent, node: any) => {
             if (node.type === 'character' && node.data?.characterId) {
                 setEditingNodeId(node.id);
+            } else if (node.type === 'characterV2' && node.data?.characterId) {
+                setEditingV2NodeId(node.id);
             } else if (node.type === 'map') {
                 setEditingMapNodeId(node.id);
             }
@@ -185,6 +195,8 @@ const WorkflowMode: React.FC = () => {
         switch (node.type) {
             case 'character':
                 return '#6366f1';
+            case 'characterV2':
+                return '#10b981';
             case 'background':
                 return '#10b981';
             case 'scene':
@@ -285,8 +297,8 @@ const WorkflowMode: React.FC = () => {
                             <button
                                 onClick={() => setShowAIPanel(!showAIPanel)}
                                 className={`px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-[11px] font-bold transition-all ${showAIPanel
-                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                        : 'hover:bg-white/5 text-neutral-400 hover:text-white'
+                                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                    : 'hover:bg-white/5 text-neutral-400 hover:text-white'
                                     }`}
                                 title="AI Scene Generator"
                             >
@@ -325,6 +337,14 @@ const WorkflowMode: React.FC = () => {
                 <PoseSequenceEditor
                     nodeId={editingNodeId}
                     onClose={() => setEditingNodeId(null)}
+                />
+            )}
+
+            {/* V2 Action/Expression Editor Modal */}
+            {editingV2NodeId && (
+                <ActionExpressionEditor
+                    nodeId={editingV2NodeId}
+                    onClose={() => setEditingV2NodeId(null)}
                 />
             )}
 

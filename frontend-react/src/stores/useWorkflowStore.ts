@@ -53,6 +53,15 @@ export interface BackgroundNodeData {
     [key: string]: unknown;
 }
 
+/** A camera cut — switches to a different CameraNode at a given time */
+export interface CameraCut {
+    id: string;
+    time: number;              // seconds — when this cut starts
+    cameraNodeId: string;      // which camera node to switch to
+    transition: 'cut' | 'crossfade' | 'smooth';  // transition type
+    transitionDuration: number; // seconds for the transition (0 = instant cut)
+}
+
 /** Data payload for a Scene Node (compositor) */
 export interface SceneNodeData {
     label: string;
@@ -60,6 +69,10 @@ export interface SceneNodeData {
     canvasWidth: number;
     canvasHeight: number;
     totalDuration: number;
+    pixelsPerUnit: number;     // PPU: how many pixels = 1 unit (default 100)
+    // Camera is now a separate CameraNode connected via edge
+    activeCameraId: string;    // ID of the default/active camera node (fallback)
+    cameraCuts: CameraCut[];   // Timeline of camera switches
     [key: string]: unknown;
 }
 
@@ -90,30 +103,62 @@ export interface AudioNodeData {
     [key: string]: unknown;
 }
 
+/** A single camera keyframe (position + zoom at a point in time) */
+export interface CameraKeyframe {
+    id: string;
+    time: number;           // seconds
+    x: number;              // center X in world units
+    y: number;              // center Y in world units
+    zoom: number;           // 1 = 100%, 2 = 200% zoom-in
+    easing: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';
+}
+
 /** Data payload for a Camera Node */
 export interface CameraNodeData {
     label: string;
-    cameraAction: 'pan' | 'zoom' | 'shake' | 'focus' | 'static';
-    startX: number;
-    startY: number;
-    endX: number;
-    endY: number;
-    startZoom: number;
-    endZoom: number;
-    duration: number;
-    easing: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';
+    keyframes: CameraKeyframe[];
+    viewportWidth: number;   // output resolution width in px (quality, not what camera sees)
+    viewportHeight: number;  // output resolution height in px (quality, not what camera sees)
+    fov: number;             // field of view width in world units (determines what camera captures)
     [key: string]: unknown;
 }
 
-/** Data payload for a Foreground Node */
+/** Data payload for a Foreground Node (image overlay on top of characters) */
 export interface ForegroundNodeData {
     label: string;
-    effectType: 'rain' | 'snow' | 'leaves' | 'sparkle' | 'light_rays' | 'custom';
-    intensity: number;
-    speed: number;
-    opacity: number;
-    zIndex: number;
+    assetHash: string;
     assetPath: string;
+    posX: number;
+    posY: number;
+    zIndex: number;
+    scale: number;
+    opacity: number;
+    blur: number;
+    [key: string]: unknown;
+}
+
+/** A single layer in the Stage (Film Set) node.
+ *  Scale = pixel height in 1920×1080 canvas space.
+ */
+export interface StageLayer {
+    id: string;
+    type: 'background' | 'foreground' | 'prop';
+    label: string;
+    assetPath: string;
+    posX: number;
+    posY: number;
+    zIndex: number;
+    scale: number;
+    opacity: number;
+    rotation: number;
+    blur: number;
+    visible: boolean;
+}
+
+/** Data payload for a Stage Node (unified BG + FG + Prop) */
+export interface StageNodeData {
+    label: string;
+    layers: StageLayer[];
     [key: string]: unknown;
 }
 
@@ -144,11 +189,46 @@ export interface MapNodeData {
     [key: string]: unknown;
 }
 
+/** V2 Pose Frame — body part selections + expression combo */
+export interface V2PoseFrame {
+    id: string;
+    duration: number;
+    bodyParts: Record<string, string>;   // partName → variantName
+    expression: {
+        type: 'combinable' | 'pre_composed';
+        mouth?: string;
+        eyes?: string;
+        eyebrows?: string;
+        preset?: string;
+    };
+    viewpoint?: string;
+    transition: 'cut' | 'crossfade';
+    transitionDuration: number;
+    autoBlink: boolean;
+    blinkInterval: number;   // seconds (3-8)
+    blinkDuration: number;   // ms (150-300)
+}
+
+/** Data payload for a Character V2 Node (jointed-limb) */
+export interface CharacterV2NodeData {
+    label: string;
+    characterId: string;
+    characterName: string;
+    posX: number;
+    posY: number;
+    zIndex: number;
+    scale: number;
+    opacity: number;
+    sequence: V2PoseFrame[];
+    activeViewpoint: string;
+    [key: string]: unknown;
+}
+
 // Union type for all node data
-export type WorkflowNodeData = CharacterNodeData | BackgroundNodeData | SceneNodeData | PropNodeData | AudioNodeData | CameraNodeData | ForegroundNodeData | MapNodeData;
+export type WorkflowNodeData = CharacterNodeData | BackgroundNodeData | SceneNodeData | PropNodeData | AudioNodeData | CameraNodeData | ForegroundNodeData | MapNodeData | CharacterV2NodeData | StageNodeData;
 
 // Node type identifiers
-export type WorkflowNodeType = 'character' | 'background' | 'scene' | 'prop' | 'audio' | 'camera' | 'foreground' | 'map';
+export type WorkflowNodeType = 'character' | 'background' | 'scene' | 'prop' | 'audio' | 'camera' | 'foreground' | 'map' | 'characterV2' | 'stage';
 
 /** A saved workflow snapshot */
 export interface SavedWorkflow {
@@ -212,7 +292,7 @@ const createDefaultData = (type: WorkflowNodeType): WorkflowNodeData => {
                 posX: 960,
                 posY: 540,
                 zIndex: 10,
-                scale: 1.0,
+                scale: 960,
                 opacity: 1.0,
                 sequence: [],
             };
@@ -231,6 +311,9 @@ const createDefaultData = (type: WorkflowNodeType): WorkflowNodeData => {
                 canvasWidth: 1920,
                 canvasHeight: 1080,
                 totalDuration: 0,
+                pixelsPerUnit: 100,
+                activeCameraId: '',
+                cameraCuts: [],
             };
         case 'prop':
             return {
@@ -258,25 +341,42 @@ const createDefaultData = (type: WorkflowNodeType): WorkflowNodeData => {
         case 'camera':
             return {
                 label: 'Camera',
-                cameraAction: 'static',
-                startX: 960,
-                startY: 540,
-                endX: 960,
-                endY: 540,
-                startZoom: 1,
-                endZoom: 1,
-                duration: 2,
-                easing: 'easeInOut',
+                keyframes: [
+                    { id: 'kf-init', time: 0, x: 9.6, y: 5.4, zoom: 1, easing: 'easeInOut' as const },
+                ],
+                viewportWidth: 1920,
+                viewportHeight: 1080,
+                fov: 19.2,  // default: 1920px / 100 PPU = 19.2 units wide
             };
         case 'foreground':
             return {
                 label: 'Foreground',
-                effectType: 'rain',
-                intensity: 0.5,
-                speed: 1,
-                opacity: 0.7,
-                zIndex: 50,
+                assetHash: '',
                 assetPath: '',
+                posX: 960,
+                posY: 540,
+                zIndex: 50,
+                scale: 960,
+                opacity: 1.0,
+                blur: 0,
+            };
+        case 'stage':
+            return {
+                label: 'Stage',
+                layers: [],
+            };
+        case 'characterV2':
+            return {
+                label: 'Character V2',
+                characterId: '',
+                characterName: '',
+                posX: 960,
+                posY: 540,
+                zIndex: 10,
+                scale: 960,
+                opacity: 1.0,
+                sequence: [],
+                activeViewpoint: '',
             };
         case 'map':
             return {

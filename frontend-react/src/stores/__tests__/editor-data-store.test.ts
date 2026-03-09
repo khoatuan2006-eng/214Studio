@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useEditorDataStore } from '../editor-data-store';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/stores/useAppStore';
 
 // Mock useAppStore
-vi.mock('@/store/useAppStore', () => ({
+vi.mock('@/stores/useAppStore', () => ({
     useAppStore: {
         getState: vi.fn(),
         subscribe: vi.fn(),

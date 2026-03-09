@@ -1,6 +1,8 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { GripVertical, Wrench } from 'lucide-react';
+import type { SceneNodeData } from '@/stores/useWorkflowStore';
+import { useWorkflowStore } from '@/stores/useWorkflowStore';
 
 export interface PropNodeData {
     label: string;
@@ -18,6 +20,9 @@ export interface PropNodeData {
 type PropNodeType = Node<PropNodeData, 'prop'>;
 
 function PropNodeComponent({ data, selected }: NodeProps<PropNodeType>) {
+    const nodes = useWorkflowStore((s) => s.nodes);
+    const sceneNode = nodes.find(n => n.type === 'scene');
+    const ppu = (sceneNode?.data as SceneNodeData)?.pixelsPerUnit || 100;
     return (
         <div
             className={`rounded-xl overflow-hidden shadow-2xl transition-all duration-200 min-w-[200px] ${selected ? 'ring-2 ring-pink-400 shadow-pink-500/30' : 'ring-1 ring-white/10 hover:ring-white/20'
@@ -43,13 +48,13 @@ function PropNodeComponent({ data, selected }: NodeProps<PropNodeType>) {
                 <div className="flex items-center justify-between text-[11px]">
                     <span className="text-neutral-400">Position</span>
                     <span className="text-white font-mono text-[10px] bg-white/5 px-2 py-0.5 rounded">
-                        {data.posX}, {data.posY}
+                        {+(data.posX / ppu).toFixed(1)}, {+(data.posY / ppu).toFixed(1)}
                     </span>
                 </div>
                 <div className="flex items-center justify-between text-[11px]">
                     <span className="text-neutral-400">Scale</span>
                     <span className="text-white font-mono text-[10px] bg-white/5 px-2 py-0.5 rounded">
-                        {data.scale}×
+                        {+((data.scale || 960) / ppu).toFixed(1)}u
                     </span>
                 </div>
                 <div className="flex items-center justify-between text-[11px]">

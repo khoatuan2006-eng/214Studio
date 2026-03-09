@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { useAppStore, STATIC_BASE } from '@/store/useAppStore';
-import { useWorkflowStore, type PoseFrame, type CharacterNodeData } from '@/store/useWorkflowStore';
+import { useAppStore, STATIC_BASE } from '@/stores/useAppStore';
+import { useWorkflowStore, type PoseFrame, type CharacterNodeData, type SceneNodeData } from '@/stores/useWorkflowStore';
 import LazyImage from '@/components/ui/LazyImage';
 import { X, Plus, Trash2, GripVertical, Clock, ArrowRight, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 
@@ -16,6 +16,10 @@ const PoseSequenceEditor: React.FC<PoseSequenceEditorProps> = ({ nodeId, onClose
     const node = nodes.find((n) => n.id === nodeId);
     const data = node?.data as CharacterNodeData | undefined;
     const character = characters.find((c) => c.id === data?.characterId);
+
+    // Get PPU from scene node
+    const sceneNode = nodes.find(n => n.type === 'scene');
+    const ppu = (sceneNode?.data as SceneNodeData)?.pixelsPerUnit || 100;
 
     // Local state for sequence editing
     const [sequence, setSequence] = useState<PoseFrame[]>(data?.sequence || []);
@@ -258,7 +262,7 @@ const PoseSequenceEditor: React.FC<PoseSequenceEditorProps> = ({ nodeId, onClose
                                                         type="number"
                                                         value={frame.startX ?? ''}
                                                         onChange={(e) => updateFrame(index, { startX: e.target.value ? Number(e.target.value) : undefined })}
-                                                        placeholder={String(data.posX)}
+                                                        placeholder={String(+(data.posX / ppu).toFixed(1))}
                                                         className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-white font-mono outline-none focus:border-emerald-500/50 placeholder:text-neutral-700"
                                                     />
                                                 </div>
@@ -268,7 +272,7 @@ const PoseSequenceEditor: React.FC<PoseSequenceEditorProps> = ({ nodeId, onClose
                                                         type="number"
                                                         value={frame.startY ?? ''}
                                                         onChange={(e) => updateFrame(index, { startY: e.target.value ? Number(e.target.value) : undefined })}
-                                                        placeholder={String(data.posY)}
+                                                        placeholder={String(+(data.posY / ppu).toFixed(1))}
                                                         className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-white font-mono outline-none focus:border-emerald-500/50 placeholder:text-neutral-700"
                                                     />
                                                 </div>
@@ -278,7 +282,7 @@ const PoseSequenceEditor: React.FC<PoseSequenceEditorProps> = ({ nodeId, onClose
                                                         type="number"
                                                         value={frame.endX ?? ''}
                                                         onChange={(e) => updateFrame(index, { endX: e.target.value ? Number(e.target.value) : undefined })}
-                                                        placeholder={String(data.posX)}
+                                                        placeholder={String(+(data.posX / ppu).toFixed(1))}
                                                         className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-white font-mono outline-none focus:border-emerald-500/50 placeholder:text-neutral-700"
                                                     />
                                                 </div>
@@ -288,12 +292,12 @@ const PoseSequenceEditor: React.FC<PoseSequenceEditorProps> = ({ nodeId, onClose
                                                         type="number"
                                                         value={frame.endY ?? ''}
                                                         onChange={(e) => updateFrame(index, { endY: e.target.value ? Number(e.target.value) : undefined })}
-                                                        placeholder={String(data.posY)}
+                                                        placeholder={String(+(data.posY / ppu).toFixed(1))}
                                                         className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-white font-mono outline-none focus:border-emerald-500/50 placeholder:text-neutral-700"
                                                     />
                                                 </div>
                                             </div>
-                                            <p className="text-[8px] text-neutral-600 mt-1">Leave empty = use node's static position. Coordinates: 0-1920 (X), 0-1080 (Y)</p>
+                                            <p className="text-[8px] text-neutral-600 mt-1">Leave empty = use node's static position. Values in units (1u = {ppu}px)</p>
                                         </div>
                                         {/* Layer Groups */}
                                         <div className="space-y-3">

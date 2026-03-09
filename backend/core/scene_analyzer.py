@@ -56,12 +56,13 @@ class CameraInfo:
     node_id: str = ""
     label: str = ""
     action: str = "static"
-    start_x: float = 960.0
-    start_y: float = 540.0
-    end_x: float = 960.0
-    end_y: float = 540.0
+    start_x: float = 9.6         # world units
+    start_y: float = 5.4         # world units
+    end_x: float = 9.6           # world units
+    end_y: float = 5.4           # world units
     start_zoom: float = 1.0
     end_zoom: float = 1.0
+    fov: float = 19.2            # field of view width in world units
     duration: float = 2.0
     easing: str = "easeInOut"
 
@@ -280,18 +281,33 @@ def _process_background(node: dict) -> BackgroundInfo:
 
 def _process_camera(node: dict) -> CameraInfo:
     data = node.get("data", {})
+    keyframes = data.get("keyframes", [])
+    fov = data.get("fov", 19.2)
+
+    # Extract start/end from keyframes
+    if keyframes:
+        first = keyframes[0]
+        last = keyframes[-1] if len(keyframes) > 1 else first
+        action = "static" if len(keyframes) <= 1 else "pan"
+        return CameraInfo(
+            node_id=node.get("id", ""),
+            label=data.get("label", "Camera"),
+            action=action,
+            start_x=first.get("x", 9.6),
+            start_y=first.get("y", 5.4),
+            end_x=last.get("x", 9.6),
+            end_y=last.get("y", 5.4),
+            start_zoom=first.get("zoom", 1.0),
+            end_zoom=last.get("zoom", 1.0),
+            fov=fov,
+            duration=last.get("time", 2.0) - first.get("time", 0.0),
+            easing=first.get("easing", "easeInOut"),
+        )
+
     return CameraInfo(
         node_id=node.get("id", ""),
         label=data.get("label", "Camera"),
-        action=data.get("cameraAction", "static"),
-        start_x=data.get("startX", 960),
-        start_y=data.get("startY", 540),
-        end_x=data.get("endX", 960),
-        end_y=data.get("endY", 540),
-        start_zoom=data.get("startZoom", 1),
-        end_zoom=data.get("endZoom", 1),
-        duration=data.get("duration", 2),
-        easing=data.get("easing", "easeInOut"),
+        fov=fov,
     )
 
 

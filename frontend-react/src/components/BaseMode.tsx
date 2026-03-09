@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAppStore, STATIC_BASE } from '../store/useAppStore';
+import { useAppStore, STATIC_BASE } from '../stores/useAppStore';
 
 import UploadModule from './UploadModule';
 import { Download, Layers } from 'lucide-react';

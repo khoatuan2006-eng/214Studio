@@ -27,6 +27,8 @@ const orgCategoriesContainer = document.getElementById('orgCategoriesContainer')
 const orgBaseCharSelect = document.getElementById('orgBaseCharSelect');
 const orgSourceLayers = document.getElementById('orgSourceLayers');
 const drCategoriesContainer = document.getElementById('drCategoriesContainer');
+const drCharacterGallery = document.getElementById('drCharacterGallery');
+const drSelectedCharName = document.getElementById('drSelectedCharName');
 
 // File Upload DOM
 const dropZone = document.getElementById('dropZone');
@@ -38,6 +40,70 @@ const uploadText = document.getElementById('uploadText');
 let appData = []; // Store characters from base DB (database.json)
 let customLibrary = { categories: [] }; // Store dressing room taxonomy (custom_library.json)
 let currentMode = 'BASE'; // 'BASE' or 'DRESSING_ROOM'
+let selectedDrCharacter = null; // Currently selected character in Dressing Room
+
+// --- Dressing Room Character Gallery ---
+function renderDrCharacterGallery() {
+    if (!drCharacterGallery) return;
+    drCharacterGallery.innerHTML = '';
+
+    if (appData.length === 0) {
+        drCharacterGallery.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem; grid-column:1/-1; text-align:center; padding:12px 0;">No characters yet. Upload a PSD file!</p>';
+        return;
+    }
+
+    appData.forEach(char => {
+        const card = document.createElement('div');
+        card.title = char.name;
+        const isSelected = selectedDrCharacter && selectedDrCharacter.id === char.id;
+        card.style.cssText = `
+            aspect-ratio:1; border-radius:10px; border:2px solid ${isSelected ? 'var(--primary)' : 'transparent'};
+            background:rgba(255,255,255,0.05); cursor:pointer; overflow:hidden; position:relative;
+            display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px;
+            transition:border-color 0.2s, transform 0.15s;
+            box-shadow:${isSelected ? '0 0 12px rgba(108,92,231,0.7)' : 'none'};
+        `;
+        card.addEventListener('mouseover', () => { if (!isSelected) card.style.borderColor = 'rgba(108,92,231,0.5)'; });
+        card.addEventListener('mouseout', () => { if (!isSelected) card.style.borderColor = 'transparent'; });
+
+        // Thumbnail: use first asset from first group
+        let thumbSrc = null;
+        if (char.layer_groups) {
+            const firstGroup = Object.values(char.layer_groups)[0];
+            if (firstGroup && firstGroup.length > 0) {
+                thumbSrc = `${STATIC_BASE}/${firstGroup[0].path}`;
+            }
+        }
+
+        if (thumbSrc) {
+            const img = document.createElement('img');
+            img.src = thumbSrc;
+            img.crossOrigin = 'Anonymous';
+            img.style.cssText = 'width:100%; height:100%; object-fit:contain; padding:4px;';
+            card.appendChild(img);
+        } else {
+            card.innerHTML = '<i class="fa-solid fa-user" style="font-size:1.4rem; color:var(--text-muted);"></i>';
+        }
+
+        // Character name label
+        const nameLabel = document.createElement('div');
+        nameLabel.textContent = char.name.split('_')[0];
+        nameLabel.style.cssText = 'position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.6); font-size:0.55rem; text-align:center; padding:2px 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff;';
+        card.appendChild(nameLabel);
+
+        card.addEventListener('click', () => {
+            selectedDrCharacter = char;
+            if (drSelectedCharName) {
+                drSelectedCharName.textContent = '✓ ' + char.name.split('_')[0];
+                drSelectedCharName.style.display = 'block';
+            }
+            renderDrCharacterGallery(); // re-render to update selected state
+        });
+
+        drCharacterGallery.appendChild(card);
+    });
+}
+
 
 // Init
 async function init() {
@@ -55,6 +121,7 @@ async function fetchCharacters() {
         appData = await res.json();
         populateCharacterSelect();
         populateOrganizerBaseSelect();
+        renderDrCharacterGallery(); // Update Dressing Room gallery
     } catch (err) {
         console.error('API Error:', err);
     }
@@ -66,6 +133,10 @@ async function fetchCustomLibrary() {
         if (!res.ok) throw new Error('Failed to fetch library');
         customLibrary = await res.json();
         renderOrganizerCategories();
+        // Also re-render Dressing Room if currently on that tab
+        if (currentMode === 'DRESSING_ROOM') {
+            renderDressingRoomUI();
+        }
     } catch (err) {
         console.error('API Error:', err);
     }
@@ -87,6 +158,7 @@ tabDressingRoom.addEventListener('click', () => {
     tabBaseChar.classList.remove('active');
     dressingRoomControls.classList.remove('hidden');
     baseModeControls.classList.add('hidden');
+    renderDrCharacterGallery(); // Show character gallery
     renderDressingRoomUI(); // Prepare custom UI
 });
 
@@ -813,7 +885,7 @@ async function handleUpload(file) {
     }
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('files', file); // Backend expects 'files' (plural)
 
     uploadStatus.classList.remove('hidden', 'error');
     uploadText.textContent = `Uploading ${file.name}...`;
@@ -832,11 +904,15 @@ async function handleUpload(file) {
 
         uploadText.textContent = "Upload successful! Extracting...";
 
-        // Refresh characters
+        // Refresh characters and library
         await fetchCharacters();
+        await fetchCustomLibrary();
         uploadStatus.classList.add('hidden');
 
-        if (characterSelect.value) {
+        // Re-render the correct mode UI after upload
+        if (currentMode === 'DRESSING_ROOM') {
+            renderDressingRoomUI();
+        } else if (characterSelect.value) {
             updatePreview();
         }
 

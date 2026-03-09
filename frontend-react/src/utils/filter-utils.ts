@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import type { FilterConfig } from '@/store/useAppStore';
+import type { FilterConfig } from '@/stores/useAppStore';
 
 /**
  * Creates a PixiJS filter from a FilterConfig

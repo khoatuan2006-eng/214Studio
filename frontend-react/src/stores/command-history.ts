@@ -101,8 +101,8 @@ export const commandHistory = new CommandHistoryManager();
 
 // --- Built-in Command Factories ---
 
-import { useAppStore } from '@/store/useAppStore';
-import type { ActionBlock, CharacterTrack, TimelineKeyframe } from '@/store/useAppStore';
+import { useAppStore } from '@/stores/useAppStore';
+import type { ActionBlock, CharacterTrack, TimelineKeyframe } from '@/stores/useAppStore';
 
 /** Command: Move an action block (start/end shift) */
 export function createMoveActionCommand(

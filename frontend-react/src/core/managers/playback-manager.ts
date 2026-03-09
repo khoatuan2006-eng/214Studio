@@ -1,6 +1,6 @@
 import { EditorCore } from '../index';
 import { setCursorTime } from '../../stores/transient-store';
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore } from '../../stores/useAppStore';
 import { interpolationService } from '../services/interpolation-service';
 
 /**

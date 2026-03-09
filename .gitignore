@@ -16,3 +16,6 @@ backend/uploads/
 .idea/
 
 backend/bin/ffmpeg/*.exe
+
+references/
+*.png

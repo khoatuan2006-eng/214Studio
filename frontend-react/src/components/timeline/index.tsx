@@ -47,7 +47,7 @@ import { useTimelineSeek } from "@/hooks/timeline/use-timeline-seek";
 import { useScrollSync } from "@/hooks/timeline/use-scroll-sync";
 import { DragLine } from "./drag-line";
 import { invokeAction } from "@/lib/actions";
-import { useAppStore, setActiveEditTargetId, useTransientSnapshot } from "@/store/useAppStore";
+import { useAppStore, setActiveEditTargetId, useTransientSnapshot } from "@/stores/useAppStore";
 import { VirtualizedTrackList, TRACK_HEIGHT } from "./VirtualizedTrackList";
 import {
 	ViewIcon,

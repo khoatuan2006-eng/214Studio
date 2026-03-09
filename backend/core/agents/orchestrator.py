@@ -105,7 +105,7 @@ async def run_pipeline(
     # ── Step 2: Builder ──────────────────────
     result.logs.append(AgentLog("builder", "running", "Building workflow nodes and edges..."))
     try:
-        workflow = builder_agent.build_workflow(plan)
+        workflow = builder_agent.build_workflow(plan, available_characters=chars)
         result.workflow = workflow
         result.logs.append(AgentLog(
             "builder", "completed",

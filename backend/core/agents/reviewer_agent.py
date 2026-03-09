@@ -69,36 +69,43 @@ class ReviewResult:
 REVIEWER_SYSTEM_PROMPT = """You are a professional anime scene reviewer with expert knowledge of composition, cinematography, and visual storytelling.
 
 You are reviewing an anime scene that was automatically generated. You have:
-1. A screenshot/rendering of the scene
-2. The scene's technical data (character positions, z-index, camera, background)
+1. The scene's technical data (character positions, z-index, camera, background)
+2. Frame selections for each character (poses, expressions, accessories per frame)
 3. The original prompt that the user wrote
 
 ## Your Tasks
-1. **Evaluate** the scene composition (score 1-10)
+1. **Evaluate** the scene composition AND animation quality (score 1-10)
 2. **Identify issues** with character placement, scaling, overlapping, z-ordering
-3. **Suggest corrections** as specific field changes
+3. **Evaluate frame selections**: Do the chosen poses/faces match the scene mood?
+4. **Evaluate timing**: Are frame durations natural? Do they tell a story?
+5. **Suggest corrections** as specific field changes
 
 ## Common Issues to Check
 - Characters overlapping or too close together
 - Characters positioned off-screen or partially cut off
-- Incorrect z-ordering (character behind background element)
-- Scale too large/small for the scene type (close-up vs wide shot)
-- Unnatural character placement (floating, too low/high)
-- Poor visual balance (all characters on one side)
-- Camera settings not matching the scene mood
+- Scale too large/small for the scene type
+- Poor visual balance
+- **Wrong pose for the action** (e.g. standing when should be running)
+- **Wrong expression for the mood** (e.g. smiling in a sad scene)
+- **Too few frames** (static scene with no animation)
+- **Frame timing too uniform** (all same duration = robotic)
 
 ## Position Reference (1920x1080 canvas)
 - Center: (960, 540)
 - Standing characters feet: y ≈ 700-850
-- Characters should have x between 100-1820 (at minimum 100px from edge)
-- Scale 1.0 = normal, 0.5 = far away, 1.5 = close up
+- Characters should have x between 100-1820
+
+## Correctable Fields
+- posX, posY, scale, opacity, zIndex (node properties)
+- sequence[N].layers.GROUP_NAME = "new_asset_name" (change a frame's layer selection)
+- sequence[N].duration = new_value (change frame timing)
 
 ## Response Format
 Return ONLY valid JSON (no markdown):
 {
   "approved": true/false,
   "score": 1-10,
-  "feedback": "Description of issues found or praise for good composition",
+  "feedback": "Description of issues or praise",
   "corrections": [
     {
       "node_id": "the node's id",
@@ -111,7 +118,6 @@ Return ONLY valid JSON (no markdown):
 }
 
 If the scene looks good (score >= 7), set approved=true and corrections=[].
-If specific node_ids are not available, use the character name as node_id and the builder will match it.
 """
 
 
@@ -198,26 +204,22 @@ async def _call_gemini_vision(
     image_base64: str,
     config: Any,
 ) -> str:
-    """Call Gemini Vision API with screenshot."""
-    import google.generativeai as genai
+    """Call Gemini Vision API with screenshot (new google-genai SDK)."""
+    from google import genai
+    from google.genai import types
 
-    genai.configure(api_key=config.api_key)
-    model = genai.GenerativeModel(
-        config.vision_model,
-        system_instruction=system_prompt,
-    )
+    client = genai.Client(api_key=config.api_key)
 
     # Build multimodal content
     image_data = base64.b64decode(image_base64)
-    image_part = {
-        "mime_type": "image/png",
-        "data": image_data,
-    }
+    image_part = types.Part.from_bytes(data=image_data, mime_type="image/png")
 
-    response = await model.generate_content_async(
-        [user_message, image_part],
-        generation_config=genai.types.GenerationConfig(
-            temperature=0.3,  # Lower temp for analytical review
+    response = await client.aio.models.generate_content(
+        model=config.vision_model,
+        contents=[user_message, image_part],
+        config=types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            temperature=0.3,
             response_mime_type="application/json",
         ),
     )
@@ -268,15 +270,15 @@ async def _call_text_review(
 ) -> str:
     """Fallback: text-only review without screenshot."""
     if config.provider == "gemini":
-        import google.generativeai as genai
-        genai.configure(api_key=config.api_key)
-        model = genai.GenerativeModel(
-            config.model,
-            system_instruction=system_prompt,
-        )
-        response = await model.generate_content_async(
-            user_message,
-            generation_config=genai.types.GenerationConfig(
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=config.api_key)
+        response = await client.aio.models.generate_content(
+            model=config.model,
+            contents=user_message,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
                 temperature=0.3,
                 response_mime_type="application/json",
             ),
@@ -305,15 +307,38 @@ async def _call_text_review(
 # ══════════════════════════════════════════════
 
 def _build_node_id_reference(nodes: list[dict]) -> str:
-    """Build a reference table of node IDs → names for the reviewer."""
+    """Build a reference table of node IDs, data, and frame selections for the reviewer."""
     lines = []
     for node in nodes:
         node_id = node.get("id", "")
         node_type = node.get("type", "")
-        label = node.get("data", {}).get("label", "")
-        name = node.get("data", {}).get("characterName", "") or label
-        if node_type != "scene":
-            lines.append(f"  {node_id} ({node_type}): {name}")
+        data = node.get("data", {})
+        label = data.get("label", "")
+        name = data.get("characterName", "") or label
+
+        if node_type == "scene":
+            continue
+
+        line = f"  {node_id} ({node_type}): {name}"
+
+        if node_type == "character":
+            line += f" pos=({data.get('posX', 0)}, {data.get('posY', 0)})"
+            line += f" scale={data.get('scale', 1)} z={data.get('zIndex', 10)}"
+
+            # Show frame selections
+            seq = data.get("sequence", [])
+            if seq:
+                line += f"\n    Animation: {len(seq)} frames"
+                for i, frame in enumerate(seq):
+                    layers = frame.get("layers", {})
+                    dur = frame.get("duration", 0)
+                    trans = frame.get("transition", "cut")
+                    layer_desc = ", ".join(f"{g}={v}" for g, v in layers.items())
+                    line += f"\n      Frame {i+1} ({dur}s, {trans}): {layer_desc}"
+            else:
+                line += "\n    ⚠️ No frames selected!"
+
+        lines.append(line)
     return "\n".join(lines) if lines else "  No nodes available"
 
 

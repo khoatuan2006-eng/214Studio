@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { ImageManager } from './managers/ImageManager';
 import { AnimationManager } from './managers/AnimationManager';
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore } from '../../stores/useAppStore';
 import { subscribe } from 'valtio';
 
 export class Compositor {

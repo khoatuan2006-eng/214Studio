@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useAppStore, STATIC_BASE, type Character } from '../store/useAppStore';
+import { useAppStore, STATIC_BASE, type Character } from '../stores/useAppStore';
 import { API_BASE_URL } from '../config/api';
 import Organizer from './Organizer';
 import LazyImage from './ui/LazyImage';
 import { Layers, ChevronLeft, Trash2, UserCheck, Users, Eye, EyeOff } from 'lucide-react';
 
 const DressingRoomMode: React.FC = () => {
-    const { characters, fetchCustomLibrary } = useAppStore();
+    const { characters, fetchCustomLibrary, fetchCharacters } = useAppStore();
     const [showOrganizer, setShowOrganizer] = useState(false);
 
     useEffect(() => {
         fetchCustomLibrary();
-    }, [fetchCustomLibrary]);
+        fetchCharacters();
+    }, [fetchCustomLibrary, fetchCharacters]);
 
     // Selected character
     const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);

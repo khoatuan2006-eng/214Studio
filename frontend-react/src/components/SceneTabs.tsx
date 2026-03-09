@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { Plus, X, Copy, Pencil } from "lucide-react";
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore } from "@/stores/useAppStore";
 
 /** P2-3.1: Scene Tabs — displayed above the timeline panel */
 export function SceneTabs() {

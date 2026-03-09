@@ -54,7 +54,7 @@ function MiniCanvasMap({ context }: { context: SceneContext }) {
             {characters.map((char) => {
                 const cx = char.position_x * scaleX;
                 const cy = char.position_y * scaleY;
-                const size = Math.max(8, 12 * char.scale);
+                const size = Math.max(8, char.scale / 60);
                 return (
                     <div
                         key={char.node_id}
@@ -211,7 +211,7 @@ function CharacterRow({ char }: { char: CharacterInfo }) {
                     x={char.position_x.toFixed(0)} y={char.position_y.toFixed(0)}
                     {' · '}
                     z={char.z_index}
-                    {char.scale !== 1 && ` · scale=${char.scale.toFixed(1)}`}
+                    {char.scale !== 480 && ` · ${+(char.scale / 100).toFixed(1)}u`}
                 </div>
                 {char.has_position_keyframes && (
                     <div style={{ fontSize: 10, color: '#f59e0b' }}>

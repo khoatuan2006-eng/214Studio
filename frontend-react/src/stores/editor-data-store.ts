@@ -12,7 +12,7 @@
  */
 
 import { create } from 'zustand';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/stores/useAppStore';
 import {
     normalizeEditorData,
     denormalizeEditorData,

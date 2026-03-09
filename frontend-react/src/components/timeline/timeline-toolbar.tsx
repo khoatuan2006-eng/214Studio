@@ -20,7 +20,7 @@ import { sliderToZoom, zoomToSlider } from "@/lib/timeline/zoom-utils";
 import { type TAction, invokeAction } from "@/lib/actions";
 import { cn } from "@/utils/ui";
 import { useTimelineStore } from "@/stores/timeline-store";
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore } from "@/stores/useAppStore";
 import { useTransientSnapshot, toggleAutoKeyframe } from "@/stores/transient-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TrimModeToolbar } from "./TrimModeToolbar";

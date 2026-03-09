@@ -1,27 +1,13 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
-import { GripVertical, Video, Move } from 'lucide-react';
-
-export interface CameraNodeData {
-    label: string;
-    cameraAction: 'pan' | 'zoom' | 'shake' | 'focus' | 'static';
-    startX: number;
-    startY: number;
-    endX: number;
-    endY: number;
-    startZoom: number;
-    endZoom: number;
-    duration: number;
-    easing: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';
-    [key: string]: unknown;
-}
+import { GripVertical, Video, Diamond } from 'lucide-react';
+import type { CameraNodeData } from '@/stores/useWorkflowStore';
 
 type CameraNodeType = Node<CameraNodeData, 'camera'>;
 
 function CameraNodeComponent({ data, selected }: NodeProps<CameraNodeType>) {
-    const actionLabels: Record<string, string> = {
-        pan: '↔ Pan', zoom: '🔍 Zoom', shake: '📳 Shake', focus: '🎯 Focus', static: '📌 Static'
-    };
+    const kfs = data.keyframes || [];
+    const lastKf = kfs[kfs.length - 1];
 
     return (
         <div
@@ -36,6 +22,9 @@ function CameraNodeComponent({ data, selected }: NodeProps<CameraNodeType>) {
                 <GripVertical className="w-3 h-3 text-white/30 cursor-grab" />
                 <Video className="w-4 h-4 text-sky-300" />
                 <span className="text-sm font-bold text-white/90 truncate flex-1">{data.label}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">
+                    {kfs.length} KF
+                </span>
             </div>
 
             <Handle
@@ -45,31 +34,33 @@ function CameraNodeComponent({ data, selected }: NodeProps<CameraNodeType>) {
             />
 
             <div className="p-3 space-y-1.5">
-                <div className="text-[10px] text-sky-300 bg-sky-500/10 px-2 py-1 rounded text-center font-bold">
-                    {actionLabels[data.cameraAction]}
-                </div>
-                {data.cameraAction === 'pan' && (
-                    <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-neutral-400 flex items-center gap-1"><Move className="w-3 h-3" /> Move</span>
-                        <span className="text-white font-mono text-[10px] bg-white/5 px-2 py-0.5 rounded">
-                            ({data.startX},{data.startY}) → ({data.endX},{data.endY})
-                        </span>
-                    </div>
-                )}
-                {data.cameraAction === 'zoom' && (
-                    <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-neutral-400">Zoom</span>
-                        <span className="text-white font-mono text-[10px] bg-white/5 px-2 py-0.5 rounded">
-                            {data.startZoom}× → {data.endZoom}×
-                        </span>
-                    </div>
-                )}
+                {/* Viewport size */}
                 <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-neutral-400">Duration</span>
+                    <span className="text-neutral-400">Viewport</span>
                     <span className="text-white font-mono text-[10px] bg-white/5 px-2 py-0.5 rounded">
-                        {data.duration}s
+                        {data.viewportWidth}×{data.viewportHeight}
                     </span>
                 </div>
+
+                {/* Keyframes mini-timeline */}
+                <div className="space-y-0.5">
+                    {kfs.map((kf) => (
+                        <div key={kf.id} className="flex items-center gap-1.5 text-[10px]">
+                            <Diamond className="w-2.5 h-2.5 text-sky-400 fill-sky-400" />
+                            <span className="text-neutral-400">{kf.time}s</span>
+                            <span className="text-white/60">→</span>
+                            <span className="text-white font-mono">({kf.x},{kf.y})</span>
+                            <span className="text-sky-300">{kf.zoom}×</span>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Duration */}
+                {lastKf && (
+                    <div className="text-[9px] text-sky-300 bg-sky-500/10 px-2 py-0.5 rounded text-center font-semibold">
+                        🎬 {lastKf.time}s total
+                    </div>
+                )}
             </div>
         </div>
     );

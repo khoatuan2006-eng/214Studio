@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
-import { getAssetPath } from '../../../store/useAppStore';
-import type { CharacterTrack, Character } from '../../../store/useAppStore';
+import { getAssetPath } from '../../../stores/useAppStore';
+import type { CharacterTrack, Character } from '../../../stores/useAppStore';
 
 export class ImageManager {
     private app: PIXI.Application;

@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import type { CharacterTrack, TimelineKeyframe } from '../../../store/useAppStore';
+import type { CharacterTrack, TimelineKeyframe } from '../../../stores/useAppStore';
 import { ImageManager } from './ImageManager';
 
 export class AnimationManager {

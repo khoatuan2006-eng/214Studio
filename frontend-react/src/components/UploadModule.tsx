@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { UploadCloud, Loader2, FileVideo } from 'lucide-react';
 import axios from 'axios';
-import { API_BASE, useAppStore } from '../store/useAppStore';
+import { API_BASE, useAppStore } from '../stores/useAppStore';
 
 const UploadModule: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);

@@ -11,8 +11,8 @@ import {
     FileArchive,
     RotateCcw,
 } from 'lucide-react';
-import { useProjectStore, type ProjectListItem } from '../store/useProjectStore';
-import { useAppStore } from '../store/useAppStore';
+import { useProjectStore, type ProjectListItem } from '../stores/useProjectStore';
+import { useAppStore } from '../stores/useAppStore';
 
 interface ProjectManagerProps {
     onProjectLoaded?: () => void;

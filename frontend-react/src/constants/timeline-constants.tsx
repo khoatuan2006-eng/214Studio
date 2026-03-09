@@ -21,7 +21,7 @@ export const DEFAULT_TRANSFORM: Transform = {
 };
 
 export const DEFAULT_OPACITY = 1;
-export const DEFAULT_BLEND_MODE = "normal" as import("@/store/useAppStore").BlendMode;
+export const DEFAULT_BLEND_MODE = "normal" as import("@/stores/useAppStore").BlendMode;
 export const DEFAULT_BOOKMARK_COLOR = "#009dff";
 
 export const TRACK_COLORS: Record<TrackType, { background: string }> = {

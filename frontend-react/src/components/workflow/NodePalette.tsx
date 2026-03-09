@@ -1,6 +1,6 @@
 import React from 'react';
-import { User, Image, Film, CloudRain, Wrench, Music, Video, MapPin } from 'lucide-react';
-import type { WorkflowNodeType } from '@/store/useWorkflowStore';
+import { User, Film, Music, MapPin, Sparkles, Clapperboard, Camera } from 'lucide-react';
+import type { WorkflowNodeType } from '@/stores/useWorkflowStore';
 
 interface NodeTypeConfig {
     type: WorkflowNodeType;
@@ -13,6 +13,16 @@ interface NodeTypeConfig {
 }
 
 const NODE_TYPES: NodeTypeConfig[] = [
+    // ── Stage-first workflow: Stage → Characters → Scene ──
+    {
+        type: 'stage' as WorkflowNodeType,
+        label: 'Stage',
+        description: '🎬 Film set — BG + FG + Props in one',
+        icon: Clapperboard,
+        color: 'text-amber-400',
+        bgGradient: 'from-amber-500/20 to-orange-500/10',
+        available: true,
+    },
     {
         type: 'character',
         label: 'Character',
@@ -23,12 +33,12 @@ const NODE_TYPES: NodeTypeConfig[] = [
         available: true,
     },
     {
-        type: 'background',
-        label: 'Background',
-        description: 'Static or animated background layer',
-        icon: Image,
+        type: 'characterV2',
+        label: 'Character V2',
+        description: 'Jointed limb with action & expression',
+        icon: Sparkles,
         color: 'text-emerald-400',
-        bgGradient: 'from-emerald-500/20 to-teal-500/10',
+        bgGradient: 'from-emerald-500/20 to-green-500/10',
         available: true,
     },
     {
@@ -40,25 +50,16 @@ const NODE_TYPES: NodeTypeConfig[] = [
         bgGradient: 'from-amber-500/20 to-orange-500/10',
         available: true,
     },
-    // Sprint 3: Additional node types
     {
-        type: 'foreground',
-        label: 'Foreground',
-        description: 'Overlay effects (rain, snow, light)',
-        icon: CloudRain,
-        color: 'text-cyan-400',
-        bgGradient: 'from-cyan-500/20 to-blue-500/10',
+        type: 'camera' as WorkflowNodeType,
+        label: 'Camera',
+        description: '🎥 Camera — zoom, pan, keyframes',
+        icon: Camera,
+        color: 'text-sky-400',
+        bgGradient: 'from-sky-500/20 to-cyan-500/10',
         available: true,
     },
-    {
-        type: 'prop',
-        label: 'Prop',
-        description: 'Objects & accessories',
-        icon: Wrench,
-        color: 'text-pink-400',
-        bgGradient: 'from-pink-500/20 to-rose-500/10',
-        available: true,
-    },
+    // ── Additional node types ──
     {
         type: 'audio',
         label: 'Audio',
@@ -66,15 +67,6 @@ const NODE_TYPES: NodeTypeConfig[] = [
         icon: Music,
         color: 'text-purple-400',
         bgGradient: 'from-purple-500/20 to-fuchsia-500/10',
-        available: true,
-    },
-    {
-        type: 'camera',
-        label: 'Camera',
-        description: 'Pan, zoom, shake, focus',
-        icon: Video,
-        color: 'text-sky-400',
-        bgGradient: 'from-sky-500/20 to-blue-500/10',
         available: true,
     },
     {
@@ -105,6 +97,7 @@ const NodePalette: React.FC<NodePaletteProps> = ({ onAddNode }) => {
                     Node Palette
                 </h3>
                 <p className="text-[10px] text-neutral-500 mt-0.5">Drag to canvas or click to add</p>
+                <p className="text-[9px] text-emerald-500/60 mt-1">① Stage → ② Characters → ③ Camera → ④ Scene</p>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5">

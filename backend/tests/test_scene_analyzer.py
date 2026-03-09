@@ -68,21 +68,24 @@ def make_background_node(node_id="bg-1", label="Forest BG", asset_hash="abc123",
 
 
 def make_camera_node(node_id="cam-1", action="pan", start_zoom=1, end_zoom=2):
+    # Build keyframes: 2 keyframes = "pan", 1 keyframe = "static"
+    keyframes = [
+        {"id": "kf1", "time": 0, "x": 9.6, "y": 5.4, "zoom": start_zoom, "easing": "easeInOut"},
+    ]
+    if action != "static":
+        keyframes.append(
+            {"id": "kf2", "time": 3, "x": 4.0, "y": 3.0, "zoom": end_zoom, "easing": "easeInOut"},
+        )
     return {
         "id": node_id,
         "type": "camera",
         "position": {"x": 0, "y": 0},
         "data": {
             "label": "Camera",
-            "cameraAction": action,
-            "startX": 960,
-            "startY": 540,
-            "endX": 400,
-            "endY": 300,
-            "startZoom": start_zoom,
-            "endZoom": end_zoom,
-            "duration": 3,
-            "easing": "easeInOut",
+            "fov": 19.2,
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "keyframes": keyframes,
         },
     }
 

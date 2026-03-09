@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
-import type { BackgroundNodeData } from '@/store/useWorkflowStore';
-import { useAppStore, STATIC_BASE, getAssetPath } from '@/store/useAppStore';
+import type { BackgroundNodeData } from '@/stores/useWorkflowStore';
+import { useAppStore, STATIC_BASE, getAssetPath } from '@/stores/useAppStore';
 import LazyImage from '@/components/ui/LazyImage';
 import { Image, GripVertical } from 'lucide-react';
 

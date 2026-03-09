@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { GripVertical, MapPin, Globe } from 'lucide-react';
-import type { MapNodeData, MapStep } from '@/store/useWorkflowStore';
+import type { MapNodeData, MapStep } from '@/stores/useWorkflowStore';
 
 type MapNodeType = Node<MapNodeData, 'map'>;
 

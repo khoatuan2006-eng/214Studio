@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAppStore, API_BASE, STATIC_BASE, getAssetPath } from '../store/useAppStore';
+import { useAppStore, API_BASE, STATIC_BASE, getAssetPath } from '../stores/useAppStore';
 import axios from 'axios';
 import LazyImage from './ui/LazyImage';
 import { Folder, FolderOpen, Plus, Trash, X } from 'lucide-react';

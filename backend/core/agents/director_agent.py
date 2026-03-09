@@ -25,10 +25,11 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CanvasConfig:
-    width: int = 1920
-    height: int = 1080
+    width: int = 1920           # output resolution (px)
+    height: int = 1080          # output resolution (px)
     fps: int = 30
     total_duration: float = 5.0
+    ppu: int = 100              # Pixels Per Unit
 
 
 @dataclass
@@ -42,31 +43,42 @@ class BackgroundPlan:
 @dataclass
 class PositionKeyframePlan:
     time: float = 0.0
-    x: float = 960.0
-    y: float = 540.0
+    x: float = 9.6       # world units (not pixels)
+    y: float = 5.4       # world units (not pixels)
+
+
+@dataclass
+class FrameSelectionPlan:
+    """AI-chosen layer selections for one animation frame."""
+    duration: float = 5.0               # how long this frame is shown
+    layers: dict = field(default_factory=dict)  # groupName → assetName (e.g. "动作" → "站立")
+    transition: str = "cut"             # "cut" or "crossfade"
+    transition_duration: float = 0.0
 
 
 @dataclass
 class CharacterPlan:
     name: str = ""
     character_id: str = ""
-    pos_x: float = 960.0
-    pos_y: float = 540.0
+    pos_x: float = 9.6        # world units
+    pos_y: float = 5.4        # world units
     z_index: int = 10
     scale: float = 1.0
     opacity: float = 1.0
+    frame_selections: list[FrameSelectionPlan] = field(default_factory=list)
     position_keyframes: list[PositionKeyframePlan] = field(default_factory=list)
 
 
 @dataclass
 class CameraPlan:
     action: str = "static"   # "static", "pan", "zoom", "shake"
-    start_x: float = 960
-    start_y: float = 540
-    end_x: float = 960
-    end_y: float = 540
+    start_x: float = 9.6     # world units
+    start_y: float = 5.4     # world units
+    end_x: float = 9.6       # world units
+    end_y: float = 5.4       # world units
     start_zoom: float = 1.0
     end_zoom: float = 1.0
+    fov: float = 19.2        # field of view width in world units
     duration: float = 2.0
     easing: str = "easeInOut"
 
@@ -83,8 +95,8 @@ class ForegroundPlan:
 class PropPlan:
     label: str = ""
     asset_path: str = ""
-    pos_x: float = 960.0
-    pos_y: float = 540.0
+    pos_x: float = 9.6        # world units
+    pos_y: float = 5.4        # world units
     z_index: int = 15
     scale: float = 1.0
     rotation: float = 0.0
@@ -118,66 +130,90 @@ class ScenePlan:
 #  SYSTEM PROMPT
 # ══════════════════════════════════════════════
 
-DIRECTOR_SYSTEM_PROMPT = """You are an anime scene director AI. Your job is to create a detailed ScenePlan JSON from a user's description.
+DIRECTOR_SYSTEM_PROMPT = """You are an anime scene director AI. Create a ScenePlan JSON with MULTIPLE animation frames per character to tell a story.
 
-## Canvas
-- Default canvas: 1920x1080 pixels
-- Coordinate system: (0,0) = top-left, (1920,1080) = bottom-right
-- Center: (960, 540)
+## Coordinate System — WORLD UNITS (not pixels!)
+- PPU (Pixels Per Unit) = 100. All positions use world units.
+- Default world: 19.2 × 10.8 units (maps to 1920×1080 px at PPU=100)
+- Center: (9.6, 5.4)
+- Characters on ground: y ≈ 7.0-8.5
+- Left: x ≈ 3.0-5.0, Center: x ≈ 8.0-11.0, Right: x ≈ 14.0-16.0
 
-## Position Guidelines
-- Characters standing on ground: y ≈ 700-850 (feet near bottom third)
-- Character on left side: x ≈ 300-500
-- Character in center: x ≈ 800-1100
-- Character on right side: x ≈ 1400-1600
-- Two characters facing each other: left at x≈400, right at x≈1520
-- Group of 3: left x≈300, center x≈960, right x≈1620
-- Close-up shot: scale ≈ 1.5-2.0, y ≈ 400-500
-- Full body shot: scale ≈ 0.8-1.0, y ≈ 750-850
-- Far away: scale ≈ 0.3-0.5
+## Camera
+- Camera positions are also in world units
+- `fov` is the camera's field-of-view WIDTH in world units (default 19.2 = sees full width)
+- Changing output resolution only affects quality, NOT what camera sees
 
-## Z-Index Guidelines
-- Background: z=0 (implicit)
-- Far characters: z=5-8
-- Main characters: z=10-15
-- Foreground props: z=20-30
-- Foreground effects: z=50
+## 🎬 SCENE BEATS (MOST IMPORTANT!)
+Every scene tells a mini-story. You MUST create **2-5 frames** per character, each showing a different moment:
 
-## Movement (Position Keyframes)
-- To move character from left to right: keyframes at time 0 (x=400) → time 3 (x=1520)
-- Walking toward camera: scale increases, y decreases slightly
-- Character entrance: start off-screen (x < 0 or x > 1920)
+**Beat structure:**
+1. **Opening** (1-2s): Character enters or starts in a neutral pose
+2. **Action** (1-3s): Main action happens (talking, reacting, moving)
+3. **Reaction** (1-2s): Character reacts — surprise, laugh, think
+4. **Resolution** (1-2s): Final pose — resolved emotion, settled position
 
-## Camera Actions
-- "static": no movement
-- "pan": horizontal movement (change startX/endX)
-- "zoom": change startZoom/endZoom
-- "shake": dramatic effect
+**TIMING RULE:** The sum of all frame durations for each character MUST equal the scene's total_duration.
+Example: total_duration=6 → frames: 1.5s + 2s + 1.5s + 1s = 6s
+
+## Frame Selection
+Each character has layer groups (e.g. poses, faces, accessories).
+For EACH frame, choose the asset that matches that moment's action and emotion.
+
+Example for a 6-second "two friends meeting" scene:
+```
+Character "Girl":
+  Frame 1 (1.5s): pose=walking, face=neutral        # approaching
+  Frame 2 (2.0s): pose=waving, face=smile            # seeing friend
+  Frame 3 (1.5s): pose=standing, face=happy           # greeting
+  Frame 4 (1.0s): pose=standing, face=laugh            # laughing together
+
+Character "Boy":
+  Frame 1 (1.5s): pose=standing, face=looking         # waiting
+  Frame 2 (2.0s): pose=waving, face=surprise          # noticing friend
+  Frame 3 (1.5s): pose=standing, face=smile            # greeting back
+  Frame 4 (1.0s): pose=standing, face=laugh            # laughing together
+```
 
 ## Response Format
-Return ONLY valid JSON matching this schema (no markdown):
+Return ONLY valid JSON (all positions in WORLD UNITS, not pixels):
 {
   "title": "Scene title",
-  "description": "Brief description",
-  "canvas": { "width": 1920, "height": 1080, "fps": 30, "total_duration": 5.0 },
-  "background": { "asset_path": "path or empty", "label": "name", "blur": 0, "parallax_speed": 0 } or null,
+  "description": "Brief scene description",
+  "canvas": { "width": 1920, "height": 1080, "fps": 30, "total_duration": 6.0, "ppu": 100 },
+  "background": { "asset_path": "", "label": "Park", "blur": 0, "parallax_speed": 0 },
   "characters": [
     {
-      "name": "Character Name",
-      "character_id": "id from available list or empty",
-      "pos_x": 960, "pos_y": 750,
+      "name": "Girl",
+      "character_id": "char-id",
+      "pos_x": 5.0, "pos_y": 7.5,
       "z_index": 10, "scale": 1.0, "opacity": 1.0,
+      "frame_selections": [
+        { "duration": 1.5, "layers": {"动作": "走路", "表情": "普通"}, "transition": "cut", "transition_duration": 0 },
+        { "duration": 2.0, "layers": {"动作": "挥手", "表情": "微笑"}, "transition": "crossfade", "transition_duration": 0.3 },
+        { "duration": 1.5, "layers": {"动作": "站立", "表情": "开心"}, "transition": "crossfade", "transition_duration": 0.3 },
+        { "duration": 1.0, "layers": {"动作": "站立", "表情": "大笑"}, "transition": "crossfade", "transition_duration": 0.2 }
+      ],
       "position_keyframes": [
-        { "time": 0, "x": 400, "y": 750 },
-        { "time": 3, "x": 1520, "y": 750 }
+        { "time": 0, "x": 2.0, "y": 7.5 },
+        { "time": 1.5, "x": 5.0, "y": 7.5 }
       ]
     }
   ],
-  "camera": { "action": "static", "start_x": 960, "start_y": 540, "end_x": 960, "end_y": 540, "start_zoom": 1.0, "end_zoom": 1.0, "duration": 2, "easing": "easeInOut" } or null,
-  "foreground": { "effect_type": "rain", "intensity": 0.5, "speed": 1.0, "opacity": 0.7 } or null,
+  "camera": { "action": "static", "start_x": 9.6, "start_y": 5.4, "end_x": 9.6, "end_y": 5.4, "start_zoom": 1.0, "end_zoom": 1.0, "fov": 19.2, "duration": 2.0, "easing": "easeInOut" },
+  "foreground": null,
   "props": [],
   "audio": []
 }
+
+## RULES
+1. Use EXACT asset names from the character's layer groups list
+2. Select AT LEAST one asset from EACH available layer group per frame
+3. Create 2-5 frames per character (NEVER just 1!)
+4. Frame durations MUST sum to total_duration
+5. Use "crossfade" transition between frames for smooth animation
+6. Match poses and expressions to the scene's story/mood
+7. ALL positions use WORLD UNITS (not pixels!) — center is (9.6, 5.4)
 """
 
 
@@ -207,11 +243,30 @@ async def create_plan(
     context_parts = []
 
     if available_characters:
-        chars_text = "\n".join(
-            f"  - id: {c.get('id', '')}, name: {c.get('name', 'Unknown')}"
-            for c in available_characters
-        )
-        context_parts.append(f"Available Characters:\n{chars_text}")
+        chars_lines = []
+        for c in available_characters:
+            cid = c.get('id', '')
+            cname = c.get('name', 'Unknown')
+            line = f"  - id: {cid}, name: {cname}"
+
+            # Include layer groups and their asset names
+            layer_groups = c.get('layer_groups', {})
+            if layer_groups:
+                groups_info = []
+                for group_name, assets in layer_groups.items():
+                    if isinstance(assets, list):
+                        asset_names = [a.get('name', '') for a in assets if a.get('name')]
+                        if asset_names:
+                            groups_info.append(
+                                f"      {group_name}: [{', '.join(asset_names)}]"
+                            )
+                if groups_info:
+                    line += "\n    Layer Groups (choose one from each group):\n"
+                    line += "\n".join(groups_info)
+
+            chars_lines.append(line)
+
+        context_parts.append(f"Available Characters:\n" + "\n".join(chars_lines))
 
     if available_backgrounds:
         bgs_text = "\n".join(
@@ -231,7 +286,7 @@ async def create_plan(
 ## User Request
 {prompt}
 
-Generate the ScenePlan JSON:"""
+Generate the ScenePlan JSON. IMPORTANT: Choose specific assets from each character's layer groups that match the scene mood and action."""
 
     # Call LLM
     raw_json = await _call_llm(
@@ -262,24 +317,62 @@ async def _call_llm(system_prompt: str, user_message: str, config: Any) -> str:
 
 
 async def _call_gemini(system_prompt: str, user_message: str, config: Any) -> str:
-    """Call Google Gemini API."""
-    import google.generativeai as genai
+    """Call Google Gemini API with auto-retry and key rotation on rate limits."""
+    import asyncio
+    from google import genai
+    from google.genai import types
 
-    genai.configure(api_key=config.api_key)
-    model = genai.GenerativeModel(
-        config.model,
-        system_instruction=system_prompt,
-    )
+    max_retries = 3
+    retry_delays = [5, 15, 30]  # seconds
 
-    response = await model.generate_content_async(
-        user_message,
-        generation_config=genai.types.GenerationConfig(
-            temperature=config.temperature,
-            response_mime_type="application/json",
-        ),
-    )
+    for attempt in range(max_retries + 1):
+        # Create client with current key
+        client = genai.Client(api_key=config.api_key)
+        try:
+            response = await client.aio.models.generate_content(
+                model=config.model,
+                contents=user_message,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=config.temperature,
+                    response_mime_type="application/json",
+                ),
+            )
+            text = response.text
+            if not text:
+                logger.warning(f"[Gemini] Empty response (attempt {attempt + 1}). Candidates: {response.candidates}")
+                if attempt < max_retries:
+                    continue
+                raise ValueError("Gemini returned empty response. Try a different prompt or model.")
+            return text
+        except Exception as e:
+            error_str = str(e)
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                # Try rotating to next key first
+                rotated = config.rotate_key()
+                if rotated:
+                    logger.warning(
+                        f"[Gemini] Rate-limited on {config.current_key_label}. "
+                        f"Switching to next key..."
+                    )
+                    continue  # Retry immediately with new key
 
-    return response.text
+                if attempt < max_retries:
+                    delay = retry_delays[attempt]
+                    logger.warning(
+                        f"[Gemini] Rate-limited ({config.current_key_label}), "
+                        f"attempt {attempt + 1}/{max_retries + 1}. "
+                        f"Retrying in {delay}s..."
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                else:
+                    raise ValueError(
+                        f"⚠️ API KEY RATE LIMITED: {config.current_key_label}. "
+                        f"Hãy đổi key mới tại https://aistudio.google.com/apikey "
+                        f"rồi gửi qua PUT /api/ai/config"
+                    )
+            raise
 
 
 async def _call_openai(system_prompt: str, user_message: str, config: Any) -> str:
@@ -348,18 +441,29 @@ def _parse_scene_plan(raw_json: str) -> ScenePlan:
         for kf in ch.get("position_keyframes", []):
             kfs.append(PositionKeyframePlan(
                 time=kf.get("time", 0),
-                x=kf.get("x", 960),
-                y=kf.get("y", 540),
+                x=kf.get("x", 9.6),
+                y=kf.get("y", 5.4),
+            ))
+
+        # Parse AI-chosen frame selections
+        frames = []
+        for fs in ch.get("frame_selections", []):
+            frames.append(FrameSelectionPlan(
+                duration=fs.get("duration", 5.0),
+                layers=fs.get("layers", {}),
+                transition=fs.get("transition", "cut"),
+                transition_duration=fs.get("transition_duration", 0),
             ))
 
         plan.characters.append(CharacterPlan(
             name=ch.get("name", "Character"),
             character_id=ch.get("character_id", ""),
-            pos_x=ch.get("pos_x", 960),
-            pos_y=ch.get("pos_y", 540),
+            pos_x=ch.get("pos_x", 9.6),
+            pos_y=ch.get("pos_y", 5.4),
             z_index=ch.get("z_index", 10),
             scale=ch.get("scale", 1.0),
             opacity=ch.get("opacity", 1.0),
+            frame_selections=frames,
             position_keyframes=kfs,
         ))
 
@@ -368,10 +472,11 @@ def _parse_scene_plan(raw_json: str) -> ScenePlan:
         cam = data["camera"]
         plan.camera = CameraPlan(
             action=cam.get("action", "static"),
-            start_x=cam.get("start_x", 960),
-            start_y=cam.get("start_y", 540),
-            end_x=cam.get("end_x", 960),
-            end_y=cam.get("end_y", 540),
+            start_x=cam.get("start_x", 9.6),
+            start_y=cam.get("start_y", 5.4),
+            end_x=cam.get("end_x", 9.6),
+            end_y=cam.get("end_y", 5.4),
+            fov=cam.get("fov", 19.2),
             start_zoom=cam.get("start_zoom", 1),
             end_zoom=cam.get("end_zoom", 1),
             duration=cam.get("duration", 2),
@@ -393,8 +498,8 @@ def _parse_scene_plan(raw_json: str) -> ScenePlan:
         plan.props.append(PropPlan(
             label=p.get("label", "Prop"),
             asset_path=p.get("asset_path", ""),
-            pos_x=p.get("pos_x", 960),
-            pos_y=p.get("pos_y", 540),
+            pos_x=p.get("pos_x", 9.6),
+            pos_y=p.get("pos_y", 5.4),
             z_index=p.get("z_index", 15),
             scale=p.get("scale", 1.0),
             rotation=p.get("rotation", 0),

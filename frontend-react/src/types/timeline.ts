@@ -1,5 +1,5 @@
 export type Transform = { x: number; y: number; scale: number; rotation: number; };
-import type { BlendMode } from "@/store/useAppStore";
+import type { BlendMode } from "@/stores/useAppStore";
 
 export interface Bookmark {
 	time: number;

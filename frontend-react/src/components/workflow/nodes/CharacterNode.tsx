@@ -1,7 +1,8 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
-import type { CharacterNodeData } from '@/store/useWorkflowStore';
-import { useAppStore, STATIC_BASE } from '@/store/useAppStore';
+import type { CharacterNodeData, SceneNodeData } from '@/stores/useWorkflowStore';
+import { useWorkflowStore } from '@/stores/useWorkflowStore';
+import { useAppStore, STATIC_BASE } from '@/stores/useAppStore';
 import LazyImage from '@/components/ui/LazyImage';
 import { User, GripVertical, Plus } from 'lucide-react';
 import { API_BASE_URL } from '@/config/api';
@@ -11,6 +12,9 @@ type CharacterNodeType = Node<CharacterNodeData, 'character'>;
 function CharacterNodeComponent({ data, selected }: NodeProps<CharacterNodeType>) {
     const characters = useAppStore((s) => s.characters);
     const character = characters.find((c) => c.id === data.characterId);
+    const nodes = useWorkflowStore((s) => s.nodes);
+    const sceneNode = nodes.find(n => n.type === 'scene');
+    const ppu = (sceneNode?.data as SceneNodeData)?.pixelsPerUnit || 100;
 
     // Get thumbnail from first asset of first group
     let thumbUrl = '';
@@ -62,7 +66,7 @@ function CharacterNodeComponent({ data, selected }: NodeProps<CharacterNodeType>
                                 {Object.keys(character.layer_groups).length} groups
                             </div>
                             <div className="text-[10px] text-neutral-500 mt-0.5">
-                                Pos: ({data.posX}, {data.posY})
+                                Pos: ({+(data.posX / ppu).toFixed(1)}, {+(data.posY / ppu).toFixed(1)})
                             </div>
                         </div>
                     </div>

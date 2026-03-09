@@ -5,7 +5,7 @@
 
 import { create } from "zustand";
 import type { ClipboardItem } from "@/types/timeline";
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore } from "@/stores/useAppStore";
 import { DEFAULT_FPS } from "@/constants/project-constants";
 
 export type LoopMode = "off" | "loopAll" | "loopSelection";

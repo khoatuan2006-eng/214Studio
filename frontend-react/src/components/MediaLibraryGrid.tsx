@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { Plus } from 'lucide-react';
-import { STATIC_BASE, getAssetPath, type Character, type LibraryAsset } from '@/store/useAppStore';
+import { STATIC_BASE, getAssetPath, type Character, type LibraryAsset } from '@/stores/useAppStore';
 
 interface MediaLibraryGridProps {
     assets: LibraryAsset[];
@@ -27,7 +27,7 @@ export const MediaLibraryGrid: React.FC<MediaLibraryGridProps> = ({
 
     const handleMouseEnter = useCallback((assetHash: string) => {
         setHoveredAsset(assetHash);
-        
+
         // Auto-play video on hover
         if (videoRef.current) {
             videoRef.current.currentTime = 0;
@@ -39,7 +39,7 @@ export const MediaLibraryGrid: React.FC<MediaLibraryGridProps> = ({
 
     const handleMouseLeave = useCallback(() => {
         setHoveredAsset(null);
-        
+
         // Pause video on leave
         if (videoRef.current) {
             videoRef.current.pause();
@@ -114,7 +114,7 @@ export const MediaLibraryGrid: React.FC<MediaLibraryGridProps> = ({
                                         onLoad={() => handleImageLoad(asset.hash)}
                                     />
                                 )}
-                                
+
                                 {/* Video preview on hover */}
                                 {isHovered && (
                                     <video

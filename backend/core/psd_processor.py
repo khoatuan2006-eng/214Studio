@@ -236,3 +236,4 @@ def process_psd(file_path):
         logger.info(f"Created new character: {char_name}")
         
     save_db(db_data)
+

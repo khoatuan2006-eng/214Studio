@@ -8,7 +8,7 @@ import {
 	canElementBeHidden,
 } from "@/lib/timeline";
 import { useEditor } from "@/hooks/use-editor";
-import { useAppStore, STATIC_BASE, getAssetPath } from "@/store/useAppStore";
+import { useAppStore, STATIC_BASE, getAssetPath } from "@/stores/useAppStore";
 import type {
 	TimelineElement as TimelineElementType,
 	TimelineTrack,

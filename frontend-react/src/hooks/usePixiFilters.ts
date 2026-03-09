@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { createPixiFilter } from '@/utils/filter-utils';
-import { useAppStore } from '@/store/useAppStore';
-import type { FilterConfig } from '@/store/useAppStore';
+import { useAppStore } from '@/stores/useAppStore';
+import type { FilterConfig } from '@/stores/useAppStore';
 
 /**
  * Custom hook to apply filters to a PixiJS display object

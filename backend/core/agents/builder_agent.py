@@ -81,13 +81,27 @@ _LAYOUT = {
 #  MAIN BUILDER
 # ══════════════════════════════════════════════
 
-def build_workflow(plan: ScenePlan) -> WorkflowResult:
+def build_workflow(
+    plan: ScenePlan,
+    available_characters: list[dict] | None = None,
+) -> WorkflowResult:
     """
     Convert a ScenePlan into workflow nodes + edges.
+
+    Args:
+        plan: The scene plan from Director Agent
+        available_characters: Character asset data from library with layer_groups
 
     Returns a WorkflowResult ready to be sent to the frontend.
     """
     result = WorkflowResult()
+
+    # Build character lookup for frame auto-population
+    char_catalog: dict[str, dict] = {}
+    for c in (available_characters or []):
+        cid = c.get("id", "")
+        if cid:
+            char_catalog[cid] = c
 
     # 1. Scene Output node
     scene_id = _next_id("scene")
@@ -115,7 +129,8 @@ def build_workflow(plan: ScenePlan) -> WorkflowResult:
     for i, char_plan in enumerate(plan.characters):
         char_id = _next_id("char")
         y_pos = _LAYOUT["char_start"]["y"] + i * _LAYOUT["char_gap_y"]
-        result.nodes.append(_build_character_node(char_id, char_plan, y_pos))
+        char_data = char_catalog.get(char_plan.character_id, {})
+        result.nodes.append(_build_character_node(char_id, char_plan, y_pos, char_data))
         result.edges.append(_make_edge(char_id, scene_id))
 
     # 4. Camera
@@ -196,11 +211,90 @@ def apply_corrections(
 #  NODE BUILDERS
 # ══════════════════════════════════════════════
 
-def _build_character_node(node_id: str, plan: CharacterPlan, y_offset: float) -> dict:
+def _build_character_node(
+    node_id: str, plan: CharacterPlan, y_offset: float, char_data: dict | None = None
+) -> dict:
     kfs = [
         {"time": kf.time, "x": kf.x, "y": kf.y}
         for kf in plan.position_keyframes
     ]
+
+    # ── Resolve AI frame_selections → PoseFrames ──
+    sequence: list[dict] = []
+    layer_groups = (char_data or {}).get("layer_groups", {})
+
+    if plan.frame_selections and layer_groups:
+        for i, fs in enumerate(plan.frame_selections):
+            resolved_layers: dict[str, str] = {}
+
+            for group_name, chosen_name in fs.layers.items():
+                assets = layer_groups.get(group_name, [])
+                if not isinstance(assets, list) or not assets:
+                    continue
+
+                # Try exact match first, then partial match, then fallback to first
+                matched = None
+                for a in assets:
+                    aname = a.get("name", "")
+                    if aname == chosen_name:
+                        matched = a
+                        break
+                if not matched:
+                    # Partial match (AI might say "站立" but asset is "站立_正面")
+                    for a in assets:
+                        aname = a.get("name", "")
+                        if chosen_name in aname or aname in chosen_name:
+                            matched = a
+                            break
+                if not matched:
+                    # Fallback to first asset in group
+                    matched = assets[0]
+                    logger.warning(
+                        f"[Builder] '{plan.name}': No match for '{chosen_name}' in "
+                        f"'{group_name}', using '{matched.get('name', '?')}'"
+                    )
+
+                if matched:
+                    ahash = matched.get("hash", "") or matched.get("name", "")
+                    if ahash:
+                        resolved_layers[group_name] = ahash
+
+            if resolved_layers:
+                sequence.append({
+                    "id": f"frame-{node_id}-{i}",
+                    "duration": fs.duration,
+                    "layers": resolved_layers,
+                    "transition": fs.transition,
+                    "transitionDuration": fs.transition_duration,
+                })
+
+        if sequence:
+            selected_info = " → ".join(
+                f"[{len(s['layers'])} layers, {s['duration']}s]"
+                for s in sequence
+            )
+            logger.info(
+                f"[Builder] AI frames for '{plan.name}': {len(sequence)} frames "
+                f"({selected_info})"
+            )
+
+    # Fallback: if no frames from AI, create one with first asset from each group
+    if not sequence and layer_groups:
+        default_layers: dict[str, str] = {}
+        for group_name, assets in layer_groups.items():
+            if isinstance(assets, list) and len(assets) > 0:
+                ahash = assets[0].get("hash", "") or assets[0].get("name", "")
+                if ahash:
+                    default_layers[group_name] = ahash
+        if default_layers:
+            sequence.append({
+                "id": f"frame-{node_id}-0",
+                "duration": 5.0,
+                "layers": default_layers,
+                "transition": "cut",
+                "transitionDuration": 0,
+            })
+            logger.info(f"[Builder] Fallback frame for '{plan.name}': {len(default_layers)} layers")
 
     return {
         "id": node_id,
@@ -215,7 +309,7 @@ def _build_character_node(node_id: str, plan: CharacterPlan, y_offset: float) ->
             "zIndex": plan.z_index,
             "scale": plan.scale,
             "opacity": plan.opacity,
-            "sequence": [],
+            "sequence": sequence,
             "positionKeyframes": kfs,
         },
     }
@@ -237,21 +331,44 @@ def _build_background_node(node_id: str, plan: BackgroundPlan) -> dict:
 
 
 def _build_camera_node(node_id: str, plan: CameraPlan) -> dict:
+    """Build camera node with CameraNodeData format (keyframes, fov, viewport)."""
+    import uuid
+
+    keyframes = []
+
+    # Start keyframe
+    keyframes.append({
+        "id": str(uuid.uuid4())[:8],
+        "time": 0,
+        "x": plan.start_x,      # world units
+        "y": plan.start_y,      # world units
+        "zoom": plan.start_zoom,
+        "easing": plan.easing,
+    })
+
+    # End keyframe (if camera moves or zooms)
+    if (plan.action != "static" and
+        (plan.start_x != plan.end_x or plan.start_y != plan.end_y or
+         plan.start_zoom != plan.end_zoom)):
+        keyframes.append({
+            "id": str(uuid.uuid4())[:8],
+            "time": plan.duration,
+            "x": plan.end_x,    # world units
+            "y": plan.end_y,    # world units
+            "zoom": plan.end_zoom,
+            "easing": plan.easing,
+        })
+
     return {
         "id": node_id,
         "type": "camera",
         "position": _LAYOUT["camera"],
         "data": {
             "label": "Camera",
-            "cameraAction": plan.action,
-            "startX": plan.start_x,
-            "startY": plan.start_y,
-            "endX": plan.end_x,
-            "endY": plan.end_y,
-            "startZoom": plan.start_zoom,
-            "endZoom": plan.end_zoom,
-            "duration": plan.duration,
-            "easing": plan.easing,
+            "fov": plan.fov,            # field of view in world units
+            "viewportWidth": 1920,       # output resolution (px)
+            "viewportHeight": 1080,      # output resolution (px)
+            "keyframes": keyframes,
         },
     }
 

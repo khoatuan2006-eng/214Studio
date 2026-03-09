@@ -8,8 +8,8 @@
 
 import { useState } from "react";
 import { ChevronRight, Trash2, Pencil } from "lucide-react";
-import type { TrackGroup } from "@/store/useAppStore";
-import { useAppStore } from "@/store/useAppStore";
+import type { TrackGroup } from "@/stores/useAppStore";
+import { useAppStore } from "@/stores/useAppStore";
 
 interface TrackGroupHeaderProps {
     group: TrackGroup;

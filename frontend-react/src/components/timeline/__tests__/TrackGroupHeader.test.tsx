@@ -14,7 +14,7 @@ vi.mock('lucide-react', () => ({
 const mockUpdateTrackGroup = vi.fn();
 const mockRemoveTrackGroup = vi.fn();
 
-vi.mock('@/store/useAppStore', () => ({
+vi.mock('@/stores/useAppStore', () => ({
     useAppStore: () => ({
         updateTrackGroup: mockUpdateTrackGroup,
         removeTrackGroup: mockRemoveTrackGroup,

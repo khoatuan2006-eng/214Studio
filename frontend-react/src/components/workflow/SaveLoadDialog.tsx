@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWorkflowStore } from '@/store/useWorkflowStore';
+import { useWorkflowStore } from '@/stores/useWorkflowStore';
 import { X, Save, FolderOpen, Trash2, Clock, FileText, Pencil, Check } from 'lucide-react';
 
 type DialogMode = 'save' | 'load';

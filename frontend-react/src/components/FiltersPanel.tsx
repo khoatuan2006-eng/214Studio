@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAppStore, type FilterType, FILTER_PRESETS, type FilterConfig } from '@/store/useAppStore';
+import { useAppStore, type FilterType, FILTER_PRESETS, type FilterConfig } from '@/stores/useAppStore';
 import { useElementSelection } from '@/hooks/timeline/element/use-element-selection';
 import {
     X,

@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useWorkflowStore } from '@/store/useWorkflowStore';
+import { useWorkflowStore } from '@/stores/useWorkflowStore';
 import { API_BASE } from '@/config/api';
 import type { SceneContext } from '@/types/scene-context';
 

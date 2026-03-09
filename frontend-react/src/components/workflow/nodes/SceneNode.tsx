@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
-import type { SceneNodeData } from '@/store/useWorkflowStore';
+import type { SceneNodeData } from '@/stores/useWorkflowStore';
 import { Film, GripVertical, Play, Eye, Zap } from 'lucide-react';
 
 type SceneNodeType = Node<SceneNodeData, 'scene'>;
@@ -52,6 +52,12 @@ function SceneNodeComponent({ data, selected }: NodeProps<SceneNodeType>) {
                     <span className="text-neutral-400">FPS</span>
                     <span className="text-white font-mono text-[10px] bg-white/5 px-2 py-0.5 rounded">
                         {data.fps}
+                    </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-neutral-400">PPU</span>
+                    <span className="text-amber-300/70 font-mono text-[10px] bg-amber-500/10 px-2 py-0.5 rounded">
+                        {data.pixelsPerUnit || 100}px/unit
                     </span>
                 </div>
                 <div className="flex items-center justify-between text-[11px]">

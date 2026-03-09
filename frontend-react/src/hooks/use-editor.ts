@@ -1,4 +1,4 @@
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore } from "@/stores/useAppStore";
 import { useCallback, useMemo } from "react";
 import { useTimelineStore, getDynamicDuration } from "@/stores/timeline-store";
 import { transientState, setActiveEditTargetId } from "@/stores/transient-store";

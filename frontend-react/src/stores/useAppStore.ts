@@ -90,7 +90,7 @@ export interface FilterConfig {
     settings: Record<string, number | string | boolean>;
 }
 
-export type FilterType = 
+export type FilterType =
     | 'brightness'
     | 'contrast'
     | 'saturation'
@@ -320,7 +320,7 @@ export const useAppStore = create<AppState>()(
         addFilterToTrack: (trackId, filterType) => set((state) => {
             const preset = FILTER_PRESETS.find(p => p.type === filterType);
             if (!preset) return {};
-            
+
             const newFilter: FilterConfig = {
                 id: `filter_${Date.now()}`,
                 type: filterType,

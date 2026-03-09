@@ -8,8 +8,8 @@
  */
 
 import type { Node, Edge } from '@xyflow/react';
-import type { CharacterNodeData, BackgroundNodeData, SceneNodeData } from '@/store/useWorkflowStore';
-import type { CharacterTrack, ActionBlock, TransformData, TimelineKeyframe } from '@/store/useAppStore';
+import type { CharacterNodeData, BackgroundNodeData, SceneNodeData, StageNodeData } from '@/stores/useWorkflowStore';
+import type { CharacterTrack, ActionBlock, TransformData, TimelineKeyframe } from '@/stores/useAppStore';
 
 // ══════════════════════════════════════════════
 //  TYPES
@@ -77,6 +77,17 @@ export function executeWorkflow(nodes: Node[], edges: Edge[]): ExecutionResult {
                 if (result.track) {
                     tracks.push(result.track);
                     maxDuration = Math.max(maxDuration, result.duration);
+                }
+                break;
+            }
+            case 'stage': {
+                const results = processStageNode(node, sceneData);
+                for (const result of results) {
+                    if (result.error) errors.push(result.error);
+                    if (result.track) {
+                        tracks.push(result.track);
+                        maxDuration = Math.max(maxDuration, result.duration);
+                    }
                 }
                 break;
             }
@@ -211,6 +222,53 @@ function processBackgroundNode(
     };
 
     return { track, duration };
+}
+
+function processStageNode(
+    node: Node,
+    sceneData: SceneNodeData
+): { track: CharacterTrack | null; duration: number; error?: string }[] {
+    const data = node.data as StageNodeData;
+    const results: { track: CharacterTrack | null; duration: number; error?: string }[] = [];
+
+    if (!data.layers || data.layers.length === 0) {
+        results.push({ track: null, duration: 0, error: `Stage node "${data.label}" has no layers.` });
+        return results;
+    }
+
+    const duration = sceneData.totalDuration || 10;
+
+    for (const layer of data.layers) {
+        if (!layer.visible || !layer.assetPath) continue;
+
+        const actions: ActionBlock[] = [{
+            id: `action-stage-${node.id}-${layer.id}`,
+            assetHash: layer.assetPath,
+            start: 0,
+            end: duration,
+            zIndex: layer.zIndex,
+        }];
+
+        const transform = createTransform({
+            x: layer.posX,
+            y: layer.posY,
+            scale: layer.scale,
+            opacity: layer.opacity,
+        });
+
+        results.push({
+            track: {
+                id: `track-stage-${node.id}-${layer.id}`,
+                name: `${data.label} / ${layer.label}`,
+                transform,
+                actions,
+                isExpanded: false,
+            },
+            duration,
+        });
+    }
+
+    return results;
 }
 
 // ══════════════════════════════════════════════

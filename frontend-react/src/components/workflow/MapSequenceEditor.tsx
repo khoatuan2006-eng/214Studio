@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useWorkflowStore, type MapNodeData, type MapStep } from '@/store/useWorkflowStore';
+import { useWorkflowStore, type MapNodeData, type MapStep } from '@/stores/useWorkflowStore';
 import { WorldMap, type MapStyleKey } from './maps/WorldMap';
 import {
     X, Plus, Trash2, Play, Pause, ChevronUp, ChevronDown,

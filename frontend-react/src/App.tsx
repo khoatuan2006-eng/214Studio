@@ -1,8 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Palette, Shirt, Menu, Loader2, GitBranch } from 'lucide-react';
 import ProjectManager from './components/ProjectManager';
-import { useProjectStore } from './store/useProjectStore';
-import { useAppStore } from './store/useAppStore';
+import { useProjectStore } from './stores/useProjectStore';
+import { useAppStore } from './stores/useAppStore';
 import { startEditorDataSync, stopEditorDataSync } from './stores/editor-data-store';
 import { useSuppressBrowserDefaults } from './hooks/useSuppressBrowserDefaults';
 const OnboardingOverlay = lazy(() => import('./components/OnboardingOverlay'));
