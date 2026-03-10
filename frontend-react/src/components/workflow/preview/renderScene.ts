@@ -9,7 +9,7 @@
  * Preview and Export call this with different (W, H), everything else is identical.
  */
 import type { PreviewTrack } from './types';
-import { getInterpolatedPos, getInterpolatedZIndex } from './types';
+import { getInterpolatedPos, getInterpolatedZIndex, getInterpolatedScale, getInterpolatedRotation } from './types';
 import type { CharacterNodeData } from '@/stores/useWorkflowStore';
 
 // ── Types ──
@@ -268,8 +268,23 @@ export function renderScene({
             ctx.save();
             ctx.globalAlpha = frame.opacity;
 
-            const charScale = charData?.scale ?? frame.scale;
+            const charScale = charData ? getInterpolatedScale(charData, time) : frame.scale;
+            const charRotation = charData ? getInterpolatedRotation(charData, time) : 0;
             const scaleFactor = charScale / SCENE_W;
+
+            // Apply rotation around character foot position
+            if (charRotation !== 0) {
+                ctx.translate(posX, posY);
+                ctx.rotate((charRotation * Math.PI) / 180);
+                ctx.translate(-posX, -posY);
+            }
+
+            // Apply horizontal flip
+            if (charData?.flipX) {
+                ctx.translate(posX, 0);
+                ctx.scale(-1, 1);
+                ctx.translate(-posX, 0);
+            }
 
             const sorted = [...frame.layerImages].sort((a, b) => a.zIndex - b.zIndex);
             for (const layer of sorted) {

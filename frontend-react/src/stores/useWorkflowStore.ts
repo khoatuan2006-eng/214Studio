@@ -33,6 +33,16 @@ export interface ZIndexKeyframe {
     z: number;      // z-index value (0-100)
 }
 
+export interface ScaleKeyframe {
+    time: number;   // seconds from start
+    scale: number;  // scale value (e.g. 480 = half, 960 = full)
+}
+
+export interface RotationKeyframe {
+    time: number;   // seconds from start
+    rotation: number; // degrees (0-360)
+}
+
 /** Data payload for a Character Node */
 export interface CharacterNodeData {
     label: string;
@@ -46,6 +56,9 @@ export interface CharacterNodeData {
     sequence: PoseFrame[];     // ordered pose/face frames
     positionKeyframes?: PositionKeyframe[]; // CapCut-style position animation
     zIndexKeyframes?: ZIndexKeyframe[];      // animate z-index over time
+    scaleKeyframes?: ScaleKeyframe[];        // animate scale over time
+    rotationKeyframes?: RotationKeyframe[];  // animate rotation over time
+    flipX?: boolean;                         // horizontal flip
     [key: string]: unknown;    // xyflow requires this index signature
 }
 

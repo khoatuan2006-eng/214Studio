@@ -53,6 +53,8 @@ const PreviewSidebar: React.FC<PreviewSidebarProps> = ({
 
     const kfs = selData.positionKeyframes || [];
     const zKfs = selData.zIndexKeyframes || [];
+    const scaleKfs = selData.scaleKeyframes || [];
+    const rotKfs = selData.rotationKeyframes || [];
 
     return (
         <div className="w-72 shrink-0 bg-neutral-900/95 border-l border-white/5 flex flex-col z-30">
@@ -103,6 +105,19 @@ const PreviewSidebar: React.FC<PreviewSidebarProps> = ({
                     <div className="flex justify-between text-[8px] text-neutral-600 mt-0.5">
                         <span>{+(100 / ppu).toFixed(1)}u</span><span>{+(540 / ppu).toFixed(1)}u</span><span>{+(1080 / ppu).toFixed(1)}u</span>
                     </div>
+                </div>
+
+                {/* Flip */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => updateNodeData(nodeId, { flipX: !selData.flipX })}
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[10px] font-bold border transition-all ${selData.flipX
+                                ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
+                                : 'bg-white/5 border-white/10 text-neutral-400 hover:bg-white/10'
+                            }`}
+                    >
+                        ↔ Lật ngang {selData.flipX ? '(ON)' : '(OFF)'}
+                    </button>
                 </div>
 
                 {/* Opacity */}
@@ -225,6 +240,131 @@ const PreviewSidebar: React.FC<PreviewSidebarProps> = ({
                             className="w-full text-center text-[9px] text-neutral-500 hover:text-red-400 py-0.5 transition-colors"
                         >
                             ↺ Clear all z-keyframes
+                        </button>
+                    )}
+                </div>
+
+                {/* Scale Keyframes */}
+                <div className="p-2 rounded bg-emerald-500/5 border border-emerald-500/10 space-y-1.5">
+                    <label className="block text-[9px] font-bold text-emerald-400 uppercase tracking-wider">◇ Scale Keyframes</label>
+                    <p className="text-[9px] text-neutral-500">Animate size over time (960=full width)</p>
+                    <button
+                        onClick={() => {
+                            const existing = [...scaleKfs];
+                            if (existing.some(k => Math.abs(k.time - currentTime) < 0.05)) return;
+                            existing.push({ time: +currentTime.toFixed(2), scale: selData.scale });
+                            existing.sort((a, b) => a.time - b.time);
+                            updateNodeData(nodeId, { scaleKeyframes: existing });
+                        }}
+                        className="w-full flex items-center justify-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[9px] font-bold border border-emerald-500/20 transition-colors"
+                    >
+                        <Plus className="w-3 h-3" />
+                        Add Scale-KF at {currentTime.toFixed(1)}s
+                    </button>
+                    {scaleKfs.length === 0 ? (
+                        <p className="text-[8px] text-neutral-600 italic">Chưa có scale keyframe.</p>
+                    ) : (
+                        <div className="space-y-0.5 max-h-28 overflow-y-auto">
+                            {scaleKfs.map((kf, i) => {
+                                const isNearest = Math.abs(kf.time - currentTime) < 0.15;
+                                return (
+                                    <div key={i} className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[9px] transition-colors ${isNearest ? 'bg-emerald-500/20 text-emerald-200' : 'text-neutral-400 hover:bg-white/5'}`}>
+                                        <Diamond className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
+                                        <span className="font-mono font-bold w-10">{kf.time.toFixed(1)}s</span>
+                                        <input
+                                            type="number"
+                                            value={kf.scale}
+                                            onChange={(e) => {
+                                                const updated = scaleKfs.map((k, j) =>
+                                                    j === i ? { ...k, scale: Math.max(50, parseInt(e.target.value) || 50) } : k
+                                                );
+                                                updateNodeData(nodeId, { scaleKeyframes: updated });
+                                            }}
+                                            min={50}
+                                            className="w-14 bg-black/40 border border-white/10 rounded px-1 text-[8px] text-white font-mono text-center outline-none focus:border-emerald-500/50"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                updateNodeData(nodeId, { scaleKeyframes: scaleKfs.filter((_, j) => j !== i) });
+                                            }}
+                                            className="ml-auto p-0.5 rounded hover:bg-red-500/20 text-neutral-600 hover:text-red-400 transition-colors"
+                                        >
+                                            <Trash2 className="w-2.5 h-2.5" />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                    {scaleKfs.length > 0 && (
+                        <button
+                            onClick={() => updateNodeData(nodeId, { scaleKeyframes: [] })}
+                            className="w-full text-center text-[9px] text-neutral-500 hover:text-red-400 py-0.5 transition-colors"
+                        >
+                            ↺ Clear all scale-keyframes
+                        </button>
+                    )}
+                </div>
+
+                {/* Rotation Keyframes */}
+                <div className="p-2 rounded bg-pink-500/5 border border-pink-500/10 space-y-1.5">
+                    <label className="block text-[9px] font-bold text-pink-400 uppercase tracking-wider">◇ Rotation Keyframes</label>
+                    <p className="text-[9px] text-neutral-500">Animate rotation over time (degrees)</p>
+                    <button
+                        onClick={() => {
+                            const existing = [...rotKfs];
+                            if (existing.some(k => Math.abs(k.time - currentTime) < 0.05)) return;
+                            existing.push({ time: +currentTime.toFixed(2), rotation: 0 });
+                            existing.sort((a, b) => a.time - b.time);
+                            updateNodeData(nodeId, { rotationKeyframes: existing });
+                        }}
+                        className="w-full flex items-center justify-center gap-1 px-2 py-1 rounded bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 text-[9px] font-bold border border-pink-500/20 transition-colors"
+                    >
+                        <Plus className="w-3 h-3" />
+                        Add Rotation-KF at {currentTime.toFixed(1)}s
+                    </button>
+                    {rotKfs.length === 0 ? (
+                        <p className="text-[8px] text-neutral-600 italic">Chưa có rotation keyframe.</p>
+                    ) : (
+                        <div className="space-y-0.5 max-h-28 overflow-y-auto">
+                            {rotKfs.map((kf, i) => {
+                                const isNearest = Math.abs(kf.time - currentTime) < 0.15;
+                                return (
+                                    <div key={i} className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[9px] transition-colors ${isNearest ? 'bg-pink-500/20 text-pink-200' : 'text-neutral-400 hover:bg-white/5'}`}>
+                                        <Diamond className="w-2.5 h-2.5 text-pink-400 shrink-0" />
+                                        <span className="font-mono font-bold w-10">{kf.time.toFixed(1)}s</span>
+                                        <input
+                                            type="number"
+                                            value={kf.rotation}
+                                            onChange={(e) => {
+                                                const updated = rotKfs.map((k, j) =>
+                                                    j === i ? { ...k, rotation: parseFloat(e.target.value) || 0 } : k
+                                                );
+                                                updateNodeData(nodeId, { rotationKeyframes: updated });
+                                            }}
+                                            step={5}
+                                            className="w-14 bg-black/40 border border-white/10 rounded px-1 text-[8px] text-white font-mono text-center outline-none focus:border-pink-500/50"
+                                        />
+                                        <span className="text-[8px] text-neutral-600">°</span>
+                                        <button
+                                            onClick={() => {
+                                                updateNodeData(nodeId, { rotationKeyframes: rotKfs.filter((_, j) => j !== i) });
+                                            }}
+                                            className="ml-auto p-0.5 rounded hover:bg-red-500/20 text-neutral-600 hover:text-red-400 transition-colors"
+                                        >
+                                            <Trash2 className="w-2.5 h-2.5" />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                    {rotKfs.length > 0 && (
+                        <button
+                            onClick={() => updateNodeData(nodeId, { rotationKeyframes: [] })}
+                            className="w-full text-center text-[9px] text-neutral-500 hover:text-red-400 py-0.5 transition-colors"
+                        >
+                            ↺ Clear all rotation-keyframes
                         </button>
                     )}
                 </div>

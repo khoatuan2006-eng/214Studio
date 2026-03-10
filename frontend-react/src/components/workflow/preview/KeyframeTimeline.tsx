@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { useWorkflowStore, type CharacterNodeData, type StageNodeData, type StageLayer, type PoseFrame } from '@/stores/useWorkflowStore';
-import { Plus, Trash2, GripVertical, Image, Layers, Wrench } from 'lucide-react';
+import { useWorkflowStore, type CharacterNodeData, type PoseFrame } from '@/stores/useWorkflowStore';
+import { Plus, Trash2, GripVertical } from 'lucide-react';
 import type { PreviewTrack } from './types';
 import { getInterpolatedZIndex } from './types';
 
@@ -69,11 +69,11 @@ interface KeyframeTimelineProps {
     setSelectedNodeId: (id: string | null) => void;
     editFrameIdx: number;
     setEditFrameIdx: (idx: number) => void;
-    overlayLayers?: StageLayer[];
+
 }
 
 const TRACK_LABEL_W = 140;
-const TRACK_H = 42;
+const TRACK_H = 56;
 const RULER_H = 28;
 const ACTIONS_W = 48;
 
@@ -86,7 +86,6 @@ const KeyframeTimeline: React.FC<KeyframeTimelineProps> = ({
     setSelectedNodeId,
     editFrameIdx,
     setEditFrameIdx,
-    overlayLayers = [],
 }) => {
     const { nodes, updateNodeData } = useWorkflowStore();
     const rulerRef = useRef<HTMLDivElement>(null);
@@ -241,22 +240,17 @@ const KeyframeTimeline: React.FC<KeyframeTimelineProps> = ({
             </div>
 
             {/* ═══ UNIFIED Z-SORTED TRACKS ═══ */}
-            <div className="relative">
+            <div className="relative overflow-y-auto" style={{ maxHeight: 280 }}>
                 {(() => {
-                    // Build unified draw list: characters + stage layers
+                    // Build draw list: characters only (stage layers shown in left panel)
                     type TimelineItem =
-                        | { kind: 'character'; zIndex: number; track: PreviewTrack; trackIndex: number }
-                        | { kind: 'stage'; zIndex: number; layer: StageLayer };
+                        { kind: 'character'; zIndex: number; track: PreviewTrack; trackIndex: number };
 
                     const items: TimelineItem[] = [];
 
                     tracks.forEach((track, trackIndex) => {
                         const nodeData = nodes.find(n => n.id === track.nodeId)?.data as CharacterNodeData | undefined;
                         items.push({ kind: 'character', zIndex: nodeData?.zIndex ?? 10, track, trackIndex });
-                    });
-
-                    overlayLayers.forEach((layer) => {
-                        items.push({ kind: 'stage', zIndex: layer.zIndex, layer });
                     });
 
                     // Sort by z-index (low = behind = top of list, high = front = bottom)
@@ -271,11 +265,6 @@ const KeyframeTimeline: React.FC<KeyframeTimelineProps> = ({
                     }
 
                     const trackColors = ['#6366f1', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b'];
-                    const stageTypeConfig = {
-                        background: { icon: Image, color: '#10b981', label: 'BG' },
-                        foreground: { icon: Layers, color: '#06b6d4', label: 'FG' },
-                        prop: { icon: Wrench, color: '#f472b6', label: 'Prop' },
-                    };
 
                     return items.map((item) => {
                         if (item.kind === 'character') {
@@ -430,6 +419,34 @@ const KeyframeTimeline: React.FC<KeyframeTimelineProps> = ({
                                                     style={{ backgroundColor: '#06b6d4', borderColor: '#0891b2', boxShadow: '0 0 4px rgba(6,182,212,0.5)' }} />
                                             </div>
                                         ))}
+
+                                        {/* Scale keyframe diamonds (emerald) */}
+                                        {(nodeData?.scaleKeyframes || []).map((kf, ki) => (
+                                            <div
+                                                key={`skf-${ki}`}
+                                                className="absolute z-30 cursor-pointer group"
+                                                style={{ left: `${totalDuration > 0 ? (kf.time / totalDuration) * 100 : 0}%`, top: '35%', transform: 'translateX(-50%)' }}
+                                                title={`Scale KF: ${kf.time.toFixed(1)}s → ${kf.scale}`}
+                                                onClick={(e) => { e.stopPropagation(); setCurrentTime(kf.time); setSelectedNodeId(track.nodeId); }}
+                                            >
+                                                <div className="w-2 h-2 rotate-45 border transition-transform group-hover:scale-125"
+                                                    style={{ backgroundColor: '#10b981', borderColor: '#059669', boxShadow: '0 0 4px rgba(16,185,129,0.5)' }} />
+                                            </div>
+                                        ))}
+
+                                        {/* Rotation keyframe diamonds (pink) */}
+                                        {(nodeData?.rotationKeyframes || []).map((kf, ki) => (
+                                            <div
+                                                key={`rkf-${ki}`}
+                                                className="absolute z-30 cursor-pointer group"
+                                                style={{ left: `${totalDuration > 0 ? (kf.time / totalDuration) * 100 : 0}%`, top: '55%', transform: 'translateX(-50%)' }}
+                                                title={`Rotation KF: ${kf.time.toFixed(1)}s → ${kf.rotation}°`}
+                                                onClick={(e) => { e.stopPropagation(); setCurrentTime(kf.time); setSelectedNodeId(track.nodeId); }}
+                                            >
+                                                <div className="w-2 h-2 rotate-45 border transition-transform group-hover:scale-125"
+                                                    style={{ backgroundColor: '#f472b6', borderColor: '#ec4899', boxShadow: '0 0 4px rgba(244,114,182,0.5)' }} />
+                                            </div>
+                                        ))}
                                     </div>
 
                                     {/* Actions */}
@@ -469,46 +486,6 @@ const KeyframeTimeline: React.FC<KeyframeTimelineProps> = ({
                                             </button>
                                         )}
                                     </div>
-                                </div>
-                            );
-                        } else {
-                            // ── STAGE LAYER ROW ──
-                            const { layer } = item;
-                            const cfg = stageTypeConfig[layer.type || 'prop'];
-                            const TypeIcon = cfg.icon;
-
-                            return (
-                                <div
-                                    key={`stage-${layer.id}`}
-                                    className="flex items-center border-b border-white/5 hover:bg-white/[0.015] transition-colors"
-                                    style={{ height: 30 }}
-                                >
-                                    <div className="shrink-0 flex items-center gap-2 px-3 border-r border-white/5"
-                                        style={{ width: TRACK_LABEL_W }}>
-                                        <TypeIcon className="w-3 h-3 shrink-0" style={{ color: cfg.color }} />
-                                        <span className="text-[9px] text-neutral-400 truncate flex-1">{layer.label}</span>
-                                        <ZBadge
-                                            value={layer.zIndex}
-                                            color={cfg.color}
-                                            onChange={(v) => {
-                                                const stageNode = nodes.find(n => n.type === 'stage');
-                                                if (!stageNode) return;
-                                                const stageData = stageNode.data as StageNodeData;
-                                                const updatedLayers = (stageData.layers || []).map(l =>
-                                                    l.id === layer.id ? { ...l, zIndex: v } : l
-                                                );
-                                                updateNodeData(stageNode.id, { layers: updatedLayers });
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="flex-1 flex items-center px-2">
-                                        <div className="h-3 rounded-full" style={{
-                                            width: '100%',
-                                            background: `linear-gradient(90deg, ${cfg.color}15, ${cfg.color}08)`,
-                                            border: `1px solid ${cfg.color}20`,
-                                        }} />
-                                    </div>
-                                    <div className="shrink-0 border-l border-white/5" style={{ width: ACTIONS_W }} />
                                 </div>
                             );
                         }

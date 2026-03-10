@@ -219,6 +219,62 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
         <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col">
             {/* ══════ MAIN CONTENT ══════ */}
             <div className="flex-1 flex min-h-0">
+                {/* ── Left: Stage Layers Panel ── */}
+                {overlayLayers.length > 0 && (
+                    <div className="w-52 shrink-0 bg-neutral-900/95 border-r border-white/5 flex flex-col">
+                        <div className="px-3 py-2 border-b border-white/5">
+                            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                                🎭 Stage Layers ({overlayLayers.length})
+                            </span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto px-2 py-1 space-y-0.5">
+                            {[...overlayLayers].sort((a, b) => a.zIndex - b.zIndex).map((layer) => {
+                                const typeIcon = layer.type === 'background' ? '🖼️' : layer.type === 'foreground' ? '📐' : '🔧';
+                                const typeColor = layer.type === 'background' ? '#3b82f6' : layer.type === 'foreground' ? '#a855f7' : '#f59e0b';
+
+                                const updateLayer = (patch: Partial<StageLayer>) => {
+                                    const stageNode = nodes.find(n => n.type === 'stage');
+                                    if (!stageNode) return;
+                                    const stageData = stageNode.data as StageNodeData;
+                                    const updatedLayers = (stageData.layers || []).map(l =>
+                                        l.id === layer.id ? { ...l, ...patch } : l
+                                    );
+                                    updateNodeData(stageNode.id, { layers: updatedLayers });
+                                };
+
+                                return (
+                                    <div
+                                        key={layer.id}
+                                        className={`flex items-center gap-1 px-2 py-1.5 rounded text-[10px] transition-colors ${layer.visible !== false ? 'bg-white/[0.02] hover:bg-white/[0.05]' : 'bg-black/20 opacity-40'}`}
+                                    >
+                                        {/* Visibility toggle */}
+                                        <button
+                                            onClick={() => updateLayer({ visible: layer.visible === false ? true : false })}
+                                            className="text-[10px] hover:scale-110 transition-transform shrink-0"
+                                            title={layer.visible !== false ? 'Ẩn layer' : 'Hiện layer'}
+                                        >
+                                            {layer.visible !== false ? '👁️' : '🚫'}
+                                        </button>
+                                        {/* Type icon */}
+                                        <span className="shrink-0">{typeIcon}</span>
+                                        {/* Label */}
+                                        <span className="flex-1 truncate text-neutral-300 font-medium min-w-0">{layer.label}</span>
+                                        {/* Z-index editable */}
+                                        <input
+                                            type="number"
+                                            value={layer.zIndex}
+                                            onChange={(e) => updateLayer({ zIndex: Number(e.target.value) })}
+                                            className="w-10 bg-black/40 border border-white/10 rounded px-1 py-0.5 text-[9px] font-mono font-bold text-center outline-none focus:border-cyan-500/50"
+                                            style={{ color: typeColor }}
+                                            title="Z-Index"
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {/* Canvas + Scene Context */}
                 <div className="flex-1 flex">
                     <PreviewCanvas

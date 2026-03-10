@@ -112,6 +112,46 @@ export function getInterpolatedZIndex(
     return data.zIndex;
 }
 
+/** Interpolate scale from keyframes at a given time */
+export function getInterpolatedScale(
+    data: CharacterNodeData,
+    time: number
+): number {
+    const kfs = data.scaleKeyframes;
+    if (!kfs || kfs.length === 0) return data.scale;
+    if (kfs.length === 1) return kfs[0].scale;
+    if (time <= kfs[0].time) return kfs[0].scale;
+    if (time >= kfs[kfs.length - 1].time) return kfs[kfs.length - 1].scale;
+
+    for (let i = 0; i < kfs.length - 1; i++) {
+        if (time >= kfs[i].time && time <= kfs[i + 1].time) {
+            const t = (time - kfs[i].time) / (kfs[i + 1].time - kfs[i].time);
+            return Math.round(kfs[i].scale + (kfs[i + 1].scale - kfs[i].scale) * t);
+        }
+    }
+    return data.scale;
+}
+
+/** Interpolate rotation from keyframes at a given time */
+export function getInterpolatedRotation(
+    data: CharacterNodeData,
+    time: number
+): number {
+    const kfs = data.rotationKeyframes;
+    if (!kfs || kfs.length === 0) return 0;
+    if (kfs.length === 1) return kfs[0].rotation;
+    if (time <= kfs[0].time) return kfs[0].rotation;
+    if (time >= kfs[kfs.length - 1].time) return kfs[kfs.length - 1].rotation;
+
+    for (let i = 0; i < kfs.length - 1; i++) {
+        if (time >= kfs[i].time && time <= kfs[i + 1].time) {
+            const t = (time - kfs[i].time) / (kfs[i + 1].time - kfs[i].time);
+            return +(kfs[i].rotation + (kfs[i + 1].rotation - kfs[i].rotation) * t).toFixed(1);
+        }
+    }
+    return 0;
+}
+
 /** Get the active frame for a track at a given time */
 export function getActiveFrame(
     track: PreviewTrack,
