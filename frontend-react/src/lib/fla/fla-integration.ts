@@ -108,7 +108,7 @@ export async function parseFLAToStageLayers(
         const frame0 = layer.frames[0];
         if (!frame0.elements.length) return false;
         return true;
-    });
+    }).reverse(); // Reverse: FLA stores top→bottom (fg first), we want bottom→top (bg first → z=0)
 
     if (!visibleLayers.length) {
         throw new Error('No visible layers with content found in FLA');
@@ -244,7 +244,7 @@ export async function parseFLAToStageLayers(
                                 assetPath: uploaded.path,
                                 posX: Math.round((doc.width / 2) * scaleFactor),
                                 posY: Math.round((doc.height / 2) * scaleFactor),
-                                zIndex: Math.min(100, (totalItems - currentItem + 1) * Math.floor(90 / totalItems)),
+                                zIndex: currentItem * Math.max(1, Math.floor(90 / totalItems)),
                                 width: Math.round(doc.width * scaleFactor),
                                 height: Math.round(doc.height * scaleFactor),
                                 opacity: layer.alphaPercent !== undefined ? layer.alphaPercent / 100 : 1,
@@ -313,7 +313,7 @@ export async function parseFLAToStageLayers(
                             assetPath: uploaded.path,
                             posX: Math.round((doc.width / 2) * scaleFactor),
                             posY: Math.round((doc.height / 2) * scaleFactor),
-                            zIndex: Math.min(100, (totalItems - currentItem + 1) * Math.floor(90 / totalItems)),
+                            zIndex: currentItem * Math.max(1, Math.floor(90 / totalItems)),
                             width: Math.round(doc.width * scaleFactor),
                             height: Math.round(doc.height * scaleFactor),
                             opacity: layer.alphaPercent !== undefined ? layer.alphaPercent / 100 : 1,
