@@ -92,6 +92,26 @@ export function getInterpolatedPos(
     return { x: data.posX, y: data.posY };
 }
 
+/** Interpolate z-index from keyframes at a given time */
+export function getInterpolatedZIndex(
+    data: CharacterNodeData,
+    time: number
+): number {
+    const kfs = data.zIndexKeyframes;
+    if (!kfs || kfs.length === 0) return data.zIndex;
+    if (kfs.length === 1) return kfs[0].z;
+    if (time <= kfs[0].time) return kfs[0].z;
+    if (time >= kfs[kfs.length - 1].time) return kfs[kfs.length - 1].z;
+
+    for (let i = 0; i < kfs.length - 1; i++) {
+        if (time >= kfs[i].time && time <= kfs[i + 1].time) {
+            const t = (time - kfs[i].time) / (kfs[i + 1].time - kfs[i].time);
+            return Math.round(kfs[i].z + (kfs[i + 1].z - kfs[i].z) * t);
+        }
+    }
+    return data.zIndex;
+}
+
 /** Get the active frame for a track at a given time */
 export function getActiveFrame(
     track: PreviewTrack,

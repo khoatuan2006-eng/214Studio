@@ -1,7 +1,7 @@
 import React from 'react';
 import { useWorkflowStore, type CharacterNodeData, type PoseFrame, type SceneNodeData } from '@/stores/useWorkflowStore';
 import { useAppStore, STATIC_BASE } from '@/stores/useAppStore';
-import { X, Settings2, Diamond, Trash2 } from 'lucide-react';
+import { X, Settings2, Diamond, Trash2, Plus } from 'lucide-react';
 
 interface PreviewSidebarProps {
     selectedNodeId: string;
@@ -52,6 +52,7 @@ const PreviewSidebar: React.FC<PreviewSidebarProps> = ({
     };
 
     const kfs = selData.positionKeyframes || [];
+    const zKfs = selData.zIndexKeyframes || [];
 
     return (
         <div className="w-72 shrink-0 bg-neutral-900/95 border-l border-white/5 flex flex-col z-30">
@@ -154,6 +155,76 @@ const PreviewSidebar: React.FC<PreviewSidebarProps> = ({
                             className="w-full text-center text-[9px] text-neutral-500 hover:text-red-400 py-0.5 transition-colors"
                         >
                             ↺ Clear all keyframes
+                        </button>
+                    )}
+                </div>
+
+                {/* Z-Index Keyframes */}
+                <div className="p-2 rounded bg-cyan-500/5 border border-cyan-500/10 space-y-1.5">
+                    <label className="block text-[9px] font-bold text-cyan-400 uppercase tracking-wider">◇ Z-Index Keyframes</label>
+                    <p className="text-[9px] text-neutral-500">Animate z-index over time (0=behind, 100=front)</p>
+
+                    {/* Add z-index keyframe */}
+                    <button
+                        onClick={() => {
+                            const existing = [...zKfs];
+                            const alreadyExists = existing.some(k => Math.abs(k.time - currentTime) < 0.05);
+                            if (alreadyExists) return; // don't duplicate
+                            existing.push({ time: +currentTime.toFixed(2), z: selData.zIndex });
+                            existing.sort((a, b) => a.time - b.time);
+                            updateNodeData(nodeId, { zIndexKeyframes: existing });
+                        }}
+                        className="w-full flex items-center justify-center gap-1 px-2 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[9px] font-bold border border-cyan-500/20 transition-colors"
+                    >
+                        <Plus className="w-3 h-3" />
+                        Add Z-Keyframe at {currentTime.toFixed(1)}s
+                    </button>
+
+                    {zKfs.length === 0 ? (
+                        <p className="text-[8px] text-neutral-600 italic">Chưa có z-index keyframe.</p>
+                    ) : (
+                        <div className="space-y-0.5 max-h-28 overflow-y-auto">
+                            {zKfs.map((kf, i) => {
+                                const isNearest = Math.abs(kf.time - currentTime) < 0.15;
+                                return (
+                                    <div key={i} className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[9px] transition-colors ${isNearest ? 'bg-cyan-500/20 text-cyan-200' : 'text-neutral-400 hover:bg-white/5'}`}>
+                                        <Diamond className="w-2.5 h-2.5 text-cyan-400 shrink-0" />
+                                        <span className="font-mono font-bold w-10">{kf.time.toFixed(1)}s</span>
+                                        <span className="font-mono text-[8px]">z={kf.z}</span>
+                                        {/* Inline z edit */}
+                                        <input
+                                            type="number"
+                                            value={kf.z}
+                                            onChange={(e) => {
+                                                const updated = zKfs.map((k, j) =>
+                                                    j === i ? { ...k, z: Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) } : k
+                                                );
+                                                updateNodeData(nodeId, { zIndexKeyframes: updated });
+                                            }}
+                                            min={0} max={100}
+                                            className="w-10 bg-black/40 border border-white/10 rounded px-1 text-[8px] text-white font-mono text-center outline-none focus:border-cyan-500/50"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                const updated = zKfs.filter((_, j) => j !== i);
+                                                updateNodeData(nodeId, { zIndexKeyframes: updated });
+                                            }}
+                                            className="ml-auto p-0.5 rounded hover:bg-red-500/20 text-neutral-600 hover:text-red-400 transition-colors"
+                                            title="Delete z-keyframe"
+                                        >
+                                            <Trash2 className="w-2.5 h-2.5" />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                    {zKfs.length > 0 && (
+                        <button
+                            onClick={() => updateNodeData(nodeId, { zIndexKeyframes: [] })}
+                            className="w-full text-center text-[9px] text-neutral-500 hover:text-red-400 py-0.5 transition-colors"
+                        >
+                            ↺ Clear all z-keyframes
                         </button>
                     )}
                 </div>

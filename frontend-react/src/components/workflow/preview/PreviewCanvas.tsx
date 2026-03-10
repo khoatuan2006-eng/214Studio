@@ -179,13 +179,15 @@ const PreviewCanvas: React.FC<PreviewCanvasProps> = ({
     const buildSceneLayers = useCallback((): SceneLayer[] => {
         return overlayLayers.map((l) => ({
             id: l.id,
+            source: l.source,
             type: l.type,
             label: l.label,
             assetUrl: `${STATIC_BASE}/${l.assetPath}`,
             posX: l.posX,
             posY: l.posY,
             zIndex: l.zIndex,
-            scale: l.scale,
+            width: l.width,
+            height: l.height,
             opacity: l.opacity,
             rotation: l.rotation,
             blur: l.blur,

@@ -9,7 +9,7 @@
  * Preview and Export call this with different (W, H), everything else is identical.
  */
 import type { PreviewTrack } from './types';
-import { getInterpolatedPos } from './types';
+import { getInterpolatedPos, getInterpolatedZIndex } from './types';
 import type { CharacterNodeData } from '@/stores/useWorkflowStore';
 
 // ── Types ──
@@ -32,13 +32,15 @@ export interface CameraExportData {
 
 export interface SceneLayer {
     id: string;
-    type: 'background' | 'foreground' | 'prop';
+    source: 'image' | 'video' | 'fla';
+    type?: 'background' | 'foreground' | 'prop';
     label: string;
     assetUrl: string;
     posX: number;
     posY: number;
     zIndex: number;
-    scale: number;
+    width: number;
+    height: number;
     opacity: number;
     rotation: number;
     blur: number;
@@ -57,6 +59,7 @@ export interface RenderSceneParams {
     charNodeDataMap: Map<string, CharacterNodeData>;
     imageCache: Map<string, HTMLImageElement>;
     ppu: number;             // Pixels Per Unit from Scene
+    showLabels?: boolean;    // Show z-index labels (preview only, not export)
 }
 
 // ── Constants ──
@@ -147,6 +150,7 @@ function drawObjectCover(
 export function renderScene({
     ctx, W, H, time, tracks, backgroundImg, backgroundBlur,
     overlayLayers, cameraData, charNodeDataMap, imageCache, ppu,
+    showLabels = true,
 }: RenderSceneParams): void {
     //
     // STRATEGY: Apply a global transform so we can work in scene space (1920×1080).
@@ -183,7 +187,7 @@ export function renderScene({
         ctx.translate(-cam.x, -cam.y);
     }
 
-    // ── 4. Background (fills entire scene) ──
+    // ── 4. Background image (fills entire scene) ──
     if (backgroundImg) {
         ctx.save();
         if (backgroundBlur > 0) ctx.filter = `blur(${backgroundBlur}px)`;
@@ -191,102 +195,133 @@ export function renderScene({
         ctx.restore();
     }
 
-    // ── 5. Characters ──
-    // Character size: "scale" property = height in scene pixels when using
-    // a 960px virtual container with object-contain + scaleFactor
-    const CHAR_CONTAINER = 960;
+    // ── 5. UNIFIED Z-INDEX: Characters + ALL overlay layers ──
+    // ALL elements (characters + stage layers) are combined into one draw list
+    // sorted by zIndex. No type-based split — z-index determines stacking order.
+    type DrawItem =
+        | { kind: 'character'; zIndex: number; track: typeof tracks[0]; charData: CharacterNodeData | undefined }
+        | { kind: 'overlay'; zIndex: number; layer: SceneLayer };
 
+    const drawList: DrawItem[] = [];
+
+    // Add characters (z-index animated via keyframes)
     for (const track of tracks) {
-        const frame = getFrameAtTime(track, time);
-        if (!frame) continue;
-
         const charData = charNodeDataMap.get(track.nodeId);
-
-        // Position in scene space
-        let posX: number, posY: number;
-        if (charData) {
-            const pos = getInterpolatedPos(charData, time);
-            posX = pos.x;
-            posY = pos.y;
-        } else {
-            let frameElapsed = 0, frameProgress = 0;
-            for (const f of track.frames) {
-                if (time >= frameElapsed && time < frameElapsed + f.duration) {
-                    frameProgress = (time - frameElapsed) / f.duration; break;
-                }
-                frameElapsed += f.duration;
-            }
-            posX = frame.startX + (frame.endX - frame.startX) * frameProgress;
-            posY = frame.startY + (frame.endY - frame.startY) * frameProgress;
-        }
-
-        ctx.save();
-        ctx.globalAlpha = frame.opacity;
-
-        const charScale = charData?.scale ?? frame.scale;
-        const scaleFactor = charScale / SCENE_W;
-
-        // Draw layers sorted by z-index
-        const sorted = [...frame.layerImages].sort((a, b) => a.zIndex - b.zIndex);
-        for (const layer of sorted) {
-            const img = imageCache.get(layer.url);
-            if (!img) continue;
-
-            const natW = img.naturalWidth;
-            const natH = img.naturalHeight;
-
-            // Object-contain within CHAR_CONTAINER
-            const fitRatio = Math.min(CHAR_CONTAINER / natW, CHAR_CONTAINER / natH);
-            const fitW = natW * fitRatio;
-            const fitH = natH * fitRatio;
-
-            // Final size in scene pixels
-            const drawW = fitW * scaleFactor;
-            const drawH = fitH * scaleFactor;
-
-            // Bottom-center anchor (CSS translate(-50%, -100%) on CONTAINER)
-            const containerH = CHAR_CONTAINER * scaleFactor;
-            const drawX = posX - drawW / 2;
-            const drawY = posY - containerH + (containerH - drawH) / 2;
-
-            ctx.drawImage(img, drawX, drawY, drawW, drawH);
-        }
-        ctx.restore();
+        const z = charData ? getInterpolatedZIndex(charData, time) : 10;
+        drawList.push({ kind: 'character', zIndex: z, track, charData });
     }
 
-    // ── 6. Overlay layers (sorted by z-index) ──
-    const sortedOverlays = [...overlayLayers].sort((a, b) => a.zIndex - b.zIndex);
-    for (const ol of sortedOverlays) {
-        const img = imageCache.get(ol.assetUrl);
-        if (!img) continue;
+    // Add ALL overlay layers (background, foreground, prop — all use z-index)
+    for (const ol of overlayLayers) {
+        drawList.push({ kind: 'overlay', zIndex: ol.zIndex, layer: ol });
+    }
 
-        ctx.save();
-        ctx.globalAlpha = ol.opacity;
-        if (ol.blur > 0) ctx.filter = `blur(${ol.blur}px)`;
+    // Sort by zIndex (lower = behind, higher = in front)
+    drawList.sort((a, b) => a.zIndex - b.zIndex);
 
-        if (ol.type === 'background') {
-            // Object-cover fills entire scene
-            drawObjectCover(ctx, img, 0, 0, SCENE_W, SCENE_H);
-        } else {
-            // FG/Prop: center-anchor at (posX, posY) in scene space
+    // Character rendering constants
+    const CHAR_CONTAINER = 960;
+
+    // Draw everything in unified z-order
+    for (const item of drawList) {
+        if (item.kind === 'overlay') {
+            // ── Stage overlay layer ──
+            const ol = item.layer;
+            const img = imageCache.get(ol.assetUrl);
+            if (!img) continue;
+
+            ctx.save();
+            ctx.globalAlpha = ol.opacity;
+            if (ol.blur > 0) ctx.filter = `blur(${ol.blur}px)`;
+
             ctx.translate(ol.posX, ol.posY);
             ctx.rotate((ol.rotation * Math.PI) / 180);
 
-            const olScale = ol.scale / SCENE_W;
-            ctx.scale(olScale, olScale);
-
-            // Match StageCanvas constraint: maxWidth=SCENE_W/2, maxHeight=SCENE_H/2
-            const natW = img.naturalWidth;
-            const natH = img.naturalHeight;
-            const maxW = SCENE_W / 2;  // 960
-            const maxH = SCENE_H / 2;  // 540
-            const constrainRatio = Math.min(1, maxW / natW, maxH / natH);
-            const drawW = natW * constrainRatio;
-            const drawH = natH * constrainRatio;
+            const drawW = ol.width || 960;
+            const drawH = ol.height || 540;
             ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
-        }
 
-        ctx.restore();
+            ctx.restore();
+        } else {
+            // ── Character track ──
+            const { track, charData } = item;
+            const frame = getFrameAtTime(track, time);
+            if (!frame) continue;
+
+            let posX: number, posY: number;
+            if (charData) {
+                const pos = getInterpolatedPos(charData, time);
+                posX = pos.x;
+                posY = pos.y;
+            } else {
+                let frameElapsed = 0, frameProgress = 0;
+                for (const f of track.frames) {
+                    if (time >= frameElapsed && time < frameElapsed + f.duration) {
+                        frameProgress = (time - frameElapsed) / f.duration; break;
+                    }
+                    frameElapsed += f.duration;
+                }
+                posX = frame.startX + (frame.endX - frame.startX) * frameProgress;
+                posY = frame.startY + (frame.endY - frame.startY) * frameProgress;
+            }
+
+            ctx.save();
+            ctx.globalAlpha = frame.opacity;
+
+            const charScale = charData?.scale ?? frame.scale;
+            const scaleFactor = charScale / SCENE_W;
+
+            const sorted = [...frame.layerImages].sort((a, b) => a.zIndex - b.zIndex);
+            for (const layer of sorted) {
+                const img = imageCache.get(layer.url);
+                if (!img) continue;
+
+                const natW = img.naturalWidth;
+                const natH = img.naturalHeight;
+
+                const fitRatio = Math.min(CHAR_CONTAINER / natW, CHAR_CONTAINER / natH);
+                const fitW = natW * fitRatio;
+                const fitH = natH * fitRatio;
+
+                const drawW = fitW * scaleFactor;
+                const drawH = fitH * scaleFactor;
+
+                const containerH = CHAR_CONTAINER * scaleFactor;
+                const drawX = posX - drawW / 2;
+                const drawY = posY - containerH + (containerH - drawH) / 2;
+
+                ctx.drawImage(img, drawX, drawY, drawW, drawH);
+            }
+
+            // ── Z-Index label above character (preview only) ──
+            if (showLabels) {
+                const currentZ = item.zIndex;
+                const containerH = CHAR_CONTAINER * scaleFactor;
+                const labelY = posY - containerH - 8;
+                const labelText = `z${currentZ}`;
+                ctx.font = 'bold 14px monospace';
+                const textW = ctx.measureText(labelText).width;
+                const padX = 5, padY = 3;
+                ctx.fillStyle = 'rgba(6, 182, 212, 0.7)';
+                const bx = posX - textW / 2 - padX;
+                const by = labelY - 14 - padY;
+                const bw = textW + padX * 2;
+                const bh = 14 + padY * 2;
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(bx, by, bw, bh, 4);
+                } else {
+                    ctx.rect(bx, by, bw, bh);
+                }
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(labelText, posX, labelY);
+            }
+
+            ctx.restore();
+        }
     }
 
     // ── 7. Close camera transform ──

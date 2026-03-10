@@ -353,21 +353,18 @@ const NodeInspector: React.FC = () => {
                                             layers: currentLayers.map(l => l.id === id ? { ...l, ...patch } : l)
                                         });
                                     }}
-                                    onAddLayer={(type) => {
+                                    onAddLayer={() => {
                                         const currentLayers = (data as StageNodeData).layers || [];
-                                        const defaults: Record<string, Partial<StageLayer>> = {
-                                            background: { zIndex: 0, label: `BG ${currentLayers.filter(l => l.type === 'background').length + 1}` },
-                                            foreground: { zIndex: 50, label: `FG ${currentLayers.filter(l => l.type === 'foreground').length + 1}` },
-                                            prop: { zIndex: 30, label: `Prop ${currentLayers.filter(l => l.type === 'prop').length + 1}` },
-                                        };
+                                        const maxZ = currentLayers.reduce((max, l) => Math.max(max, l.zIndex), 0);
                                         const newLayer: StageLayer = {
                                             id: `layer-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                                            type,
-                                            label: defaults[type]?.label || type,
+                                            type: 'prop',
+                                            source: 'image',
+                                            label: `Layer ${currentLayers.length + 1}`,
                                             assetPath: '',
                                             posX: 960, posY: 540,
-                                            zIndex: (defaults[type]?.zIndex as number) ?? 10,
-                                            scale: 960, opacity: 1, rotation: 0, blur: 0, visible: true,
+                                            zIndex: Math.min(100, maxZ + 10),
+                                            width: 960, height: 540, opacity: 1, rotation: 0, blur: 0, visible: true,
                                         };
                                         updateNodeData(selectedNode.id, { layers: [...currentLayers, newLayer] });
                                     }}
@@ -860,6 +857,7 @@ function StageLayerEditor({ layers, onUpdate, pixelsPerUnit = 100 }: { layers: S
     const uploadRef = useRef<HTMLInputElement>(null);
     const [presets, setPresets] = useState<StagePreset[]>([]);
     const [saveName, setSaveName] = useState('');
+    const [flaImporting, setFlaImporting] = useState<string | null>(null); // progress text
 
     // Load presets from localStorage
     useEffect(() => {
@@ -895,21 +893,19 @@ function StageLayerEditor({ layers, onUpdate, pixelsPerUnit = 100 }: { layers: S
 
     const sorted = useMemo(() => [...layers].sort((a, b) => a.zIndex - b.zIndex), [layers]);
 
-    const addLayer = useCallback((type: 'background' | 'foreground' | 'prop') => {
-        const defaults: Record<string, Partial<StageLayer>> = {
-            background: { zIndex: 0, label: `BG ${layers.filter(l => l.type === 'background').length + 1}` },
-            foreground: { zIndex: 50, label: `FG ${layers.filter(l => l.type === 'foreground').length + 1}` },
-            prop: { zIndex: 30, label: `Prop ${layers.filter(l => l.type === 'prop').length + 1}` },
-        };
+    const addLayer = useCallback(() => {
+        const maxZ = layers.reduce((max, l) => Math.max(max, l.zIndex), 0);
         const newLayer: StageLayer = {
             id: `layer-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            type,
-            label: defaults[type]?.label || type,
+            type: 'prop',
+            source: 'image',
+            label: `Layer ${layers.length + 1}`,
             assetPath: '',
             posX: 960,
             posY: 540,
-            zIndex: (defaults[type]?.zIndex as number) ?? 10,
-            scale: 960,
+            zIndex: Math.min(100, maxZ + 10),
+            width: 960,
+            height: 540,
             opacity: 1,
             rotation: 0,
             blur: 0,
@@ -940,48 +936,60 @@ function StageLayerEditor({ layers, onUpdate, pixelsPerUnit = 100 }: { layers: S
         const layer = layers.find(l => l.id === targetId);
         if (!layer || !files.length) return;
 
-        // Upload to appropriate library
-        const endpoint = layer.type === 'background'
-            ? '/api/backgrounds/upload'
-            : '/api/foregrounds/upload';
+        // Detect source type from file
+        const file = files[0];
+        const isVideo = file.type.startsWith('video/');
+        const source = isVideo ? 'video' as const : 'image' as const;
 
+        // Upload to stages endpoint
         const formData = new FormData();
-        formData.append('files', files[0]);
+        formData.append('files', file);
 
         try {
-            const res = await fetch(`${API_BASE_URL}${endpoint}`, { method: 'POST', body: formData });
+            const res = await fetch(`${API_BASE_URL}/api/stages/upload`, { method: 'POST', body: formData });
             if (res.ok) {
                 const data = await res.json();
                 if (data.uploaded?.length > 0) {
-                    updateLayer(targetId, { assetPath: data.uploaded[0].path });
+                    updateLayer(targetId, { assetPath: data.uploaded[0].path, source });
                 }
             }
         } catch { /* ignore */ }
     }, [layers, updateLayer]);
 
-    const typeColors = {
-        background: { bg: 'bg-emerald-500/15', text: 'text-emerald-300', border: 'border-emerald-500/30' },
-        foreground: { bg: 'bg-cyan-500/15', text: 'text-cyan-300', border: 'border-cyan-500/30' },
-        prop: { bg: 'bg-pink-500/15', text: 'text-pink-300', border: 'border-pink-500/30' },
+    const sourceColors: Record<string, { bg: string; text: string; border: string }> = {
+        image: { bg: 'bg-cyan-500/15', text: 'text-cyan-300', border: 'border-cyan-500/30' },
+        video: { bg: 'bg-purple-500/15', text: 'text-purple-300', border: 'border-purple-500/30' },
+        fla: { bg: 'bg-amber-500/15', text: 'text-amber-300', border: 'border-amber-500/30' },
     };
 
     return (
         <div className="space-y-3">
-            {/* Add Layer Buttons */}
+            {/* Add Layer Button */}
             <div className="space-y-1.5">
                 <label className="block text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Add Layer</label>
-                <div className="flex gap-1.5">
-                    {(['background', 'foreground', 'prop'] as const).map((type) => (
-                        <button
-                            key={type}
-                            onClick={() => addLayer(type)}
-                            className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02] active:scale-95 ${typeColors[type].bg} ${typeColors[type].text} ${typeColors[type].border}`}
-                        >
-                            <Plus className="w-3 h-3" />
-                            {type === 'background' ? 'BG' : type === 'foreground' ? 'FG' : 'Prop'}
-                        </button>
-                    ))}
+                <div className="flex gap-1">
+                    <button
+                        onClick={() => addLayer()}
+                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02] active:scale-95 bg-amber-500/15 text-amber-300 border-amber-500/30"
+                    >
+                        <Plus className="w-3 h-3" />
+                        Add Layer
+                    </button>
+                    <button
+                        onClick={() => uploadRef.current?.click()}
+                        disabled={!!flaImporting}
+                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border text-[10px] font-medium transition-all hover:scale-[1.02] active:scale-95 bg-orange-500/15 text-orange-300 border-orange-500/30 disabled:opacity-40"
+                    >
+                        <Upload className="w-3 h-3" />
+                        Import FLA
+                    </button>
                 </div>
+                {flaImporting && (
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                        <div className="w-3 h-3 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-[10px] text-orange-300">{flaImporting}</span>
+                    </div>
+                )}
             </div>
 
             {/* Save / Load Presets */}
@@ -1030,10 +1038,37 @@ function StageLayerEditor({ layers, onUpdate, pixelsPerUnit = 100 }: { layers: S
             <input
                 ref={uploadRef}
                 type="file"
-                accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.psd"
+                accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.psd,.mp4,.webm,.mov,.fla,.xfl"
                 className="hidden"
-                onChange={(e) => {
-                    if (e.target.files && expandedId) {
+                onChange={async (e) => {
+                    if (!e.target.files || e.target.files.length === 0) return;
+                    const file = e.target.files[0];
+                    const ext = file.name.split('.').pop()?.toLowerCase();
+
+                    if (ext === 'fla' || ext === 'xfl') {
+                        // FLA import: parse → render layers → upload PNGs
+                        try {
+                            const { parseFLAToStageLayers } = await import('@/lib/fla/fla-integration');
+                            setFlaImporting('Parsing FLA...');
+                            const newLayers = await parseFLAToStageLayers(file, (progress) => {
+                                if (progress.phase === 'parsing') {
+                                    setFlaImporting(`Parsing... ${progress.current}%`);
+                                } else if (progress.phase === 'rendering') {
+                                    setFlaImporting(`Rendering layer ${progress.current}/${progress.total}: ${progress.layerName || ''}`);
+                                } else {
+                                    setFlaImporting(`Uploading ${progress.current}/${progress.total}...`);
+                                }
+                            });
+                            if (newLayers.length > 0) {
+                                onUpdate([...layers, ...newLayers]);
+                            }
+                            setFlaImporting(null);
+                        } catch (err) {
+                            console.error('FLA import failed:', err);
+                            setFlaImporting(null);
+                        }
+                    } else if (expandedId) {
+                        // Normal upload for a specific layer
                         handleUpload(e.target.files, expandedId);
                     }
                     e.target.value = '';
@@ -1052,7 +1087,7 @@ function StageLayerEditor({ layers, onUpdate, pixelsPerUnit = 100 }: { layers: S
                     <div className="space-y-1">
                         {sorted.map((layer: StageLayer) => {
                             const isExpanded = expandedId === layer.id;
-                            const colors = typeColors[layer.type];
+                            const colors = sourceColors[layer.source] || sourceColors.image;
                             return (
                                 <div key={layer.id} className={`rounded-lg border transition-all ${isExpanded ? `${colors.border} bg-white/[0.02]` : 'border-white/5 hover:border-white/10'}`}>
                                     {/* Layer Header */}
@@ -1064,21 +1099,25 @@ function StageLayerEditor({ layers, onUpdate, pixelsPerUnit = 100 }: { layers: S
 
                                         {/* Thumbnail */}
                                         {layer.assetPath ? (
-                                            <img
-                                                src={`${STATIC_BASE}/${layer.assetPath}`}
-                                                className="w-6 h-6 rounded object-cover"
-                                                alt=""
-                                            />
+                                            layer.source === 'video' ? (
+                                                <div className="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center text-[8px]">🎬</div>
+                                            ) : (
+                                                <img
+                                                    src={`${STATIC_BASE}/${layer.assetPath}`}
+                                                    className="w-6 h-6 rounded object-cover"
+                                                    alt=""
+                                                />
+                                            )
                                         ) : (
                                             <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center">
                                                 <Upload className="w-3 h-3 text-neutral-600" />
                                             </div>
                                         )}
 
-                                        {/* Label + Type badge */}
+                                        {/* Label + Source badge */}
                                         <span className="text-[11px] text-white/80 flex-1 truncate">{layer.label}</span>
                                         <span className={`text-[8px] px-1 py-0.5 rounded font-mono ${colors.bg} ${colors.text}`}>
-                                            {layer.type === 'background' ? 'BG' : layer.type === 'foreground' ? 'FG' : 'PROP'}
+                                            {layer.source.toUpperCase()}
                                         </span>
                                         <span className="text-[9px] text-neutral-500 font-mono w-6 text-right">z{layer.zIndex}</span>
 
@@ -1103,7 +1142,7 @@ function StageLayerEditor({ layers, onUpdate, pixelsPerUnit = 100 }: { layers: S
                                                 className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded border border-dashed border-white/10 hover:border-white/20 text-[10px] text-neutral-400 transition-all"
                                             >
                                                 <Upload className="w-3 h-3" />
-                                                {layer.assetPath ? 'Change image' : 'Upload image/PSD'}
+                                                {layer.assetPath ? 'Change asset' : 'Upload image/video'}
                                             </button>
 
                                             {/* Label */}
@@ -1115,6 +1154,20 @@ function StageLayerEditor({ layers, onUpdate, pixelsPerUnit = 100 }: { layers: S
                                                     onChange={(e) => updateLayer(layer.id, { label: e.target.value })}
                                                     className="flex-1 bg-white/5 rounded px-2 py-0.5 text-[10px] text-white border border-white/5 focus:border-amber-500/50 outline-none"
                                                 />
+                                            </div>
+
+                                            {/* Type */}
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] text-neutral-500 w-10">Type</span>
+                                                <select
+                                                    value={layer.type || 'prop'}
+                                                    onChange={(e) => updateLayer(layer.id, { type: e.target.value as StageLayer['type'] })}
+                                                    className="flex-1 bg-white/5 rounded px-2 py-0.5 text-[10px] text-white border border-white/5 focus:border-amber-500/50 outline-none"
+                                                >
+                                                    <option value="background">🖼️ Background</option>
+                                                    <option value="foreground">🎭 Foreground</option>
+                                                    <option value="prop">🔧 Prop</option>
+                                                </select>
                                             </div>
 
                                             {/* Z-Index with arrows */}
@@ -1151,11 +1204,15 @@ function StageLayerEditor({ layers, onUpdate, pixelsPerUnit = 100 }: { layers: S
                                                 />
                                             </div>
 
-                                            {/* Height (units) + Opacity */}
+                                            {/* Size (units) + Opacity */}
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] text-neutral-500 w-10">H(u)</span>
-                                                <input type="number" value={+(layer.scale / ppu).toFixed(2)} step={0.1}
-                                                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) updateLayer(layer.id, { scale: Math.round(v * ppu) }); }}
+                                                <span className="text-[10px] text-neutral-500 w-10">W×H</span>
+                                                <input type="number" value={+(layer.width / ppu).toFixed(2)} step={0.1}
+                                                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) updateLayer(layer.id, { width: Math.round(v * ppu) }); }}
+                                                    className="w-14 bg-white/5 rounded px-1.5 py-0.5 text-[10px] text-white text-center border border-white/5 outline-none"
+                                                />
+                                                <input type="number" value={+(layer.height / ppu).toFixed(2)} step={0.1}
+                                                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) updateLayer(layer.id, { height: Math.round(v * ppu) }); }}
                                                     className="w-14 bg-white/5 rounded px-1.5 py-0.5 text-[10px] text-white text-center border border-white/5 outline-none"
                                                 />
                                                 <span className="text-[10px] text-neutral-500 w-10 text-right">Opacity</span>

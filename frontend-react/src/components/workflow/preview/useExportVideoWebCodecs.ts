@@ -175,6 +175,7 @@ export function useExportVideoWebCodecs({
                     charNodeDataMap: charNodeDataMap ?? new Map(),
                     imageCache,
                     ppu,
+                    showLabels: false,
                 });
 
                 // Copy rendered frame to OffscreenCanvas for mediabunny

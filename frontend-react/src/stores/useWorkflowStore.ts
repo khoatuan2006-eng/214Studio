@@ -28,6 +28,11 @@ export interface PositionKeyframe {
     y: number;      // canvas Y (0-1080)
 }
 
+export interface ZIndexKeyframe {
+    time: number;   // seconds from start
+    z: number;      // z-index value (0-100)
+}
+
 /** Data payload for a Character Node */
 export interface CharacterNodeData {
     label: string;
@@ -40,6 +45,7 @@ export interface CharacterNodeData {
     opacity: number;
     sequence: PoseFrame[];     // ordered pose/face frames
     positionKeyframes?: PositionKeyframe[]; // CapCut-style position animation
+    zIndexKeyframes?: ZIndexKeyframe[];      // animate z-index over time
     [key: string]: unknown;    // xyflow requires this index signature
 }
 
@@ -137,18 +143,20 @@ export interface ForegroundNodeData {
     [key: string]: unknown;
 }
 
-/** A single layer in the Stage (Film Set) node.
- *  Scale = pixel height in 1920×1080 canvas space.
+/** A single layer in the Stage node.
+ *  Coordinates in pixels on 1920×1080 canvas, displayed as units via PPU.
  */
 export interface StageLayer {
     id: string;
     type: 'background' | 'foreground' | 'prop';
+    source: 'image' | 'video' | 'fla';
     label: string;
     assetPath: string;
     posX: number;
     posY: number;
     zIndex: number;
-    scale: number;
+    width: number;      // pixel width on 1920×1080 canvas
+    height: number;     // pixel height on 1920×1080 canvas
     opacity: number;
     rotation: number;
     blur: number;

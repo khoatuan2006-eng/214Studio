@@ -60,24 +60,16 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
         let bgUrl = bgData?.assetPath ? `${STATIC_BASE}/${bgData.assetPath}` : '';
         let bgBlur = bgData?.blur || 0;
 
-        // ── Stage node: extract layers for BG + overlays ──
+        // ── Stage node: all layers are overlays ──
         let stageOverlays: StageLayer[] = [];
         const stageNode = nodes.find(
             (n) => n.type === 'stage' && connectedIds.includes(n.id)
         );
         if (stageNode) {
             const stageData = stageNode.data as StageNodeData;
-            const sortedLayers = [...(stageData.layers || [])]
+            stageOverlays = [...(stageData.layers || [])]
                 .filter(l => l.visible && l.assetPath)
                 .sort((a, b) => a.zIndex - b.zIndex);
-
-            const bgLayer = sortedLayers.find(l => l.type === 'background');
-            if (bgLayer && !bgUrl) {
-                bgUrl = `${STATIC_BASE}/${bgLayer.assetPath}`;
-                bgBlur = bgLayer.blur || 0;
-            }
-
-            stageOverlays = sortedLayers.filter(l => l !== bgLayer);
         }
 
         const charNodes = nodes.filter(
@@ -198,13 +190,15 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
         backgroundBlur,
         overlayLayers: overlayLayers.map((l) => ({
             id: l.id,
+            source: l.source,
             type: l.type,
             label: l.label,
             assetUrl: `${STATIC_BASE}/${l.assetPath}`,
             posX: l.posX,
             posY: l.posY,
             zIndex: l.zIndex,
-            scale: l.scale,
+            width: l.width,
+            height: l.height,
             opacity: l.opacity,
             rotation: l.rotation,
             blur: l.blur,
@@ -641,6 +635,7 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
                 setSelectedNodeId={setSelectedNodeId}
                 editFrameIdx={editFrameIdx}
                 setEditFrameIdx={setEditFrameIdx}
+                overlayLayers={overlayLayers}
             />
 
             {/* ══════ PLAYBACK CONTROLS ══════ */}
