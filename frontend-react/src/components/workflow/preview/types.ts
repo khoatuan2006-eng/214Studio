@@ -152,6 +152,24 @@ export function getInterpolatedRotation(
     return 0;
 }
 
+/** Get interpolated flipX from keyframes at a given time (step interpolation — holds until next keyframe) */
+export function getInterpolatedFlipX(
+    data: CharacterNodeData,
+    time: number
+): boolean {
+    const kfs = data.flipXKeyframes;
+    if (!kfs || kfs.length === 0) return !!data.flipX;
+    if (kfs.length === 1) return kfs[0].flipX;
+    if (time <= kfs[0].time) return kfs[0].flipX;
+    if (time >= kfs[kfs.length - 1].time) return kfs[kfs.length - 1].flipX;
+
+    // Step interpolation: use the last keyframe whose time <= current time
+    for (let i = kfs.length - 1; i >= 0; i--) {
+        if (time >= kfs[i].time) return kfs[i].flipX;
+    }
+    return !!data.flipX;
+}
+
 /** Get the active frame for a track at a given time */
 export function getActiveFrame(
     track: PreviewTrack,

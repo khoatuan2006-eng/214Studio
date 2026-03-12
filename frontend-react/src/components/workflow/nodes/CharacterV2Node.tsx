@@ -8,10 +8,11 @@ import { API_BASE_URL } from '@/config/api';
 
 type CharacterV2NodeType = Node<CharacterV2NodeData, 'characterV2'>;
 
-function CharacterV2NodeComponent({ data, selected }: NodeProps<CharacterV2NodeType>) {
+function CharacterV2NodeComponent({ id, data, selected }: NodeProps<CharacterV2NodeType>) {
     const characters = useCharacterV2Store((s) => s.characters);
     const character = characters.find((c) => c.id === data.characterId);
     const nodes = useWorkflowStore((s) => s.nodes);
+    const edges = useWorkflowStore((s) => s.edges);
     const sceneNode = nodes.find(n => n.type === 'scene');
     const ppu = (sceneNode?.data as SceneNodeData)?.pixelsPerUnit || 100;
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -151,6 +152,13 @@ function CharacterV2NodeComponent({ data, selected }: NodeProps<CharacterV2NodeT
                 }`}
             style={{ background: 'linear-gradient(135deg, #0d2818 0%, #1a3a2a 100%)' }}
         >
+            {/* Stage Input Handle */}
+            <Handle
+                type="target"
+                position={Position.Left}
+                id="stage-in"
+                className="!w-3 !h-3 !bg-amber-500 !border-2 !border-amber-300 !shadow-lg !shadow-amber-500/50"
+            />
             {/* Header */}
             <div className="flex items-center gap-2 px-3 py-2 border-b border-white/10"
                 style={{ background: 'linear-gradient(90deg, rgba(16,185,129,0.3), rgba(5,150,105,0.2))' }}
@@ -164,6 +172,22 @@ function CharacterV2NodeComponent({ data, selected }: NodeProps<CharacterV2NodeT
                     V2
                 </span>
             </div>
+
+            {/* Connected Stage indicator */}
+            {(() => {
+                const stageEdge = edges.find((e: any) => e.targetHandle === 'stage-in' && e.target === id);
+                const stageNode = stageEdge ? nodes.find(n => n.id === stageEdge.source) : null;
+                return stageNode ? (
+                    <div className="px-3 py-1 border-b border-white/5 bg-amber-500/5 flex items-center gap-1.5">
+                        <span className="text-[9px]">🎬</span>
+                        <span className="text-[9px] text-amber-300 truncate">{(stageNode.data as any).label}</span>
+                    </div>
+                ) : (
+                    <div className="px-3 py-1 border-b border-white/5 flex items-center gap-1.5">
+                        <span className="text-[9px] text-neutral-600">← Kết nối Stage</span>
+                    </div>
+                );
+            })()}
 
             {/* Preview */}
             <div className="p-3">

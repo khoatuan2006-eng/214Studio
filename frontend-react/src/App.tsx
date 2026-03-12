@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Palette, Shirt, Menu, Loader2, GitBranch } from 'lucide-react';
+import { Palette, Shirt, Menu, Loader2, GitBranch, Key } from 'lucide-react';
+import APIKeyManager from './components/APIKeyManager';
 import ProjectManager from './components/ProjectManager';
 import { useProjectStore } from './stores/useProjectStore';
 import { useAppStore } from './stores/useAppStore';
@@ -32,6 +33,7 @@ function App() {
 
   const [activeTab, setActiveTab] = useState<Tab>('base'); // Start on base mode for now
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showAPIKeys, setShowAPIKeys] = useState(false);
   const { currentProject, startAutoSave, stopAutoSave, markDirty } = useProjectStore();
 
   // P2-3.5: Restore editorData from saved project when project changes
@@ -150,8 +152,16 @@ function App() {
           })}
         </nav>
 
-        {/* Bottom decoration */}
-        <div className="mt-auto pt-4 px-4 w-full">
+        {/* Bottom section */}
+        <div className="mt-auto pt-4 px-3 w-full space-y-2">
+          <button
+            onClick={() => setShowAPIKeys(true)}
+            className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3 px-4'} w-full py-2.5 rounded-xl transition-all text-neutral-400 hover:text-neutral-200 hover:bg-white/5`}
+            title="API Keys"
+          >
+            <Key className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--accent-400)' }} />
+            {!isSidebarCollapsed && <span className="text-xs font-medium">API Keys</span>}
+          </button>
           {!isSidebarCollapsed && (
             <div className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
               v2.0 — Premium Edition
@@ -190,6 +200,9 @@ function App() {
         <Suspense fallback={null}>
           <OnboardingOverlay />
         </Suspense>
+
+        {/* API Key Manager Modal */}
+        <APIKeyManager open={showAPIKeys} onClose={() => setShowAPIKeys(false)} />
       </main>
     </div>
   );

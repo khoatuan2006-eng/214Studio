@@ -18,4 +18,5 @@ backend/uploads/
 backend/bin/ffmpeg/*.exe
 
 references/
+research/
 *.png

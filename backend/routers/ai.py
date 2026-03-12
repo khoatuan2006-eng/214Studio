@@ -162,6 +162,127 @@ async def ai_review_scene(body: AIReviewRequest):
         raise HTTPException(status_code=500, detail=f"Review failed: {str(e)}")
 
 
+class StageAnalyzeRequest(BaseModel):
+    """Request to analyze stage layer elements with Vision AI."""
+    layers: list[dict]  # Each dict: { id, label, image_base64, type, zIndex }
+    vision_model: str | None = None  # Optional: override default vision model
+
+
+@router.post("/api/ai/analyze-stage")
+async def ai_analyze_stage(body: StageAnalyzeRequest):
+    """
+    Analyze stage layer images using Vision AI to identify elements.
+    Returns semantic labels (name_vi, name_en, category, etc.) for each layer.
+    """
+    from backend.core.agents.stage_analyzer_agent import analyze_stage_elements
+
+    try:
+        result = await analyze_stage_elements(body.layers, vision_model=body.vision_model)
+        return JSONResponse(content=result.to_dict())
+    except Exception as e:
+        logger.error(f"Stage analysis failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Stage analysis failed: {str(e)}")
+
+
+class ScriptAnalyzeRequest(BaseModel):
+    """Request to analyze a script/SRT for character identification."""
+    srt_content: str
+    model: str | None = None
+
+
+@router.post("/api/ai/analyze-script")
+async def ai_analyze_script(body: ScriptAnalyzeRequest):
+    """
+    Analyze SRT script using AI to identify characters,
+    assign dialogue, and suggest poses/actions/emotions per timestamp.
+    """
+    from backend.core.agents.script_analyzer_agent import analyze_script
+
+    try:
+        result = await analyze_script(body.srt_content, model=body.model)
+        return JSONResponse(content=result.to_dict())
+    except Exception as e:
+        logger.error(f"Script analysis failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Script analysis failed: {str(e)}")
+
+class CharacterAnalyzeRequest(BaseModel):
+    """Request to analyze a character's position and pose/emotions using AI."""
+    character_name: str = "Character"
+    layer_catalog: dict[str, list[str]] = {}  # groupName → list of asset names
+    stage_elements: list[dict] = []   # Semantic elements from Stage Analyzer
+    script_actions: list[dict] = []   # Actions from Script Analyzer
+    canvas_width: int = 1920
+    canvas_height: int = 1080
+    other_characters: list[dict] = [] # Other characters already placed
+    stage_image_base64: str | None = None  # Base64 PNG of composited stage
+    model: str | None = None
+    ground_y: float | None = None  # Pre-computed ground line Y position (pixels)
+
+
+@router.post("/api/ai/analyze-character")
+async def ai_analyze_character(body: CharacterAnalyzeRequest):
+    """
+    Analyze stage context + script to suggest character pose sequence and position.
+    Uses Gemini Vision if stage_image_base64 is provided for precise placement.
+    """
+    from backend.core.agents.character_agent import analyze_character
+
+    try:
+        result = await analyze_character(
+            character_name=body.character_name,
+            layer_catalog=body.layer_catalog,
+            stage_elements=body.stage_elements,
+            script_actions=body.script_actions,
+            canvas_width=body.canvas_width,
+            canvas_height=body.canvas_height,
+            other_characters=body.other_characters if body.other_characters else None,
+            stage_image_base64=body.stage_image_base64,
+            model=body.model,
+            ground_y=body.ground_y,
+        )
+        return JSONResponse(content=result.to_dict())
+    except Exception as e:
+        logger.error(f"Character analysis failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Character analysis failed: {str(e)}")
+
+
+class CharacterChatRequest(BaseModel):
+    """Request to chat with a character's AI assistant."""
+    message: str
+    character_name: str = "Character"
+    current_state: dict = {}
+    layer_catalog: dict[str, list[str]] = {}
+    chat_history: list[dict] = []
+    canvas_width: int = 1920
+    canvas_height: int = 1080
+    model: str | None = None
+
+
+@router.post("/api/ai/character-chat")
+async def ai_character_chat(body: CharacterChatRequest):
+    """
+    Chat with a character's AI assistant to modify keyframes, poses, expressions.
+    Returns structured updates that can be applied directly to the character node.
+    """
+    from backend.core.agents.character_chat_agent import chat_with_character
+
+    try:
+        result = await chat_with_character(
+            message=body.message,
+            character_name=body.character_name,
+            current_state=body.current_state,
+            layer_catalog=body.layer_catalog,
+            chat_history=body.chat_history if body.chat_history else None,
+            canvas_width=body.canvas_width,
+            canvas_height=body.canvas_height,
+            model=body.model,
+        )
+        return JSONResponse(content=result.to_dict())
+    except Exception as e:
+        logger.error(f"Character chat failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Character chat failed: {str(e)}")
+
+
 @router.get("/api/ai/config")
 async def ai_get_config():
     """Get current AI configuration (without exposing API key)."""
@@ -305,6 +426,50 @@ async def ai_add_key(body: AddKeyRequest):
     config = get_ai_config()
     config.add_key(body.api_key)
     return JSONResponse(content=config.to_dict())
+
+
+class AddMultipleKeysRequest(BaseModel):
+    api_keys: list[str]
+
+@router.post("/api/ai/keys/bulk")
+async def ai_add_keys_bulk(body: AddMultipleKeysRequest):
+    """Add multiple API keys at once (from textarea paste)."""
+    from backend.core.ai_config import get_ai_config
+    config = get_ai_config()
+    added = 0
+    for key in body.api_keys:
+        k = key.strip()
+        if k and k not in config.api_keys:
+            config.add_key(k)
+            added += 1
+    return JSONResponse(content={**config.to_dict(), "added": added})
+
+
+@router.get("/api/ai/keys")
+async def ai_list_keys():
+    """List all API keys (masked for security)."""
+    from backend.core.ai_config import get_ai_config
+    config = get_ai_config()
+    masked = []
+    for i, key in enumerate(config.api_keys):
+        label = f"{key[:6]}...{key[-4:]}" if len(key) > 10 else "***"
+        masked.append({"index": i, "label": label})
+    return JSONResponse(content={
+        "keys": masked,
+        "total": len(config.api_keys),
+        "current": config.current_key_label,
+    })
+
+
+@router.delete("/api/ai/keys/{index}")
+async def ai_remove_key(index: int):
+    """Remove an API key by its index."""
+    from backend.core.ai_config import get_ai_config
+    config = get_ai_config()
+    if 0 <= index < len(config.api_keys):
+        config.remove_key(index)
+        return JSONResponse(content=config.to_dict())
+    raise HTTPException(status_code=404, detail="Key index not found")
 
 
 # ── AI Automation Gateway ──

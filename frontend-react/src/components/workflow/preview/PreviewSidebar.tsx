@@ -2,6 +2,7 @@ import React from 'react';
 import { useWorkflowStore, type CharacterNodeData, type PoseFrame, type SceneNodeData } from '@/stores/useWorkflowStore';
 import { useAppStore, STATIC_BASE } from '@/stores/useAppStore';
 import { X, Settings2, Diamond, Trash2, Plus } from 'lucide-react';
+import { getInterpolatedFlipX } from './types';
 
 interface PreviewSidebarProps {
     selectedNodeId: string;
@@ -55,6 +56,8 @@ const PreviewSidebar: React.FC<PreviewSidebarProps> = ({
     const zKfs = selData.zIndexKeyframes || [];
     const scaleKfs = selData.scaleKeyframes || [];
     const rotKfs = selData.rotationKeyframes || [];
+    const flipKfs = selData.flipXKeyframes || [];
+    const currentFlipX = getInterpolatedFlipX(selData, currentTime);
 
     return (
         <div className="w-72 shrink-0 bg-neutral-900/95 border-l border-white/5 flex flex-col z-30">
@@ -68,11 +71,21 @@ const PreviewSidebar: React.FC<PreviewSidebarProps> = ({
             </div>
 
             {/* Selected Frame Indicator */}
-            <div className="px-4 py-2 border-b border-white/5 flex items-center gap-2">
-                <span className="text-[9px] text-neutral-500 uppercase tracking-wider">Editing</span>
-                <span className="text-xs font-bold text-indigo-300">Frame {fi + 1}</span>
-                <span className="text-[9px] text-neutral-600">/ {seq.length}</span>
-                <span className="text-[9px] text-neutral-600">({frame.duration}s)</span>
+            <div className="px-4 py-2 border-b border-white/5">
+                <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[9px] text-neutral-500 uppercase tracking-wider">Editing</span>
+                    <span className="text-xs font-bold text-indigo-300">Frame {fi + 1}</span>
+                    <span className="text-[9px] text-neutral-600">/ {seq.length}</span>
+                    <span className="text-[9px] text-neutral-600">({frame.duration}s)</span>
+                </div>
+                {/* Frame action description */}
+                <input
+                    type="text"
+                    value={frame.description || ''}
+                    onChange={(e) => updateFrame({ description: e.target.value })}
+                    placeholder="Mô tả hành động (VD: Đứng mỉm cười)"
+                    className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-amber-200 placeholder:text-neutral-600 outline-none focus:border-amber-500/40 transition-colors"
+                />
             </div>
 
             {/* Scrollable content */}
@@ -107,16 +120,17 @@ const PreviewSidebar: React.FC<PreviewSidebarProps> = ({
                     </div>
                 </div>
 
-                {/* Flip */}
+                {/* Flip — static toggle + keyframe indicator */}
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => updateNodeData(nodeId, { flipX: !selData.flipX })}
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[10px] font-bold border transition-all ${selData.flipX
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[10px] font-bold border transition-all ${currentFlipX
                                 ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
                                 : 'bg-white/5 border-white/10 text-neutral-400 hover:bg-white/10'
                             }`}
                     >
-                        ↔ Lật ngang {selData.flipX ? '(ON)' : '(OFF)'}
+                        ↔ Lật ngang {currentFlipX ? '(ON)' : '(OFF)'}
+                        {flipKfs.length > 0 && <span className="text-[8px] text-violet-400 ml-1">◇{flipKfs.length}</span>}
                     </button>
                 </div>
 
@@ -365,6 +379,71 @@ const PreviewSidebar: React.FC<PreviewSidebarProps> = ({
                             className="w-full text-center text-[9px] text-neutral-500 hover:text-red-400 py-0.5 transition-colors"
                         >
                             ↺ Clear all rotation-keyframes
+                        </button>
+                    )}
+                </div>
+
+                {/* FlipX Keyframes */}
+                <div className="p-2 rounded bg-violet-500/5 border border-violet-500/10 space-y-1.5">
+                    <label className="block text-[9px] font-bold text-violet-400 uppercase tracking-wider">◇ Flip Keyframes</label>
+                    <p className="text-[9px] text-neutral-500">Lật ngang nhân vật theo thời gian</p>
+                    <button
+                        onClick={() => {
+                            const existing = [...flipKfs];
+                            if (existing.some(k => Math.abs(k.time - currentTime) < 0.05)) return;
+                            existing.push({ time: +currentTime.toFixed(2), flipX: !currentFlipX });
+                            existing.sort((a, b) => a.time - b.time);
+                            updateNodeData(nodeId, { flipXKeyframes: existing });
+                        }}
+                        className="w-full flex items-center justify-center gap-1 px-2 py-1 rounded bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 text-[9px] font-bold border border-violet-500/20 transition-colors"
+                    >
+                        <Plus className="w-3 h-3" />
+                        Toggle Flip at {currentTime.toFixed(1)}s → {!currentFlipX ? 'ON' : 'OFF'}
+                    </button>
+                    {flipKfs.length === 0 ? (
+                        <p className="text-[8px] text-neutral-600 italic">Chưa có flip keyframe.</p>
+                    ) : (
+                        <div className="space-y-0.5 max-h-28 overflow-y-auto">
+                            {flipKfs.map((kf, i) => {
+                                const isNearest = Math.abs(kf.time - currentTime) < 0.15;
+                                return (
+                                    <div key={i} className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[9px] transition-colors ${isNearest ? 'bg-violet-500/20 text-violet-200' : 'text-neutral-400 hover:bg-white/5'}`}>
+                                        <Diamond className="w-2.5 h-2.5 text-violet-400 shrink-0" />
+                                        <span className="font-mono font-bold w-10">{kf.time.toFixed(1)}s</span>
+                                        <span className={`text-[8px] font-bold ${kf.flipX ? 'text-violet-300' : 'text-neutral-500'}`}>{kf.flipX ? '↔ ON' : '— OFF'}</span>
+                                        <button
+                                            onClick={() => {
+                                                // Toggle the value of this keyframe
+                                                const updated = flipKfs.map((k, j) =>
+                                                    j === i ? { ...k, flipX: !k.flipX } : k
+                                                );
+                                                updateNodeData(nodeId, { flipXKeyframes: updated });
+                                            }}
+                                            className="px-1 py-0.5 rounded bg-white/5 hover:bg-violet-500/20 text-[8px] text-neutral-400 hover:text-violet-300 transition-colors"
+                                            title="Toggle value"
+                                        >
+                                            ↔
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                updateNodeData(nodeId, { flipXKeyframes: flipKfs.filter((_, j) => j !== i) });
+                                            }}
+                                            className="ml-auto p-0.5 rounded hover:bg-red-500/20 text-neutral-600 hover:text-red-400 transition-colors"
+                                            title="Delete flip keyframe"
+                                        >
+                                            <Trash2 className="w-2.5 h-2.5" />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                    {flipKfs.length > 0 && (
+                        <button
+                            onClick={() => updateNodeData(nodeId, { flipXKeyframes: [] })}
+                            className="w-full text-center text-[9px] text-neutral-500 hover:text-red-400 py-0.5 transition-colors"
+                        >
+                            ↺ Clear all flip-keyframes
                         </button>
                     )}
                 </div>

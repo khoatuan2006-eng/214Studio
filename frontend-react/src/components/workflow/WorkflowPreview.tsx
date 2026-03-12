@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useWorkflowStore, type CharacterNodeData, type BackgroundNodeData, type StageNodeData, type StageLayer, type CameraNodeData, type CameraKeyframe } from '@/stores/useWorkflowStore';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useWorkflowStore, type CharacterNodeData, type StageNodeData, type CameraNodeData, type CameraKeyframe } from '@/stores/useWorkflowStore';
 import { useAppStore, STATIC_BASE } from '@/stores/useAppStore';
 import SceneContextPanel from './SceneContextPanel';
 import PreviewCanvas from './preview/PreviewCanvas';
@@ -7,6 +7,7 @@ import PreviewSidebar from './preview/PreviewSidebar';
 import KeyframeTimeline from './preview/KeyframeTimeline';
 import PlaybackControls from './preview/PlaybackControls';
 import ExportOverlay from './preview/ExportOverlay';
+import SceneJsonEditor from './preview/SceneJsonEditor';
 import { usePlayback } from './preview/usePlayback';
 import { useExportVideoWebCodecs } from './preview/useExportVideoWebCodecs';
 import { resolveFrameLayers, type ResolvedFrame, type PreviewTrack } from './preview/types';
@@ -39,7 +40,7 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
     // ══════════════════════════════════════
     //  RESOLVE WORKFLOW → PREVIEW TRACKS
     // ══════════════════════════════════════
-    const { tracks, totalDuration, backgroundUrl, backgroundBlur, overlayLayers, allCameras, sceneNodeId, cameraCuts, ppu } = useMemo(() => {
+    const { tracks, totalDuration, backgroundUrl, backgroundBlur, overlayLayers, allCameras, sceneNodeId, cameraCuts, ppu, audioUrl, srtLines, audioDuration } = useMemo(() => {
         const sceneNode = nodes.find((n) => n.type === 'scene');
         if (!sceneNode) return {
             tracks: [], totalDuration: 0, backgroundUrl: '', backgroundBlur: 0,
@@ -48,23 +49,40 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
             sceneNodeId: null as string | null,
             cameraCuts: [] as import('@/stores/useWorkflowStore').CameraCut[],
             ppu: 100,
+            audioUrl: '' as string,
+            srtLines: [] as { index: number; text: string; start_time: number; end_time: number }[],
+            audioDuration: 0,
         };
 
         const connectedEdges = edges.filter((e) => e.target === sceneNode.id);
         const connectedIds = connectedEdges.map((e) => e.source);
 
-        const bgNode = nodes.find(
-            (n) => n.type === 'background' && connectedIds.includes(n.id)
-        );
-        const bgData = bgNode?.data as BackgroundNodeData | undefined;
-        let bgUrl = bgData?.assetPath ? `${STATIC_BASE}/${bgData.assetPath}` : '';
-        let bgBlur = bgData?.blur || 0;
+        let bgUrl = '';
+        let bgBlur = 0;
 
-        // ── Stage node: all layers are overlays ──
+        // ── Stage node: find connected directly to scene OR via character nodes ──
         let stageOverlays: StageLayer[] = [];
-        const stageNode = nodes.find(
+        // 1) Stage directly connected to scene
+        let stageNode = nodes.find(
             (n) => n.type === 'stage' && connectedIds.includes(n.id)
         );
+        // 2) Stage connected to a character that connects to scene (Stage→Character→Scene)
+        if (!stageNode) {
+            for (const charId of connectedIds) {
+                const charNode = nodes.find(n => n.id === charId && (n.type === 'character' || n.type === 'characterV2'));
+                if (!charNode) continue;
+                // Find edge where stage connects to this character's stage-in handle
+                const stageEdge = edges.find(e => e.target === charId && e.targetHandle === 'stage-in');
+                if (stageEdge) {
+                    stageNode = nodes.find(n => n.id === stageEdge.source && n.type === 'stage');
+                    if (stageNode) break;
+                }
+            }
+        }
+        // 3) Fallback: any stage in the workflow
+        if (!stageNode) {
+            stageNode = nodes.find(n => n.type === 'stage');
+        }
         if (stageNode) {
             const stageData = stageNode.data as StageNodeData;
             stageOverlays = [...(stageData.layers || [])]
@@ -141,9 +159,43 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
         const sceneData = sceneNode.data as import('@/stores/useWorkflowStore').SceneNodeData;
         const cuts = (sceneData.cameraCuts || []).sort((a, b) => a.time - b.time);
 
+        // ── Audio resolution: find Audio TTS node connected to scene via audio-in ──
+        let resolvedAudioUrl = '';
+        let resolvedSrtLines: { index: number; text: string; start_time: number; end_time: number }[] = [];
+        let resolvedAudioDuration = 0;
+        const audioEdge = edges.find(e => e.target === sceneNode.id && e.targetHandle === 'audio-in');
+        const audioSourceNode = audioEdge ? nodes.find(n => n.id === audioEdge.source) : null;
+        if (audioSourceNode) {
+            const ad = audioSourceNode.data as any;
+            if (ad?.ttsAudioUrl) {
+                // Build full URL
+                const base = STATIC_BASE;
+                resolvedAudioUrl = ad.ttsAudioUrl.startsWith('http') ? ad.ttsAudioUrl : `${base}${ad.ttsAudioUrl}`;
+                resolvedSrtLines = ad.ttsLines || [];
+                resolvedAudioDuration = ad.ttsDuration || 0;
+            }
+        }
+        // Also check: any audio node connected to scene (fallback to mp3-out handle)
+        if (!resolvedAudioUrl) {
+            for (const e of edges.filter(e => e.target === sceneNode.id)) {
+                const src = nodes.find(n => n.id === e.source);
+                if (src && (src.data as any)?.ttsAudioUrl) {
+                    const ad = src.data as any;
+                    const base = STATIC_BASE;
+                    resolvedAudioUrl = ad.ttsAudioUrl.startsWith('http') ? ad.ttsAudioUrl : `${base}${ad.ttsAudioUrl}`;
+                    resolvedSrtLines = ad.ttsLines || [];
+                    resolvedAudioDuration = ad.ttsDuration || 0;
+                    break;
+                }
+            }
+        }
+
+        // Use audio duration if longer than animation duration
+        const finalDuration = Math.max(maxDuration, resolvedAudioDuration) || 5;
+
         return {
             tracks: resultTracks,
-            totalDuration: maxDuration || 5,
+            totalDuration: finalDuration,
             backgroundUrl: bgUrl,
             backgroundBlur: bgBlur,
             overlayLayers: stageOverlays,
@@ -151,11 +203,38 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
             sceneNodeId: sceneNode.id,
             cameraCuts: cuts,
             ppu: sceneData.pixelsPerUnit || 100,
+            audioUrl: resolvedAudioUrl,
+            srtLines: resolvedSrtLines,
+            audioDuration: resolvedAudioDuration,
         };
     }, [nodes, edges, characters]);
 
     // Hooks
     const playback = usePlayback({ totalDuration, onClose });
+
+    // ── Audio playback sync ──
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // Sync audio with playback state
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio || !audioUrl) return;
+        if (playback.isPlaying) {
+            // Sync time and play
+            const diff = Math.abs(audio.currentTime - playback.currentTime);
+            if (diff > 0.3) audio.currentTime = playback.currentTime;
+            audio.play().catch(() => { });
+        } else {
+            audio.pause();
+        }
+    }, [playback.isPlaying, audioUrl]);
+
+    // When user scrubs, sync audio time
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio || !audioUrl || playback.isPlaying) return;
+        audio.currentTime = playback.currentTime;
+    }, [playback.currentTime, audioUrl, playback.isPlaying]);
 
     // ── Resolve active camera based on cameraCuts + playback time ──
     const { cameraData, cameraNodeId } = useMemo(() => {
@@ -219,61 +298,8 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
         <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col">
             {/* ══════ MAIN CONTENT ══════ */}
             <div className="flex-1 flex min-h-0">
-                {/* ── Left: Stage Layers Panel ── */}
-                {overlayLayers.length > 0 && (
-                    <div className="w-52 shrink-0 bg-neutral-900/95 border-r border-white/5 flex flex-col">
-                        <div className="px-3 py-2 border-b border-white/5">
-                            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                                🎭 Stage Layers ({overlayLayers.length})
-                            </span>
-                        </div>
-                        <div className="flex-1 overflow-y-auto px-2 py-1 space-y-0.5">
-                            {[...overlayLayers].sort((a, b) => a.zIndex - b.zIndex).map((layer) => {
-                                const typeIcon = layer.type === 'background' ? '🖼️' : layer.type === 'foreground' ? '📐' : '🔧';
-                                const typeColor = layer.type === 'background' ? '#3b82f6' : layer.type === 'foreground' ? '#a855f7' : '#f59e0b';
-
-                                const updateLayer = (patch: Partial<StageLayer>) => {
-                                    const stageNode = nodes.find(n => n.type === 'stage');
-                                    if (!stageNode) return;
-                                    const stageData = stageNode.data as StageNodeData;
-                                    const updatedLayers = (stageData.layers || []).map(l =>
-                                        l.id === layer.id ? { ...l, ...patch } : l
-                                    );
-                                    updateNodeData(stageNode.id, { layers: updatedLayers });
-                                };
-
-                                return (
-                                    <div
-                                        key={layer.id}
-                                        className={`flex items-center gap-1 px-2 py-1.5 rounded text-[10px] transition-colors ${layer.visible !== false ? 'bg-white/[0.02] hover:bg-white/[0.05]' : 'bg-black/20 opacity-40'}`}
-                                    >
-                                        {/* Visibility toggle */}
-                                        <button
-                                            onClick={() => updateLayer({ visible: layer.visible === false ? true : false })}
-                                            className="text-[10px] hover:scale-110 transition-transform shrink-0"
-                                            title={layer.visible !== false ? 'Ẩn layer' : 'Hiện layer'}
-                                        >
-                                            {layer.visible !== false ? '👁️' : '🚫'}
-                                        </button>
-                                        {/* Type icon */}
-                                        <span className="shrink-0">{typeIcon}</span>
-                                        {/* Label */}
-                                        <span className="flex-1 truncate text-neutral-300 font-medium min-w-0">{layer.label}</span>
-                                        {/* Z-index editable */}
-                                        <input
-                                            type="number"
-                                            value={layer.zIndex}
-                                            onChange={(e) => updateLayer({ zIndex: Number(e.target.value) })}
-                                            className="w-10 bg-black/40 border border-white/10 rounded px-1 py-0.5 text-[9px] font-mono font-bold text-center outline-none focus:border-cyan-500/50"
-                                            style={{ color: typeColor }}
-                                            title="Z-Index"
-                                        />
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
+                {/* ── Left: Scene JSON Editor ── */}
+                <SceneJsonEditor currentTime={playback.currentTime} />
 
                 {/* Canvas + Scene Context */}
                 <div className="flex-1 flex">
@@ -400,17 +426,6 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
                         if (d < minDist) { minDist = d; nearest = kf; }
                     }
                     const updated = kfs.map(kf => kf.id === nearest.id ? { ...kf, zoom: Math.max(0.5, Math.min(5, newZoom)) } : kf);
-                    updateNodeData(cameraNodeId, { keyframes: updated });
-                };
-
-                const moveNearestCamera = (dx: number, dy: number) => {
-                    if (kfs.length === 0) return;
-                    let nearest = kfs[0], minDist = Infinity;
-                    for (const kf of kfs) {
-                        const d = Math.abs(kf.time - playback.currentTime);
-                        if (d < minDist) { minDist = d; nearest = kf; }
-                    }
-                    const updated = kfs.map(kf => kf.id === nearest.id ? { ...kf, x: Math.round(kf.x + dx), y: Math.round(kf.y + dy) } : kf);
                     updateNodeData(cameraNodeId, { keyframes: updated });
                 };
 
@@ -681,6 +696,58 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
                 );
             })()}
 
+            {/* ══════ AUDIO TRACK ══════ */}
+            {audioUrl && (
+                <>
+                    <audio ref={audioRef} src={audioUrl} preload="auto" />
+                    <div className="px-4 py-1.5 bg-neutral-900/60 border-b border-white/5">
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">
+                                🎵 Audio Track {audioDuration > 0 && `· ${audioDuration.toFixed(1)}s`}
+                            </span>
+                            {/* Current subtitle */}
+                            {(() => {
+                                const cur = srtLines.find((l: any) =>
+                                    playback.currentTime >= l.start_time && playback.currentTime <= l.end_time
+                                );
+                                return cur ? (
+                                    <span className="text-[9px] text-purple-300 truncate max-w-[60%]">
+                                        💬 {(cur as any).text}
+                                    </span>
+                                ) : null;
+                            })()}
+                        </div>
+                        {/* SRT segments on timeline */}
+                        <div className="relative h-8 rounded bg-neutral-800/50 border border-white/5 overflow-hidden">
+                            {/* SRT subtitle blocks */}
+                            {srtLines.map((line: any, i: number) => {
+                                const left = (line.start_time / totalDuration) * 100;
+                                const width = ((line.end_time - line.start_time) / totalDuration) * 100;
+                                const isActive = playback.currentTime >= line.start_time && playback.currentTime <= line.end_time;
+                                return (
+                                    <div
+                                        key={i}
+                                        className={`absolute top-0.5 bottom-0.5 rounded-sm flex items-center px-1 overflow-hidden transition-colors ${isActive ? 'bg-purple-500/40 ring-1 ring-purple-400' : 'bg-purple-500/15'
+                                            }`}
+                                        style={{ left: `${left}%`, width: `${Math.max(width, 0.5)}%` }}
+                                        title={`${line.start_time.toFixed(1)}s: ${line.text}`}
+                                    >
+                                        <span className="text-[6px] text-purple-200/80 truncate">
+                                            {line.text}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                            {/* Playhead */}
+                            <div
+                                className="absolute top-0 bottom-0 w-0.5 bg-white/80 z-10"
+                                style={{ left: `${(playback.currentTime / totalDuration) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
+
             {/* ══════ KEYFRAME TIMELINE ══════ */}
             <KeyframeTimeline
                 tracks={tracks}
@@ -691,7 +758,6 @@ const WorkflowPreview: React.FC<WorkflowPreviewProps> = ({ onClose }) => {
                 setSelectedNodeId={setSelectedNodeId}
                 editFrameIdx={editFrameIdx}
                 setEditFrameIdx={setEditFrameIdx}
-                overlayLayers={overlayLayers}
             />
 
             {/* ══════ PLAYBACK CONTROLS ══════ */}

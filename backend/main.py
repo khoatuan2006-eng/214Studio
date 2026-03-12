@@ -22,7 +22,7 @@ from backend.core.database import init_db
 from backend.core.psd_processor import load_db
 
 # Import routers
-from backend.routers import projects, psd, psd_v2, assets, library, export, ai, backgrounds, foregrounds, stages
+from backend.routers import projects, psd, psd_v2, assets, library, export, ai, backgrounds, foregrounds, stages, tts
 
 # Set up logging configuration
 logging.basicConfig(
@@ -118,6 +118,7 @@ app.include_router(ai.router)
 app.include_router(backgrounds.router)
 app.include_router(foregrounds.router)
 app.include_router(stages.router)
+app.include_router(tts.router)
 
 
 if __name__ == "__main__":

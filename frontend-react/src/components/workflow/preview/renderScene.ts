@@ -9,7 +9,7 @@
  * Preview and Export call this with different (W, H), everything else is identical.
  */
 import type { PreviewTrack } from './types';
-import { getInterpolatedPos, getInterpolatedZIndex, getInterpolatedScale, getInterpolatedRotation } from './types';
+import { getInterpolatedPos, getInterpolatedZIndex, getInterpolatedScale, getInterpolatedRotation, getInterpolatedFlipX } from './types';
 import type { CharacterNodeData } from '@/stores/useWorkflowStore';
 
 // ── Types ──
@@ -245,7 +245,10 @@ export function renderScene({
         } else {
             // ── Character track ──
             const { track, charData } = item;
-            const frame = getFrameAtTime(track, time);
+            // Apply startDelay: character's pose sequence begins at startDelay seconds
+            const delay = charData?.startDelay || 0;
+            const charTime = Math.max(0, time - delay);
+            const frame = getFrameAtTime(track, charTime);
             if (!frame) continue;
 
             let posX: number, posY: number;
@@ -279,8 +282,9 @@ export function renderScene({
                 ctx.translate(-posX, -posY);
             }
 
-            // Apply horizontal flip
-            if (charData?.flipX) {
+            // Apply horizontal flip (animated via keyframes)
+            const isFlipped = charData ? getInterpolatedFlipX(charData, time) : false;
+            if (isFlipped) {
                 ctx.translate(posX, 0);
                 ctx.scale(-1, 1);
                 ctx.translate(-posX, 0);

@@ -14,14 +14,12 @@ import '@xyflow/react/dist/style.css';
 import { useWorkflowStore, type WorkflowNodeType } from '@/stores/useWorkflowStore';
 import { CharacterNode } from './nodes/CharacterNode';
 import { CharacterV2Node } from './nodes/CharacterV2Node';
-import { BackgroundNode } from './nodes/BackgroundNode';
 import { SceneNode } from './nodes/SceneNode';
-import { PropNode } from './nodes/PropNode';
 import { AudioNode } from './nodes/AudioNode';
 import { CameraNode } from './nodes/CameraNode';
-import { ForegroundNode } from './nodes/ForegroundNode';
 import { StageNode } from './nodes/StageNode';
 import { MapNode } from './nodes/MapNode';
+import { ScriptAnalyzerNode } from './nodes/ScriptAnalyzerNode';
 import NodePalette from './NodePalette';
 import NodeInspector from './NodeInspector';
 import PoseSequenceEditor from './PoseSequenceEditor';
@@ -39,14 +37,12 @@ import { Save, FolderOpen, Trash2, Undo2, Redo2, Workflow, Sparkles } from 'luci
 const nodeTypes: NodeTypes = {
     character: CharacterNode,
     characterV2: CharacterV2Node,
-    background: BackgroundNode,
     scene: SceneNode,
-    prop: PropNode,
     audio: AudioNode,
     camera: CameraNode,
-    foreground: ForegroundNode,
     stage: StageNode,
     map: MapNode,
+    scriptAnalyzer: ScriptAnalyzerNode,
 };
 
 const WorkflowMode: React.FC = () => {
@@ -197,8 +193,6 @@ const WorkflowMode: React.FC = () => {
                 return '#6366f1';
             case 'characterV2':
                 return '#10b981';
-            case 'background':
-                return '#10b981';
             case 'scene':
                 return '#f59e0b';
             case 'map':
@@ -244,8 +238,11 @@ const WorkflowMode: React.FC = () => {
                     fitView
                     snapToGrid
                     snapGrid={[20, 20]}
+                    deleteKeyCode={['Delete', 'Backspace']}
+                    edgesReconnectable
                     defaultEdgeOptions={{
                         animated: true,
+                        selectable: true,
                         style: { stroke: 'rgba(99, 102, 241, 0.5)', strokeWidth: 2 },
                     }}
                     style={{ background: '#08080f' }}

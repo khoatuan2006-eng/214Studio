@@ -62,11 +62,20 @@ const NODE_TYPES: NodeTypeConfig[] = [
     // ── Additional node types ──
     {
         type: 'audio',
-        label: 'Audio',
-        description: 'BGM, SFX, voice + lip-sync',
+        label: 'Audio TTS',
+        description: '🎤 Text-to-Speech → MP3 + SRT',
         icon: Music,
         color: 'text-purple-400',
         bgGradient: 'from-purple-500/20 to-fuchsia-500/10',
+        available: true,
+    },
+    {
+        type: 'scriptAnalyzer' as WorkflowNodeType,
+        label: 'Script Analyzer',
+        description: '🎬 AI phân tích kịch bản → nhân vật',
+        icon: Clapperboard,
+        color: 'text-amber-400',
+        bgGradient: 'from-amber-500/20 to-purple-500/10',
         available: true,
     },
     {

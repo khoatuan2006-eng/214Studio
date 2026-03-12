@@ -1,11 +1,15 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import type { SceneNodeData } from '@/stores/useWorkflowStore';
-import { Film, GripVertical, Play, Eye, Zap } from 'lucide-react';
+import { useWorkflowStore } from '@/stores/useWorkflowStore';
+import { Film, GripVertical, Play, Eye, Zap, Music } from 'lucide-react';
 
 type SceneNodeType = Node<SceneNodeData, 'scene'>;
 
-function SceneNodeComponent({ data, selected }: NodeProps<SceneNodeType>) {
+function SceneNodeComponent({ id, data, selected }: NodeProps<SceneNodeType>) {
+    const nodes = useWorkflowStore((s) => s.nodes);
+    const edges = useWorkflowStore((s) => s.edges);
+
     const handleExecute = (e: React.MouseEvent) => {
         e.stopPropagation();
         window.dispatchEvent(new CustomEvent('workflow:execute'));
@@ -15,6 +19,12 @@ function SceneNodeComponent({ data, selected }: NodeProps<SceneNodeType>) {
         e.stopPropagation();
         window.dispatchEvent(new CustomEvent('workflow:preview'));
     };
+
+    // Find connected Audio TTS node
+    const audioEdge = edges.find((e: any) => e.target === id && e.targetHandle === 'audio-in');
+    const audioNode = audioEdge ? nodes.find(n => n.id === audioEdge.source) : null;
+    const audioData = audioNode?.data as any;
+    const hasAudio = !!audioData?.ttsAudioUrl;
 
     return (
         <div
@@ -34,12 +44,27 @@ function SceneNodeComponent({ data, selected }: NodeProps<SceneNodeType>) {
                 <Zap className="w-3.5 h-3.5 text-amber-400" />
             </div>
 
+            {/* Main input handle (characters, cameras, etc.) */}
             <Handle
                 type="target"
                 position={Position.Left}
+                id="main-in"
                 className="!w-4 !h-4 !bg-amber-500 !border-2 !border-amber-300 !shadow-lg !shadow-amber-500/50 !rounded-sm !rotate-45"
-                style={{ top: '50%' }}
+                style={{ top: '35%' }}
             />
+
+            {/* Audio input handle */}
+            <Handle
+                type="target"
+                position={Position.Left}
+                id="audio-in"
+                className="!w-3.5 !h-3.5 !bg-purple-500 !border-2 !border-purple-300 !shadow-lg !shadow-purple-500/50 !rounded-full"
+                style={{ top: '55%' }}
+            />
+
+            {/* Handle labels */}
+            <div className="absolute left-6 text-[6px] font-bold text-amber-400" style={{ top: 'calc(35% - 4px)' }}>🎬</div>
+            <div className="absolute left-6 text-[6px] font-bold text-purple-400" style={{ top: 'calc(55% - 4px)' }}>🎵</div>
 
             <div className="p-3 space-y-2">
                 <div className="flex items-center justify-between text-[11px]">
@@ -65,6 +90,20 @@ function SceneNodeComponent({ data, selected }: NodeProps<SceneNodeType>) {
                     <span className="text-amber-300 font-mono text-[10px] bg-amber-500/10 px-2 py-0.5 rounded">
                         {data.totalDuration > 0 ? `${data.totalDuration.toFixed(1)}s` : 'Auto'}
                     </span>
+                </div>
+
+                {/* Audio status */}
+                <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-neutral-400 flex items-center gap-1">
+                        <Music className="w-3 h-3" /> Audio
+                    </span>
+                    {hasAudio ? (
+                        <span className="text-purple-300 font-mono text-[10px] bg-purple-500/10 px-2 py-0.5 rounded">
+                            ✅ {audioData.ttsDuration?.toFixed(1)}s
+                        </span>
+                    ) : (
+                        <span className="text-neutral-600 text-[10px]">← Kết nối Audio TTS</span>
+                    )}
                 </div>
             </div>
 

@@ -19,6 +19,7 @@ export interface PoseFrame {
     endY?: number;
     startScale?: number;
     endScale?: number;
+    description?: string;            // human-readable action description (e.g. "Đứng mỉm cười")
 }
 
 /** Position keyframe for CapCut-style movement animation */
@@ -43,6 +44,11 @@ export interface RotationKeyframe {
     rotation: number; // degrees (0-360)
 }
 
+export interface FlipXKeyframe {
+    time: number;   // seconds from start
+    flipX: boolean; // true = flipped, false = normal
+}
+
 /** Data payload for a Character Node */
 export interface CharacterNodeData {
     label: string;
@@ -58,18 +64,10 @@ export interface CharacterNodeData {
     zIndexKeyframes?: ZIndexKeyframe[];      // animate z-index over time
     scaleKeyframes?: ScaleKeyframe[];        // animate scale over time
     rotationKeyframes?: RotationKeyframe[];  // animate rotation over time
-    flipX?: boolean;                         // horizontal flip
+    flipXKeyframes?: FlipXKeyframe[];          // animate horizontal flip over time
+    flipX?: boolean;                         // horizontal flip (static default)
+    startDelay?: number;                     // seconds to delay pose sequence start (stagger characters)
     [key: string]: unknown;    // xyflow requires this index signature
-}
-
-/** Data payload for a Background Node */
-export interface BackgroundNodeData {
-    label: string;
-    assetHash: string;
-    assetPath: string;
-    parallaxSpeed: number;     // 0 = static, 1 = full parallax
-    blur: number;              // background blur amount
-    [key: string]: unknown;
 }
 
 /** A camera cut — switches to a different CameraNode at a given time */
@@ -92,20 +90,6 @@ export interface SceneNodeData {
     // Camera is now a separate CameraNode connected via edge
     activeCameraId: string;    // ID of the default/active camera node (fallback)
     cameraCuts: CameraCut[];   // Timeline of camera switches
-    [key: string]: unknown;
-}
-
-/** Data payload for a Prop Node */
-export interface PropNodeData {
-    label: string;
-    assetHash: string;
-    assetPath: string;
-    posX: number;
-    posY: number;
-    zIndex: number;
-    scale: number;
-    opacity: number;
-    rotation: number;
     [key: string]: unknown;
 }
 
@@ -142,19 +126,7 @@ export interface CameraNodeData {
     [key: string]: unknown;
 }
 
-/** Data payload for a Foreground Node (image overlay on top of characters) */
-export interface ForegroundNodeData {
-    label: string;
-    assetHash: string;
-    assetPath: string;
-    posX: number;
-    posY: number;
-    zIndex: number;
-    scale: number;
-    opacity: number;
-    blur: number;
-    [key: string]: unknown;
-}
+
 
 /** A single layer in the Stage node.
  *  Coordinates in pixels on 1920×1080 canvas, displayed as units via PPU.
@@ -245,11 +217,20 @@ export interface CharacterV2NodeData {
     [key: string]: unknown;
 }
 
+export interface ScriptAnalyzerNodeData {
+    label: string;
+    srtContent: string;
+    analysisResult: any;
+    analyzedCharacters: any[];
+    createdNodeIds: string[];
+    [key: string]: unknown;
+}
+
 // Union type for all node data
-export type WorkflowNodeData = CharacterNodeData | BackgroundNodeData | SceneNodeData | PropNodeData | AudioNodeData | CameraNodeData | ForegroundNodeData | MapNodeData | CharacterV2NodeData | StageNodeData;
+export type WorkflowNodeData = CharacterNodeData | SceneNodeData | AudioNodeData | CameraNodeData | MapNodeData | CharacterV2NodeData | StageNodeData | ScriptAnalyzerNodeData;
 
 // Node type identifiers
-export type WorkflowNodeType = 'character' | 'background' | 'scene' | 'prop' | 'audio' | 'camera' | 'foreground' | 'map' | 'characterV2' | 'stage';
+export type WorkflowNodeType = 'character' | 'scene' | 'audio' | 'camera' | 'map' | 'characterV2' | 'stage' | 'scriptAnalyzer';
 
 /** A saved workflow snapshot */
 export interface SavedWorkflow {
@@ -317,14 +298,6 @@ const createDefaultData = (type: WorkflowNodeType): WorkflowNodeData => {
                 opacity: 1.0,
                 sequence: [],
             };
-        case 'background':
-            return {
-                label: 'Background',
-                assetHash: '',
-                assetPath: '',
-                parallaxSpeed: 0,
-                blur: 0,
-            };
         case 'scene':
             return {
                 label: 'Scene Output',
@@ -336,21 +309,9 @@ const createDefaultData = (type: WorkflowNodeType): WorkflowNodeData => {
                 activeCameraId: '',
                 cameraCuts: [],
             };
-        case 'prop':
-            return {
-                label: 'Prop',
-                assetHash: '',
-                assetPath: '',
-                posX: 960,
-                posY: 540,
-                zIndex: 15,
-                scale: 1.0,
-                opacity: 1.0,
-                rotation: 0,
-            };
         case 'audio':
             return {
-                label: 'Audio',
+                label: 'Audio TTS',
                 audioType: 'bgm',
                 assetPath: '',
                 volume: 0.8,
@@ -368,18 +329,6 @@ const createDefaultData = (type: WorkflowNodeType): WorkflowNodeData => {
                 viewportWidth: 1920,
                 viewportHeight: 1080,
                 fov: 19.2,  // default: 1920px / 100 PPU = 19.2 units wide
-            };
-        case 'foreground':
-            return {
-                label: 'Foreground',
-                assetHash: '',
-                assetPath: '',
-                posX: 960,
-                posY: 540,
-                zIndex: 50,
-                scale: 960,
-                opacity: 1.0,
-                blur: 0,
             };
         case 'stage':
             return {
@@ -409,6 +358,14 @@ const createDefaultData = (type: WorkflowNodeType): WorkflowNodeData => {
                 borderColor: '#334155',
                 defaultColor: '#1e3a5f',
                 highlightColor: '#ef4444',
+            };
+        case 'scriptAnalyzer':
+            return {
+                label: 'Script Analyzer',
+                srtContent: '',
+                analysisResult: null,
+                analyzedCharacters: [],
+                createdNodeIds: [],
             };
     }
 };
