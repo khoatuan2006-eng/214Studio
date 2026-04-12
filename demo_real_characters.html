@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnimeStudio — Real Character Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117; --bg2: #161b22; --bg3: #21262d;
+            --border: #30363d; --text: #e6edf3; --text2: #8b949e; --text3: #484f58;
+            --cyan: #39d2c0; --blue: #58a6ff; --green: #3fb950; --orange: #d29922;
+            --purple: #bc8cff; --red: #f85149;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+        .app { display:grid; grid-template-rows:48px 1fr 180px; height:100vh; }
+
+        /* Header */
+        .header { display:flex; align-items:center; padding:0 16px; background:var(--bg2); border-bottom:1px solid var(--border); gap:12px; }
+        .logo { font-weight:700; font-size:14px; color:var(--cyan); }
+        .badge { font-size:11px; padding:3px 8px; background:rgba(57,210,192,0.15); color:var(--cyan); border-radius:4px; font-weight:500; }
+        .controls { margin-left:auto; display:flex; gap:8px; align-items:center; }
+        .btn { padding:6px 14px; border-radius:6px; border:1px solid var(--border); background:var(--bg3); color:var(--text); font:500 12px 'Inter'; cursor:pointer; transition:all .15s; }
+        .btn:hover { background:#30363d; }
+        .btn.primary { background:#238636; border-color:#2ea043; }
+        .btn.primary:hover { background:#2ea043; }
+        .btn.active { background:var(--cyan); color:#000; border-color:var(--cyan); }
+        .time-display { font:500 13px 'JetBrains Mono'; color:var(--cyan); min-width:60px; text-align:center; }
+
+        /* Main */
+        .main { display:grid; grid-template-columns:1fr 300px; overflow:hidden; }
+
+        /* Canvas */
+        .canvas-area { position:relative; background:#0a0e14; display:flex; align-items:center; justify-content:center; }
+        #stage { border-radius:4px; box-shadow:0 0 40px rgba(0,0,0,0.5); background:#1a1c2e; }
+        .canvas-overlay { position:absolute; top:12px; right:12px; font:11px 'JetBrains Mono'; color:var(--text3); background:rgba(0,0,0,0.6); padding:4px 8px; border-radius:4px; }
+
+        /* Side Panel */
+        .panel { background:var(--bg2); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+        .panel-title { padding:10px 14px; border-bottom:1px solid var(--border); font:600 11px 'Inter'; color:var(--text2); text-transform:uppercase; letter-spacing:.8px; }
+        .panel-scroll { flex:1; overflow-y:auto; padding:8px; }
+        .panel-scroll::-webkit-scrollbar { width:4px; }
+        .panel-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+        /* Character card */
+        .char-card { background:var(--bg3); border-radius:8px; padding:10px; margin-bottom:8px; border:1px solid var(--border); transition:all .15s; }
+        .char-card:hover { border-color:var(--cyan); }
+        .char-card .char-name { font-weight:600; font-size:12px; margin-bottom:6px; }
+        .char-card .char-stats { font-size:10px; color:var(--text3); margin-bottom:8px; }
+        .char-card .selector { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:6px; }
+        .char-card .selector-label { font-size:10px; color:var(--text2); margin-bottom:3px; font-weight:500; }
+        .pill { padding:3px 8px; font-size:10px; border-radius:4px; border:1px solid var(--border); background:var(--bg); cursor:pointer; transition:all .15s; color:var(--text2); }
+        .pill:hover { border-color:var(--text2); color:var(--text); }
+        .pill.active { background:rgba(57,210,192,0.2); border-color:var(--cyan); color:var(--cyan); }
+
+        /* Timeline */
+        .timeline { background:var(--bg2); border-top:1px solid var(--border); display:grid; grid-template-rows:24px 1fr; }
+        .ruler { display:flex; align-items:center; padding:0 140px 0 140px; background:var(--bg3); border-bottom:1px solid var(--border); position:relative; }
+        .ruler-mark { position:absolute; font:10px 'JetBrains Mono'; color:var(--text3); }
+        .tracks { display:flex; flex-direction:column; overflow-y:auto; padding:2px 0; position:relative; }
+        .track { display:flex; align-items:center; height:26px; }
+        .track-label { width:140px; padding:0 8px; font:500 10px 'Inter'; color:var(--text2); flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .track-bar { flex:1; height:100%; position:relative; border-bottom:1px solid #1c2129; }
+        .kf-diamond { position:absolute; width:8px; height:8px; border-radius:2px; transform:rotate(45deg); top:50%; margin-top:-4px; cursor:pointer; transition:transform .15s; }
+        .kf-diamond:hover { transform:rotate(45deg) scale(1.5); }
+        .playhead-line { position:absolute; top:0; width:2px; height:100%; background:var(--cyan); z-index:10; pointer-events:none; }
+        .playhead-line::before { content:''; position:absolute; top:-4px; left:-4px; width:10px; height:10px; background:var(--cyan); border-radius:50%; }
+
+        /* Loading */
+        .loading { text-align:center; padding:40px; color:var(--text3); }
+        .loading .spinner { width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--cyan); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <div class="logo">▶ ANIMESTUDIO</div>
+        <div class="badge">Real Characters</div>
+        <div class="controls">
+            <button class="btn" onclick="resetAnimation()">⟲ Reset</button>
+            <button class="btn" id="playBtn" onclick="togglePlay()">▶ Play</button>
+            <div class="time-display" id="timeDisp">0.00s</div>
+            <button class="btn primary" onclick="runScenario()">🎬 Run Scene</button>
+        </div>
+    </div>
+    <div class="main">
+        <div class="canvas-area">
+            <canvas id="stage" width="960" height="540"></canvas>
+            <div class="canvas-overlay" id="canvasInfo">Loading...</div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Characters</div>
+            <div class="panel-scroll" id="charPanel">
+                <div class="loading"><div class="spinner"></div>Loading characters...</div>
+            </div>
+        </div>
+    </div>
+    <div class="timeline">
+        <div class="ruler" id="ruler"></div>
+        <div class="tracks" id="tracks"></div>
+    </div>
+</div>
+
+<script>
+const API = 'http://localhost:8001';
+const CANVAS_W = 960, CANVAS_H = 540;
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let characters = [];  // from API
+let sceneChars = [];  // characters placed in scene
+let imageCache = {};  // url → Image
+let currentTime = 0;
+let duration = 8.0;
+let isPlaying = false;
+let animFrame = null;
+
+// ══════════════════════════════════════════════
+//  IMAGE LOADING
+// ══════════════════════════════════════════════
+function loadImage(url) {
+    if (imageCache[url]) return Promise.resolve(imageCache[url]);
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => { imageCache[url] = img; resolve(img); };
+        img.onerror = () => { console.warn('Failed to load:', url); resolve(null); };
+        img.src = API + url;
+    });
+}
+
+async function preloadCharacter(charData) {
+    const promises = [];
+    for (const pose of Object.values(charData.poses)) {
+        promises.push(loadImage(pose.url));
+    }
+    // Only preload first 10 faces to save time
+    let faceCount = 0;
+    for (const face of Object.values(charData.faces)) {
+        if (faceCount++ >= 10) break;
+        promises.push(loadImage(face.url));
+    }
+    await Promise.all(promises);
+}
+
+// ══════════════════════════════════════════════
+//  SCENE CHARACTERS
+// ══════════════════════════════════════════════
+class SceneCharacter {
+    constructor(charData, config) {
+        this.data = charData;
+        this.name = charData.name;
+        this.id = charData.id;
+        this.x = config.x || CANVAS_W/2;
+        this.y = config.y || CANVAS_H * 0.7;
+        this.scale = config.scale || 0.25;
+        this.opacity = 1;
+        this.currentPose = charData.default_pose || Object.keys(charData.poses)[0];
+        this.currentFace = charData.default_face || Object.keys(charData.faces)[0];
+        this.keyframes = {}; // property → [{time, value, easing}]
+        this.frameSequence = []; // [{time, pose, face}]
+        this.flipX = config.flipX || false;
+        this.label = config.label || charData.name;
+        this.color = config.color || '#58a6ff';
+    }
+
+    addKeyframe(prop, time, value, easing='linear') {
+        if (!this.keyframes[prop]) this.keyframes[prop] = [];
+        this.keyframes[prop] = this.keyframes[prop].filter(k=>Math.abs(k.time-time)>0.001);
+        this.keyframes[prop].push({time, value, easing});
+        this.keyframes[prop].sort((a,b)=>a.time-b.time);
+    }
+
+    addFrame(time, pose, face) {
+        this.frameSequence = this.frameSequence.filter(f=>Math.abs(f.time-time)>0.001);
+        this.frameSequence.push({time, pose, face});
+        this.frameSequence.sort((a,b)=>a.time-b.time);
+    }
+
+    evalAt(time) {
+        const lerp = (kfs, def) => {
+            if (!kfs?.length) return def;
+            if (time<=kfs[0].time) return kfs[0].value;
+            if (time>=kfs[kfs.length-1].time) return kfs[kfs.length-1].value;
+            for (let i=0;i<kfs.length-1;i++) {
+                if (kfs[i].time<=time&&time<=kfs[i+1].time) {
+                    const d=kfs[i+1].time-kfs[i].time;
+                    if(d<=0) return kfs[i+1].value;
+                    let t=(time-kfs[i].time)/d;
+                    const e=kfs[i].easing;
+                    if(e==='easeInOut') t=3*t*t-2*t*t*t;
+                    else if(e==='easeIn') t=t*t;
+                    else if(e==='easeOut') t=1-(1-t)*(1-t);
+                    return kfs[i].value+(kfs[i+1].value-kfs[i].value)*t;
+                }
+            }
+            return kfs[kfs.length-1].value;
+        };
+
+        let pose = this.currentPose;
+        let face = this.currentFace;
+        if (this.frameSequence.length) {
+            for (const f of this.frameSequence) {
+                if (f.time <= time) { pose = f.pose; face = f.face; }
+                else break;
+            }
+        }
+
+        return {
+            x: lerp(this.keyframes.x, this.x),
+            y: lerp(this.keyframes.y, this.y),
+            scale: lerp(this.keyframes.scale, this.scale),
+            opacity: lerp(this.keyframes.opacity, this.opacity),
+            pose, face
+        };
+    }
+}
+
+// ══════════════════════════════════════════════
+//  RENDERING
+// ══════════════════════════════════════════════
+function drawBackground() {
+    // Night sky gradient
+    const grad = ctx.createLinearGradient(0,0,0,CANVAS_H*0.65);
+    grad.addColorStop(0,'#0f0c29');
+    grad.addColorStop(0.5,'#302b63');
+    grad.addColorStop(1,'#24243e');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,CANVAS_W,CANVAS_H*0.65);
+
+    // Stars
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    for(let i=0;i<40;i++){
+        ctx.fillRect((i*137.5)%CANVAS_W,(i*97.3)%(CANVAS_H*0.45),1.5,1.5);
+    }
+
+    // Moon
+    ctx.beginPath(); ctx.arc(CANVAS_W*0.82,CANVAS_H*0.1,18,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,230,0.85)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(CANVAS_W*0.82+7,CANVAS_H*0.1-2,15,0,Math.PI*2);
+    ctx.fillStyle='#1a1c3a'; ctx.fill();
+
+    // Mountains
+    ctx.fillStyle='#3d3760';
+    ctx.beginPath(); ctx.moveTo(0,CANVAS_H*0.5);
+    for(let x=0;x<=CANVAS_W;x+=30) ctx.lineTo(x,CANVAS_H*0.35+Math.sin(x*0.01)*40+Math.sin(x*0.017)*25);
+    ctx.lineTo(CANVAS_W,CANVAS_H*0.65); ctx.lineTo(0,CANVAS_H*0.65); ctx.fill();
+
+    // Trees
+    for(let i=0;i<14;i++){
+        const tx=i*70+15, ty=CANVAS_H*0.48+Math.sin(i*2.5)*12;
+        ctx.fillStyle=`hsl(${140+i*4},38%,${20+i*1.5}%)`;
+        ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx-14,ty+30); ctx.lineTo(tx+14,ty+30); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(tx,ty-12); ctx.lineTo(tx-10,ty+12); ctx.lineTo(tx+10,ty+12); ctx.fill();
+    }
+
+    // Ground
+    const gg = ctx.createLinearGradient(0,CANVAS_H*0.65,0,CANVAS_H);
+    gg.addColorStop(0,'#3d5a32'); gg.addColorStop(1,'#2a3f20');
+    ctx.fillStyle=gg;
+    ctx.fillRect(0,CANVAS_H*0.65,CANVAS_W,CANVAS_H*0.35);
+}
+
+async function renderScene() {
+    ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+    drawBackground();
+
+    for (const sc of sceneChars) {
+        const state = sc.evalAt(currentTime);
+        if (state.opacity < 0.01) continue;
+
+        const poseUrl = sc.data.poses[state.pose]?.url;
+        const faceUrl = sc.data.faces[state.face]?.url;
+
+        const poseImg = poseUrl ? (imageCache[poseUrl] || await loadImage(poseUrl)) : null;
+        const faceImg = faceUrl ? (imageCache[faceUrl] || await loadImage(faceUrl)) : null;
+
+        ctx.save();
+        ctx.globalAlpha = state.opacity;
+        ctx.translate(state.x, state.y);
+        const s = state.scale;
+        ctx.scale(sc.flipX ? -s : s, s);
+
+        // Draw pose (body)
+        if (poseImg) {
+            ctx.drawImage(poseImg, -poseImg.width/2, -poseImg.height*0.85);
+        }
+        // Overlay face
+        if (faceImg) {
+            ctx.drawImage(faceImg, -faceImg.width/2, -faceImg.height*0.85);
+        }
+
+        ctx.restore();
+
+        // Name label
+        ctx.save();
+        ctx.globalAlpha = state.opacity;
+        ctx.font = '600 11px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        const tw = ctx.measureText(sc.label).width;
+        ctx.fillRect(state.x-tw/2-6, state.y+10, tw+12, 18);
+        ctx.fillStyle = sc.color;
+        ctx.fillText(sc.label, state.x, state.y+23);
+
+        // Pose/face subtitle
+        ctx.font = '9px "JetBrains Mono"';
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillText(`${state.pose} + ${state.face}`, state.x, state.y+36);
+        ctx.restore();
+    }
+
+    // Time overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(CANVAS_W-80,8,72,22);
+    ctx.fillStyle = '#39d2c0';
+    ctx.font = '500 12px "JetBrains Mono"';
+    ctx.fillText(`t=${currentTime.toFixed(2)}s`, CANVAS_W-74, 23);
+}
+
+// ══════════════════════════════════════════════
+//  UI
+// ══════════════════════════════════════════════
+function renderCharacterPanel() {
+    const panel = document.getElementById('charPanel');
+    if (!characters.length) { panel.innerHTML = '<div class="loading">No characters found</div>'; return; }
+
+    let html = '';
+    for (const char of characters) {
+        const sc = sceneChars.find(s => s.id === char.id);
+        const inScene = !!sc;
+        const curPose = sc?.currentPose || char.default_pose;
+        const curFace = sc?.currentFace || char.default_face;
+
+        html += `<div class="char-card">
+            <div class="char-name" style="color:${sc?.color||'var(--text)'}">${char.name.split('_')[0]}</div>
+            <div class="char-stats">${char.poses} poses · ${char.faces} faces</div>`;
+
+        if (inScene) {
+            // Pose selector
+            html += `<div class="selector-label">Pose (动作)</div><div class="selector">`;
+            const poseNames = Object.keys(sceneChars.find(s=>s.id===char.id).data.poses);
+            for (const p of poseNames.slice(0,12)) {
+                const active = p === curPose ? ' active' : '';
+                html += `<div class="pill${active}" onclick="setPose('${char.id}','${p}')">${p}</div>`;
+            }
+            if (poseNames.length > 12) html += `<div class="pill" style="color:var(--text3)">+${poseNames.length-12}</div>`;
+            html += `</div>`;
+
+            // Face selector
+            html += `<div class="selector-label">Face (表情)</div><div class="selector">`;
+            const faceNames = Object.keys(sceneChars.find(s=>s.id===char.id).data.faces);
+            for (const f of faceNames.slice(0,12)) {
+                const active = f === curFace ? ' active' : '';
+                html += `<div class="pill${active}" onclick="setFace('${char.id}','${f}')">${f}</div>`;
+            }
+            if (faceNames.length > 12) html += `<div class="pill" style="color:var(--text3)">+${faceNames.length-12}</div>`;
+            html += `</div>`;
+        }
+        html += `</div>`;
+    }
+    panel.innerHTML = html;
+}
+
+function renderTimeline() {
+    const tracks = document.getElementById('tracks');
+    const ruler = document.getElementById('ruler');
+    const leftPad = 140;
+
+    let rulerHtml='';
+    for(let t=0;t<=duration;t++){
+        const x=leftPad+(CANVAS_W-leftPad-40)*t/duration;
+        rulerHtml+=`<div class="ruler-mark" style="left:${x}px">${t}s</div>`;
+    }
+    ruler.innerHTML=rulerHtml;
+
+    let html='';
+    for(const sc of sceneChars){
+        for(const [prop,kfs] of Object.entries(sc.keyframes)){
+            if(!kfs.length) continue;
+            html+=`<div class="track"><div class="track-label" style="color:${sc.color}">${sc.label}.${prop}</div><div class="track-bar">`;
+            for(const kf of kfs){
+                const pct=(kf.time/duration)*100;
+                html+=`<div class="kf-diamond" style="left:${pct}%;background:${sc.color}" title="t=${kf.time} v=${kf.value.toFixed(1)}"></div>`;
+            }
+            html+=`</div></div>`;
+        }
+        if(sc.frameSequence.length){
+            html+=`<div class="track"><div class="track-label" style="color:${sc.color}">${sc.label}.pose</div><div class="track-bar">`;
+            for(const f of sc.frameSequence){
+                const pct=(f.time/duration)*100;
+                html+=`<div class="kf-diamond" style="left:${pct}%;background:var(--orange)" title="${f.pose}+${f.face}"></div>`;
+            }
+            html+=`</div></div>`;
+        }
+    }
+    const phPct=(currentTime/duration)*100;
+    html+=`<div class="playhead-line" style="left:${phPct}%;margin-left:140px;width:2px"></div>`;
+    tracks.innerHTML=html;
+}
+
+window.setPose = function(charId, pose) {
+    const sc = sceneChars.find(s=>s.id===charId);
+    if(sc) { sc.currentPose=pose; renderScene(); renderCharacterPanel(); }
+};
+window.setFace = function(charId, face) {
+    const sc = sceneChars.find(s=>s.id===charId);
+    if(sc) { sc.currentFace=face; renderScene(); renderCharacterPanel(); }
+};
+
+// ══════════════════════════════════════════════
+//  SCENARIO — AI Director simulation
+// ══════════════════════════════════════════════
+async function runScenario() {
+    if(sceneChars.length < 2) { alert('Need at least 2 characters loaded'); return; }
+    resetAnimation();
+
+    const girl = sceneChars[0];
+    const boy = sceneChars[1];
+
+    // Girl: start left, walk to center
+    girl.addKeyframe('x', 0.0, 100);
+    girl.addKeyframe('x', 3.0, CANVAS_W*0.38, 'easeInOut');
+    girl.addKeyframe('x', 8.0, CANVAS_W*0.42, 'easeOut');
+
+    // Boy: start right, approach
+    boy.addKeyframe('x', 0.0, CANVAS_W-100);
+    boy.addKeyframe('x', 1.5, CANVAS_W-100);
+    boy.addKeyframe('x', 4.0, CANVAS_W*0.62, 'easeInOut');
+    boy.addKeyframe('x', 8.0, CANVAS_W*0.58, 'easeOut');
+
+    // Boy: fade in
+    boy.addKeyframe('opacity', 0.0, 0);
+    boy.addKeyframe('opacity', 1.5, 0);
+    boy.addKeyframe('opacity', 2.5, 1, 'easeIn');
+
+    // Girl pose/face changes
+    girl.addFrame(0.0, '逃跑', '吃惊');
+    girl.addFrame(3.0, '站立', '惊讶');
+    girl.addFrame(5.0, '打招呼', '微笑');
+    girl.addFrame(7.0, '偷笑', '害羞');
+
+    // Boy pose/face changes
+    boy.addFrame(0.0, '站立', '冷漠');
+    boy.addFrame(2.5, '叉腰', '傲慢');
+    boy.addFrame(5.0, '打招呼', '微笑');
+    boy.addFrame(7.0, '偷笑', '偷笑');
+
+    // Preload missing images
+    for (const sc of [girl, boy]) {
+        for (const f of sc.frameSequence) {
+            if (sc.data.poses[f.pose]) await loadImage(sc.data.poses[f.pose].url);
+            if (sc.data.faces[f.face]) await loadImage(sc.data.faces[f.face].url);
+        }
+    }
+
+    renderTimeline();
+    renderScene();
+
+    // Auto-play
+    setTimeout(()=>{ togglePlay(); }, 300);
+}
+
+function resetAnimation() {
+    if(animFrame) cancelAnimationFrame(animFrame);
+    isPlaying = false;
+    currentTime = 0;
+    document.getElementById('playBtn').textContent = '▶ Play';
+    for(const sc of sceneChars){
+        sc.keyframes = {};
+        sc.frameSequence = [];
+    }
+    renderScene(); renderTimeline();
+}
+
+function togglePlay() {
+    isPlaying = !isPlaying;
+    document.getElementById('playBtn').textContent = isPlaying?'⏸ Pause':'▶ Play';
+    if(isPlaying){
+        if(currentTime>=duration) currentTime=0;
+        let last=performance.now();
+        function tick(ts){
+            if(!isPlaying) return;
+            currentTime+=(ts-last)/1000; last=ts;
+            if(currentTime>=duration) currentTime=0;
+            renderScene();
+            renderTimeline();
+            document.getElementById('timeDisp').textContent=currentTime.toFixed(2)+'s';
+            animFrame=requestAnimationFrame(tick);
+        }
+        animFrame=requestAnimationFrame(tick);
+    }
+}
+
+// ══════════════════════════════════════════════
+//  INIT — Load characters from API
+// ══════════════════════════════════════════════
+async function init() {
+    document.getElementById('canvasInfo').textContent = 'Fetching characters...';
+
+    try {
+        const res = await fetch(API + '/api/scene-graph/characters');
+        characters = await res.json();
+    } catch(e) {
+        document.getElementById('canvasInfo').textContent = 'Backend offline — start with: python -m backend.main';
+        document.getElementById('charPanel').innerHTML = `<div class="loading" style="color:var(--red)">Cannot connect to ${API}<br><br>Run: python -m backend.main</div>`;
+        return;
+    }
+
+    if(!characters.length) {
+        document.getElementById('canvasInfo').textContent = 'No characters found';
+        return;
+    }
+
+    document.getElementById('canvasInfo').textContent = `Loading ${characters.length} characters...`;
+
+    // Load full character data + place in scene
+    const colors = ['#58a6ff', '#f85149', '#3fb950'];
+    const positions = [
+        { x: CANVAS_W*0.3, y: CANVAS_H*0.75, flipX: false },
+        { x: CANVAS_W*0.7, y: CANVAS_H*0.75, flipX: true },
+        { x: CANVAS_W*0.5, y: CANVAS_H*0.78, flipX: false },
+    ];
+
+    for(let i=0; i<Math.min(characters.length, 2); i++){
+        const full = await (await fetch(API+'/api/scene-graph/characters/'+characters[i].id)).json();
+        const sc = new SceneCharacter(full, {
+            ...positions[i],
+            scale: 0.22,
+            label: full.name.split('_')[0],
+            color: colors[i],
+        });
+        sceneChars.push(sc);
+        await preloadCharacter(full);
+    }
+
+    document.getElementById('canvasInfo').textContent = `${sceneChars.length} characters · ${CANVAS_W}×${CANVAS_H}`;
+    renderCharacterPanel();
+    renderScene();
+    renderTimeline();
+}
+
+init();
+</script>
+</body>
+</html>

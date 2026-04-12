@@ -87,7 +87,7 @@ export function useSuppressBrowserDefaults() {
         const handleDragStart = (e: DragEvent) => {
             const target = e.target as HTMLElement;
             // Prevent default image drag ghost, but allow explicitly draggable elements
-            if (target.tagName === 'IMG' && !target.closest('[data-allow-drag="true"]')) {
+            if (target.tagName === 'IMG' && !target.closest?.('[data-allow-drag="true"]')) {
                 e.preventDefault();
             }
         };
@@ -98,8 +98,8 @@ export function useSuppressBrowserDefaults() {
             // Only suppress context menu on canvas and timeline areas, not on inputs/text
             if (
                 target.tagName === 'CANVAS' ||
-                target.closest('[data-suppress-context-menu]') ||
-                target.closest('.pixi-app-container')
+                target.closest?.('[data-suppress-context-menu]') ||
+                target.closest?.('.pixi-app-container')
             ) {
                 e.preventDefault();
             }
@@ -111,9 +111,9 @@ export function useSuppressBrowserDefaults() {
             // Prevent text selection when dragging on canvas, timeline, or transform handles
             if (
                 target.tagName === 'CANVAS' ||
-                target.closest('[data-no-select]') ||
-                target.closest('.timeline-container') ||
-                target.closest('.transform-handles')
+                target.closest?.('[data-no-select]') ||
+                target.closest?.('.timeline-container') ||
+                target.closest?.('.transform-handles')
             ) {
                 e.preventDefault();
             }

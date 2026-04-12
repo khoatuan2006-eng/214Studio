@@ -168,13 +168,13 @@ def export_layer_recursive(layer, current_path_parts, current_fs_path, char_name
             # Database references the shared static route
             url_path = f"assets/{filename}"
             
-            # Avoid adding exactly the same layer twice to the JSON
             existing_layer = next((l for l in layer_groups[top_group] if l["hash"] == img_hash), None)
             if not existing_layer:
                 layer_groups[top_group].append({
                     "name": safe_name,
                     "path": url_path,
-                    "hash": img_hash
+                    "hash": img_hash,
+                    "bbox": [layer.left, layer.top, layer.width, layer.height]
                 })
 
     # Restore visibility before returning

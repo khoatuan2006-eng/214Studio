@@ -1,0 +1,249 @@
+{
+  "id": "scene-2436f41b",
+  "name": "Forest Encounter",
+  "canvas_width": 1920,
+  "canvas_height": 1080,
+  "ppu": 100,
+  "fps": 30,
+  "duration": 6.0,
+  "root_order": [
+    "background_layer-d7201a2c",
+    "background_layer-1896cff6",
+    "background_layer-a591aa92",
+    "background_layer-0a68fa10",
+    "character-bc209e6f",
+    "character-3371d913"
+  ],
+  "nodes": {
+    "background_layer-d7201a2c": {
+      "id": "background_layer-d7201a2c",
+      "name": "Sky",
+      "node_type": "background_layer",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scale_x": 1.0,
+        "scale_y": 1.0,
+        "rotation": 0.0
+      },
+      "opacity": 1.0,
+      "z_index": -30,
+      "visible": true,
+      "parent_id": null,
+      "keyframes": {},
+      "metadata": {},
+      "children": [],
+      "asset_path": "forest/sky.png",
+      "parallax_speed": 0.1,
+      "blur": 0.0
+    },
+    "background_layer-1896cff6": {
+      "id": "background_layer-1896cff6",
+      "name": "Mountains",
+      "node_type": "background_layer",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scale_x": 1.0,
+        "scale_y": 1.0,
+        "rotation": 0.0
+      },
+      "opacity": 1.0,
+      "z_index": -20,
+      "visible": true,
+      "parent_id": null,
+      "keyframes": {},
+      "metadata": {},
+      "children": [],
+      "asset_path": "forest/mountains.png",
+      "parallax_speed": 0.3,
+      "blur": 0.0
+    },
+    "background_layer-a591aa92": {
+      "id": "background_layer-a591aa92",
+      "name": "Trees",
+      "node_type": "background_layer",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scale_x": 1.0,
+        "scale_y": 1.0,
+        "rotation": 0.0
+      },
+      "opacity": 1.0,
+      "z_index": -10,
+      "visible": true,
+      "parent_id": null,
+      "keyframes": {},
+      "metadata": {},
+      "children": [],
+      "asset_path": "forest/trees.png",
+      "parallax_speed": 0.7,
+      "blur": 0.0
+    },
+    "background_layer-0a68fa10": {
+      "id": "background_layer-0a68fa10",
+      "name": "Ground",
+      "node_type": "background_layer",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scale_x": 1.0,
+        "scale_y": 1.0,
+        "rotation": 0.0
+      },
+      "opacity": 1.0,
+      "z_index": -5,
+      "visible": true,
+      "parent_id": null,
+      "keyframes": {},
+      "metadata": {},
+      "children": [],
+      "asset_path": "forest/ground.png",
+      "parallax_speed": 1.0,
+      "blur": 0.0
+    },
+    "character-bc209e6f": {
+      "id": "character-bc209e6f",
+      "name": "Hero",
+      "node_type": "character",
+      "transform": {
+        "x": 2.0,
+        "y": 7.5,
+        "scale_x": 1.0,
+        "scale_y": 1.0,
+        "rotation": 0.0
+      },
+      "opacity": 1.0,
+      "z_index": 0,
+      "visible": true,
+      "parent_id": null,
+      "keyframes": {
+        "x": [
+          {
+            "time": 0.0,
+            "value": 2.0,
+            "easing": "linear"
+          },
+          {
+            "time": 3.0,
+            "value": 8.0,
+            "easing": "easeInOut"
+          },
+          {
+            "time": 6.0,
+            "value": 8.5,
+            "easing": "easeOut"
+          }
+        ]
+      },
+      "metadata": {},
+      "children": [],
+      "character_id": "hero-001",
+      "active_layers": {
+        "pose": "walking",
+        "face": "determined"
+      },
+      "available_layers": {},
+      "frame_sequence": [
+        {
+          "time": 0.0,
+          "layers": {
+            "pose": "walking",
+            "face": "determined"
+          }
+        },
+        {
+          "time": 3.0,
+          "layers": {
+            "pose": "standing",
+            "face": "surprised"
+          }
+        },
+        {
+          "time": 4.5,
+          "layers": {
+            "pose": "fighting_stance",
+            "face": "angry"
+          }
+        }
+      ]
+    },
+    "character-3371d913": {
+      "id": "character-3371d913",
+      "name": "Villain",
+      "node_type": "character",
+      "transform": {
+        "x": 17.0,
+        "y": 7.5,
+        "scale_x": 1.0,
+        "scale_y": 1.0,
+        "rotation": 0.0
+      },
+      "opacity": 1.0,
+      "z_index": 0,
+      "visible": true,
+      "parent_id": null,
+      "keyframes": {
+        "x": [
+          {
+            "time": 0.0,
+            "value": 17.0,
+            "easing": "linear"
+          },
+          {
+            "time": 2.0,
+            "value": 17.0,
+            "easing": "linear"
+          },
+          {
+            "time": 4.0,
+            "value": 11.0,
+            "easing": "easeInOut"
+          }
+        ],
+        "opacity": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "easing": "linear"
+          },
+          {
+            "time": 2.0,
+            "value": 0.0,
+            "easing": "linear"
+          },
+          {
+            "time": 3.0,
+            "value": 1.0,
+            "easing": "easeIn"
+          }
+        ]
+      },
+      "metadata": {},
+      "children": [],
+      "character_id": "villain-001",
+      "active_layers": {
+        "pose": "standing",
+        "face": "smirk"
+      },
+      "available_layers": {},
+      "frame_sequence": [
+        {
+          "time": 2.0,
+          "layers": {
+            "pose": "walking",
+            "face": "smirk"
+          }
+        },
+        {
+          "time": 4.0,
+          "layers": {
+            "pose": "standing",
+            "face": "evil_laugh"
+          }
+        }
+      ]
+    }
+  }
+}

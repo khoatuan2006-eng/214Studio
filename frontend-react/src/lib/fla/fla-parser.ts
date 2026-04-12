@@ -282,8 +282,11 @@ export class FLAParser {
     // Also scan all XML files in LIBRARY folder directly (handles encoding issues)
     if (this.zip) {
       const libraryFiles = Object.keys(this.zip.files).filter(
-        path => (path.startsWith('LIBRARY/') || path.startsWith('LIBRARY\\')) &&
-                (path.toLowerCase().endsWith('.xml'))
+        path => {
+          const upper = path.toUpperCase();
+          return (upper.startsWith('LIBRARY/') || upper.startsWith('LIBRARY\\')) &&
+                 (path.toLowerCase().endsWith('.xml'));
+        }
       );
 
       if (DEBUG) console.log(`Found ${libraryFiles.length} XML files in LIBRARY folder`);
@@ -322,7 +325,7 @@ export class FLAParser {
       const symbolDoc = this.parser.parseFromString(symbolXml, 'text/xml');
       const symbolRoot = symbolDoc.documentElement;
 
-      if (symbolRoot.tagName === 'DOMSymbolItem') {
+      if (symbolRoot.tagName.toLowerCase() === 'domsymbolitem') {
         const rawName = symbolRoot.getAttribute('name') || filename.replace('.xml', '');
         const name = normalizePath(rawName);
 

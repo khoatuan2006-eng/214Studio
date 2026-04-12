@@ -1135,428 +1135,920 @@
         {
           "name": "基础",
           "path": "assets/01bd7a11f6576be100facd26f75261a684cf240887f3c3654b610336e6083b04.png",
-          "hash": "01bd7a11f6576be100facd26f75261a684cf240887f3c3654b610336e6083b04"
+          "hash": "01bd7a11f6576be100facd26f75261a684cf240887f3c3654b610336e6083b04",
+          "bbox": [
+            1010,
+            382,
+            117,
+            305
+          ]
         },
         {
           "name": "招呼",
           "path": "assets/0b6d9f4048c8198928f53c1020e5a1df909173df92b664bef4ffb63e6cfd2206.png",
-          "hash": "0b6d9f4048c8198928f53c1020e5a1df909173df92b664bef4ffb63e6cfd2206"
+          "hash": "0b6d9f4048c8198928f53c1020e5a1df909173df92b664bef4ffb63e6cfd2206",
+          "bbox": [
+            999,
+            179,
+            202,
+            262
+          ]
         },
         {
           "name": "点破",
           "path": "assets/345ac840e623f9f7940b2c5a74aee87deaac2bec73f5855605d8f7a9b7f0e5fd.png",
-          "hash": "345ac840e623f9f7940b2c5a74aee87deaac2bec73f5855605d8f7a9b7f0e5fd"
+          "hash": "345ac840e623f9f7940b2c5a74aee87deaac2bec73f5855605d8f7a9b7f0e5fd",
+          "bbox": [
+            979,
+            306,
+            279,
+            173
+          ]
         },
         {
           "name": "伸展",
           "path": "assets/75c48e4bb6afb3127bfaccd151b60dcceca9726f3e7f00deb84c767699ec7569.png",
-          "hash": "75c48e4bb6afb3127bfaccd151b60dcceca9726f3e7f00deb84c767699ec7569"
+          "hash": "75c48e4bb6afb3127bfaccd151b60dcceca9726f3e7f00deb84c767699ec7569",
+          "bbox": [
+            986,
+            378,
+            281,
+            136
+          ]
         },
         {
           "name": "掐腰",
           "path": "assets/b75bebf875b712db4fe618b68427400c880b5028591a69886c53b9b723951c6e.png",
-          "hash": "b75bebf875b712db4fe618b68427400c880b5028591a69886c53b9b723951c6e"
+          "hash": "b75bebf875b712db4fe618b68427400c880b5028591a69886c53b9b723951c6e",
+          "bbox": [
+            1017,
+            382,
+            116,
+            258
+          ]
         },
         {
           "name": "出拳",
           "path": "assets/fefc4f60b52b956dda87957fe575e8e7b955fba0152a4e268bfc518c43747a75.png",
-          "hash": "fefc4f60b52b956dda87957fe575e8e7b955fba0152a4e268bfc518c43747a75"
+          "hash": "fefc4f60b52b956dda87957fe575e8e7b955fba0152a4e268bfc518c43747a75",
+          "bbox": [
+            1007,
+            351,
+            290,
+            116
+          ]
         },
         {
           "name": "过来",
           "path": "assets/daa09d088084427fceda7cc66c2b85703ed0772384a9adcc173e0850cbf8676a.png",
-          "hash": "daa09d088084427fceda7cc66c2b85703ed0772384a9adcc173e0850cbf8676a"
+          "hash": "daa09d088084427fceda7cc66c2b85703ed0772384a9adcc173e0850cbf8676a",
+          "bbox": [
+            1007,
+            340,
+            293,
+            128
+          ]
         },
         {
           "name": "指指点点",
           "path": "assets/f5698f889d83594b29bdcd0abe19c58ea61cf06673b1993d167a69a924dff57a.png",
-          "hash": "f5698f889d83594b29bdcd0abe19c58ea61cf06673b1993d167a69a924dff57a"
+          "hash": "f5698f889d83594b29bdcd0abe19c58ea61cf06673b1993d167a69a924dff57a",
+          "bbox": [
+            1007,
+            272,
+            324,
+            222
+          ]
         },
         {
           "name": "指点",
           "path": "assets/c141c0311867cce444c74a2a99844fcf41971626e4326c8c27072418799fd44c.png",
-          "hash": "c141c0311867cce444c74a2a99844fcf41971626e4326c8c27072418799fd44c"
+          "hash": "c141c0311867cce444c74a2a99844fcf41971626e4326c8c27072418799fd44c",
+          "bbox": [
+            1007,
+            341,
+            305,
+            127
+          ]
         },
         {
           "name": "捂耳朵",
           "path": "assets/950c0f449d46f2aa9f21b1e5b1f8492f6ba7d5524417e8b67378b7a9b787469c.png",
-          "hash": "950c0f449d46f2aa9f21b1e5b1f8492f6ba7d5524417e8b67378b7a9b787469c"
+          "hash": "950c0f449d46f2aa9f21b1e5b1f8492f6ba7d5524417e8b67378b7a9b787469c",
+          "bbox": [
+            1006,
+            219,
+            150,
+            219
+          ]
         }
       ],
       "下身": [
         {
           "name": "图层 5",
           "path": "assets/34c6d0678093342b5d3786d19eac26d05297d87392c783df7f5ca0792129922a.png",
-          "hash": "34c6d0678093342b5d3786d19eac26d05297d87392c783df7f5ca0792129922a"
+          "hash": "34c6d0678093342b5d3786d19eac26d05297d87392c783df7f5ca0792129922a",
+          "bbox": [
+            887,
+            592,
+            181,
+            418
+          ]
         }
       ],
       "上身": [
         {
           "name": "图层 4",
           "path": "assets/d4a4f7cc2a0b51e199597db00f09abb7feee202bd5f18e04e98c5e5d1f97cd9b.png",
-          "hash": "d4a4f7cc2a0b51e199597db00f09abb7feee202bd5f18e04e98c5e5d1f97cd9b"
+          "hash": "d4a4f7cc2a0b51e199597db00f09abb7feee202bd5f18e04e98c5e5d1f97cd9b",
+          "bbox": [
+            876,
+            303,
+            184,
+            328
+          ]
         }
       ],
       "衣服": [
         {
           "name": "图层 11",
           "path": "assets/4d5ecf01d379474f4c4b9c5ed52939599aee52e50755de690f167da2efe44472.png",
-          "hash": "4d5ecf01d379474f4c4b9c5ed52939599aee52e50755de690f167da2efe44472"
+          "hash": "4d5ecf01d379474f4c4b9c5ed52939599aee52e50755de690f167da2efe44472",
+          "bbox": [
+            843,
+            113,
+            252,
+            901
+          ]
         },
         {
           "name": "图层 13",
           "path": "assets/f6d818150d4b29bb419d6ab8dd8681ead5d3cd6007bd1f334f2939264aec654b.png",
-          "hash": "f6d818150d4b29bb419d6ab8dd8681ead5d3cd6007bd1f334f2939264aec654b"
+          "hash": "f6d818150d4b29bb419d6ab8dd8681ead5d3cd6007bd1f334f2939264aec654b",
+          "bbox": [
+            837,
+            112,
+            262,
+            906
+          ]
         }
       ],
       "前手": [
         {
           "name": "基础",
           "path": "assets/fbf5b726b4e5b6c382fd1c904105d40b60882aa9c08c8751f0b059e0de89a567.png",
-          "hash": "fbf5b726b4e5b6c382fd1c904105d40b60882aa9c08c8751f0b059e0de89a567"
+          "hash": "fbf5b726b4e5b6c382fd1c904105d40b60882aa9c08c8751f0b059e0de89a567",
+          "bbox": [
+            829,
+            373,
+            96,
+            332
+          ]
         },
         {
           "name": "插兜",
           "path": "assets/e129eef6a519cd1fa8a4fc5a0ce6aef62cbede81d1eba8a5a3213bd6f44c307c.png",
-          "hash": "e129eef6a519cd1fa8a4fc5a0ce6aef62cbede81d1eba8a5a3213bd6f44c307c"
+          "hash": "e129eef6a519cd1fa8a4fc5a0ce6aef62cbede81d1eba8a5a3213bd6f44c307c",
+          "bbox": [
+            807,
+            373,
+            144,
+            325
+          ]
         },
         {
           "name": "掐腰",
           "path": "assets/69ef51566d35e31f953b59156906fdb1c83ca1a848b4835f7b30e68333a149d9.png",
-          "hash": "69ef51566d35e31f953b59156906fdb1c83ca1a848b4835f7b30e68333a149d9"
+          "hash": "69ef51566d35e31f953b59156906fdb1c83ca1a848b4835f7b30e68333a149d9",
+          "bbox": [
+            798,
+            370,
+            142,
+            269
+          ]
         },
         {
           "name": "伏案左",
           "path": "assets/107c4d63ba2f777728f08425e0dc31ae870aedd3f3ef30081c1fc8deeb2f7a73.png",
-          "hash": "107c4d63ba2f777728f08425e0dc31ae870aedd3f3ef30081c1fc8deeb2f7a73"
+          "hash": "107c4d63ba2f777728f08425e0dc31ae870aedd3f3ef30081c1fc8deeb2f7a73",
+          "bbox": [
+            815,
+            373,
+            199,
+            156
+          ]
         },
         {
           "name": "伏案右",
           "path": "assets/95ea5e23ea74e597e4ce4d3422c8ee7fa63e496befeb0c083ce191ca5b508f13.png",
-          "hash": "95ea5e23ea74e597e4ce4d3422c8ee7fa63e496befeb0c083ce191ca5b508f13"
+          "hash": "95ea5e23ea74e597e4ce4d3422c8ee7fa63e496befeb0c083ce191ca5b508f13",
+          "bbox": [
+            1020,
+            381,
+            131,
+            142
+          ]
         },
         {
           "name": "握持",
           "path": "assets/f684b2ec31300648ef1606bb0965541aa3ef5310294b55ecafdade74d1ecc02e.png",
-          "hash": "f684b2ec31300648ef1606bb0965541aa3ef5310294b55ecafdade74d1ecc02e"
+          "hash": "f684b2ec31300648ef1606bb0965541aa3ef5310294b55ecafdade74d1ecc02e",
+          "bbox": [
+            814,
+            373,
+            191,
+            161
+          ]
         },
         {
           "name": "端起",
           "path": "assets/b8bb4e912af222815d7b6a4a9ddb918cbf651d848e6f4a0050cf814b3356a83b.png",
-          "hash": "b8bb4e912af222815d7b6a4a9ddb918cbf651d848e6f4a0050cf814b3356a83b"
+          "hash": "b8bb4e912af222815d7b6a4a9ddb918cbf651d848e6f4a0050cf814b3356a83b",
+          "bbox": [
+            1009,
+            387,
+            124,
+            197
+          ]
         },
         {
           "name": "揉眼",
           "path": "assets/129041c41886006e3adb6260b1f28302a54be94464c49bfec0e9da58d8a88bc0.png",
-          "hash": "129041c41886006e3adb6260b1f28302a54be94464c49bfec0e9da58d8a88bc0"
+          "hash": "129041c41886006e3adb6260b1f28302a54be94464c49bfec0e9da58d8a88bc0",
+          "bbox": [
+            800,
+            231,
+            199,
+            201
+          ]
         },
         {
           "name": "捂耳朵",
           "path": "assets/7b0cdbc07b27a2a384b49537e15b97cb591d2099b8c8bb22a91e78bf666f7902.png",
-          "hash": "7b0cdbc07b27a2a384b49537e15b97cb591d2099b8c8bb22a91e78bf666f7902"
+          "hash": "7b0cdbc07b27a2a384b49537e15b97cb591d2099b8c8bb22a91e78bf666f7902",
+          "bbox": [
+            782,
+            217,
+            133,
+            219
+          ]
         },
         {
           "name": "接电话",
           "path": "assets/5191ca49a5eee8f956cfdbe9708f898adc38d0d50306b9d62c6960f2e882d9bc.png",
-          "hash": "5191ca49a5eee8f956cfdbe9708f898adc38d0d50306b9d62c6960f2e882d9bc"
+          "hash": "5191ca49a5eee8f956cfdbe9708f898adc38d0d50306b9d62c6960f2e882d9bc",
+          "bbox": [
+            820,
+            252,
+            97,
+            265
+          ]
         },
         {
           "name": "摸头",
           "path": "assets/95d65b1ae89b35b499cc351c40bc2af3b92a27055b66433b8dad8c6eac6b2c11.png",
-          "hash": "95d65b1ae89b35b499cc351c40bc2af3b92a27055b66433b8dad8c6eac6b2c11"
+          "hash": "95d65b1ae89b35b499cc351c40bc2af3b92a27055b66433b8dad8c6eac6b2c11",
+          "bbox": [
+            783,
+            115,
+            151,
+            331
+          ]
         },
         {
           "name": "托腮",
           "path": "assets/9d82123591e76eecc71ed663859e74cc341d6b2fd8cd5ffdfaab368553b602fc.png",
-          "hash": "9d82123591e76eecc71ed663859e74cc341d6b2fd8cd5ffdfaab368553b602fc"
+          "hash": "9d82123591e76eecc71ed663859e74cc341d6b2fd8cd5ffdfaab368553b602fc",
+          "bbox": [
+            870,
+            323,
+            152,
+            213
+          ]
         },
         {
           "name": "拍胸",
           "path": "assets/a593f71b1b950d62bc904685e74e4897a225522c02f08aeed07cf927f0eaedc6.png",
-          "hash": "a593f71b1b950d62bc904685e74e4897a225522c02f08aeed07cf927f0eaedc6"
+          "hash": "a593f71b1b950d62bc904685e74e4897a225522c02f08aeed07cf927f0eaedc6",
+          "bbox": [
+            979,
+            384,
+            148,
+            166
+          ]
         },
         {
           "name": "伸展",
           "path": "assets/8d7f6dfa7a17726f3894248c97ecc5a6aa8d12cb738fc7a9c831de8d564e2b2d.png",
-          "hash": "8d7f6dfa7a17726f3894248c97ecc5a6aa8d12cb738fc7a9c831de8d564e2b2d"
+          "hash": "8d7f6dfa7a17726f3894248c97ecc5a6aa8d12cb738fc7a9c831de8d564e2b2d",
+          "bbox": [
+            659,
+            368,
+            264,
+            149
+          ]
         },
         {
           "name": "抱拳",
           "path": "assets/47863aede443bb7ee6dcacf5aaab66ae5e8fe0ed0cffdf5cde6c2add3ac66001.png",
-          "hash": "47863aede443bb7ee6dcacf5aaab66ae5e8fe0ed0cffdf5cde6c2add3ac66001"
+          "hash": "47863aede443bb7ee6dcacf5aaab66ae5e8fe0ed0cffdf5cde6c2add3ac66001",
+          "bbox": [
+            868,
+            376,
+            260,
+            189
+          ]
         },
         {
           "name": "合十",
           "path": "assets/86f359bac1afcd43577a99ae890a3e21d89d310e85b6f61034f6e6996fa187f8.png",
-          "hash": "86f359bac1afcd43577a99ae890a3e21d89d310e85b6f61034f6e6996fa187f8"
+          "hash": "86f359bac1afcd43577a99ae890a3e21d89d310e85b6f61034f6e6996fa187f8",
+          "bbox": [
+            868,
+            374,
+            260,
+            191
+          ]
         },
         {
           "name": "结印",
           "path": "assets/b4bc68c580026c904b394afe04cc7ebc19afea69ee76783876a26013593650e1.png",
-          "hash": "b4bc68c580026c904b394afe04cc7ebc19afea69ee76783876a26013593650e1"
+          "hash": "b4bc68c580026c904b394afe04cc7ebc19afea69ee76783876a26013593650e1",
+          "bbox": [
+            868,
+            355,
+            260,
+            210
+          ]
         },
         {
           "name": "交叉",
           "path": "assets/90c4174b2948cc63bbc1df3b2219b62d23af7262214ab63b220c57287b5d6aae.png",
-          "hash": "90c4174b2948cc63bbc1df3b2219b62d23af7262214ab63b220c57287b5d6aae"
+          "hash": "90c4174b2948cc63bbc1df3b2219b62d23af7262214ab63b220c57287b5d6aae",
+          "bbox": [
+            845,
+            371,
+            260,
+            184
+          ]
         }
       ],
       "嘴": [
         {
           "name": "基础嘴",
           "path": "assets/7adba1b359a6bdf4b152ef641fc36bc0477c0c089a37071f80f81f4a569f7e42.png",
-          "hash": "7adba1b359a6bdf4b152ef641fc36bc0477c0c089a37071f80f81f4a569f7e42"
+          "hash": "7adba1b359a6bdf4b152ef641fc36bc0477c0c089a37071f80f81f4a569f7e42",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "奸笑",
           "path": "assets/eaebce6971431f1f20718c0587cccd8c05a62f3feea129690bbe61143f96b33c.png",
-          "hash": "eaebce6971431f1f20718c0587cccd8c05a62f3feea129690bbe61143f96b33c"
+          "hash": "eaebce6971431f1f20718c0587cccd8c05a62f3feea129690bbe61143f96b33c",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "惊讶嘴",
           "path": "assets/8bd07b06f598e2661384ddfe4ea7d73c26dd8a6eb1684e8bc79029d5031d28f8.png",
-          "hash": "8bd07b06f598e2661384ddfe4ea7d73c26dd8a6eb1684e8bc79029d5031d28f8"
+          "hash": "8bd07b06f598e2661384ddfe4ea7d73c26dd8a6eb1684e8bc79029d5031d28f8",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "撇嘴",
           "path": "assets/dedacbceb5b2c0a9bc4542ffece2f1cc3cb93308e207940c96b9f54e11aad8b6.png",
-          "hash": "dedacbceb5b2c0a9bc4542ffece2f1cc3cb93308e207940c96b9f54e11aad8b6"
+          "hash": "dedacbceb5b2c0a9bc4542ffece2f1cc3cb93308e207940c96b9f54e11aad8b6",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "O型嘴",
           "path": "assets/23e06a2432abe7e9d6b4787e4de00463d78de1894e22c49b670172e118fd9394.png",
-          "hash": "23e06a2432abe7e9d6b4787e4de00463d78de1894e22c49b670172e118fd9394"
+          "hash": "23e06a2432abe7e9d6b4787e4de00463d78de1894e22c49b670172e118fd9394",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "尖牙嘴",
           "path": "assets/968ba2f17178db823528c199c4f5332bb694f79447b5325d6ad280416c233ec8.png",
-          "hash": "968ba2f17178db823528c199c4f5332bb694f79447b5325d6ad280416c233ec8"
+          "hash": "968ba2f17178db823528c199c4f5332bb694f79447b5325d6ad280416c233ec8",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "嘟嘟嘴",
           "path": "assets/ca79c1c6fa441cacdd8e22f596bcf09d9e87e13b434525533125351ebbf98693.png",
-          "hash": "ca79c1c6fa441cacdd8e22f596bcf09d9e87e13b434525533125351ebbf98693"
+          "hash": "ca79c1c6fa441cacdd8e22f596bcf09d9e87e13b434525533125351ebbf98693",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "微笑",
           "path": "assets/7b9f6341d829f62f3afc981d5f8ef9a831168b76e60d17e3a0c957897add1baf.png",
-          "hash": "7b9f6341d829f62f3afc981d5f8ef9a831168b76e60d17e3a0c957897add1baf"
+          "hash": "7b9f6341d829f62f3afc981d5f8ef9a831168b76e60d17e3a0c957897add1baf",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "沉默",
           "path": "assets/50d8aa2d5215e7de5b90d9485672d51e262d1993a8b797c72779a4c89af00e62.png",
-          "hash": "50d8aa2d5215e7de5b90d9485672d51e262d1993a8b797c72779a4c89af00e62"
+          "hash": "50d8aa2d5215e7de5b90d9485672d51e262d1993a8b797c72779a4c89af00e62",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "喷",
           "path": "assets/395d1da32ed00f48408d6482c3e7196cfac4f13e36f00d391426c18cc1b88616.png",
-          "hash": "395d1da32ed00f48408d6482c3e7196cfac4f13e36f00d391426c18cc1b88616"
+          "hash": "395d1da32ed00f48408d6482c3e7196cfac4f13e36f00d391426c18cc1b88616",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "吐",
           "path": "assets/1176a5f6111d54a72e7e2141c4ac12fa1e08aeac7869cd01e96465808efbd505.png",
-          "hash": "1176a5f6111d54a72e7e2141c4ac12fa1e08aeac7869cd01e96465808efbd505"
+          "hash": "1176a5f6111d54a72e7e2141c4ac12fa1e08aeac7869cd01e96465808efbd505",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "不屑嘴",
           "path": "assets/5eba81e0c3303bc79e6a02431ac275cd64975365857e34036881cafc3fc208a4.png",
-          "hash": "5eba81e0c3303bc79e6a02431ac275cd64975365857e34036881cafc3fc208a4"
+          "hash": "5eba81e0c3303bc79e6a02431ac275cd64975365857e34036881cafc3fc208a4",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "嘲讽嘴",
           "path": "assets/fbddb1b2ea6bc513fe6504da897b05b723ffbff34fb7451ff8c5522be92d3cc5.png",
-          "hash": "fbddb1b2ea6bc513fe6504da897b05b723ffbff34fb7451ff8c5522be92d3cc5"
+          "hash": "fbddb1b2ea6bc513fe6504da897b05b723ffbff34fb7451ff8c5522be92d3cc5",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "腼腆嘴",
           "path": "assets/1c822978530b53454415cbfaf93686131c5f27f79a3c11fc1f1b78238558a2a4.png",
-          "hash": "1c822978530b53454415cbfaf93686131c5f27f79a3c11fc1f1b78238558a2a4"
+          "hash": "1c822978530b53454415cbfaf93686131c5f27f79a3c11fc1f1b78238558a2a4",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "愤怒嘴",
           "path": "assets/15fc65418e1b89c1451b845ddc40b6fb173c2c0ab968e9434c75182caa835d72.png",
-          "hash": "15fc65418e1b89c1451b845ddc40b6fb173c2c0ab968e9434c75182caa835d72"
+          "hash": "15fc65418e1b89c1451b845ddc40b6fb173c2c0ab968e9434c75182caa835d72",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "歪嘴战神",
           "path": "assets/05df5c90319b428b849297d324186f050b7f6e7ca65e505a415791a8ea315c5c.png",
-          "hash": "05df5c90319b428b849297d324186f050b7f6e7ca65e505a415791a8ea315c5c"
+          "hash": "05df5c90319b428b849297d324186f050b7f6e7ca65e505a415791a8ea315c5c",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "委屈嘴",
           "path": "assets/15d642821964f9716e8e65094fde66b9a8d8c29a3651c327231e40a9b70b2ac0.png",
-          "hash": "15d642821964f9716e8e65094fde66b9a8d8c29a3651c327231e40a9b70b2ac0"
+          "hash": "15d642821964f9716e8e65094fde66b9a8d8c29a3651c327231e40a9b70b2ac0",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "石化嘴",
           "path": "assets/dda65626fb332822954ffc8c61264fa08d43b0957302cb6910e12aee58cadf54.png",
-          "hash": "dda65626fb332822954ffc8c61264fa08d43b0957302cb6910e12aee58cadf54"
+          "hash": "dda65626fb332822954ffc8c61264fa08d43b0957302cb6910e12aee58cadf54",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "尬笑",
           "path": "assets/abdea836b85aa5aaa450ac3bb2a2c7d7fdbb0587c12648e7474ddad765ef6def.png",
-          "hash": "abdea836b85aa5aaa450ac3bb2a2c7d7fdbb0587c12648e7474ddad765ef6def"
+          "hash": "abdea836b85aa5aaa450ac3bb2a2c7d7fdbb0587c12648e7474ddad765ef6def",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "大笑",
           "path": "assets/affb41a0c480586b44584ebee9c980f9cc2979d6c0526e6270ab14c237d7df5a.png",
-          "hash": "affb41a0c480586b44584ebee9c980f9cc2979d6c0526e6270ab14c237d7df5a"
+          "hash": "affb41a0c480586b44584ebee9c980f9cc2979d6c0526e6270ab14c237d7df5a",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "咬牙切齿",
           "path": "assets/a70882972bd4b61df197365e89bf3d2a7ec138f4fbd47d82b01d82db8ebf7d44.png",
-          "hash": "a70882972bd4b61df197365e89bf3d2a7ec138f4fbd47d82b01d82db8ebf7d44"
+          "hash": "a70882972bd4b61df197365e89bf3d2a7ec138f4fbd47d82b01d82db8ebf7d44",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         }
       ],
       "眼睛": [
         {
           "name": "基础眼",
           "path": "assets/66ec759f90691cf05287c285764fe3644a287146113cfed87b9c40d9b8ccd834.png",
-          "hash": "66ec759f90691cf05287c285764fe3644a287146113cfed87b9c40d9b8ccd834"
+          "hash": "66ec759f90691cf05287c285764fe3644a287146113cfed87b9c40d9b8ccd834",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "平淡眼",
           "path": "assets/9a1250645991dc1b8d50a3f6c980011c71193ae7b9e42982f6e68fe7732677fe.png",
-          "hash": "9a1250645991dc1b8d50a3f6c980011c71193ae7b9e42982f6e68fe7732677fe"
+          "hash": "9a1250645991dc1b8d50a3f6c980011c71193ae7b9e42982f6e68fe7732677fe",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "邪恶眼",
           "path": "assets/67eb63c431709fbe890c3e1c1a36ae63f21fd2ce14752b1ecfb9773c2b196938.png",
-          "hash": "67eb63c431709fbe890c3e1c1a36ae63f21fd2ce14752b1ecfb9773c2b196938"
+          "hash": "67eb63c431709fbe890c3e1c1a36ae63f21fd2ce14752b1ecfb9773c2b196938",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "桃花眼",
           "path": "assets/f54b81b57a579f8b8b2009f988adf3fe2f6861ecd67d9ed213cee1d5acddeef7.png",
-          "hash": "f54b81b57a579f8b8b2009f988adf3fe2f6861ecd67d9ed213cee1d5acddeef7"
+          "hash": "f54b81b57a579f8b8b2009f988adf3fe2f6861ecd67d9ed213cee1d5acddeef7",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "大眼",
           "path": "assets/e6d2389ca025214f02c6af13d733ca67713e91018b7f0212f6ce956283ba2ded.png",
-          "hash": "e6d2389ca025214f02c6af13d733ca67713e91018b7f0212f6ce956283ba2ded"
+          "hash": "e6d2389ca025214f02c6af13d733ca67713e91018b7f0212f6ce956283ba2ded",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "白眼",
           "path": "assets/e1ae8ce312d436cbe4181068a17f65e6149651db3a28e844d82ecb13e3e6aed3.png",
-          "hash": "e1ae8ce312d436cbe4181068a17f65e6149651db3a28e844d82ecb13e3e6aed3"
+          "hash": "e1ae8ce312d436cbe4181068a17f65e6149651db3a28e844d82ecb13e3e6aed3",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "迷糊眼",
           "path": "assets/0c3f9295558dac02c85ffaa34efcd31c489a78a8a37f9b2128790d90ea25cce0.png",
-          "hash": "0c3f9295558dac02c85ffaa34efcd31c489a78a8a37f9b2128790d90ea25cce0"
+          "hash": "0c3f9295558dac02c85ffaa34efcd31c489a78a8a37f9b2128790d90ea25cce0",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "挤眼",
           "path": "assets/8f419a901985a74808c83ba74222fa3c66b60fa3abc137b7136c2d358d8a50d4.png",
-          "hash": "8f419a901985a74808c83ba74222fa3c66b60fa3abc137b7136c2d358d8a50d4"
+          "hash": "8f419a901985a74808c83ba74222fa3c66b60fa3abc137b7136c2d358d8a50d4",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "不屑眼",
           "path": "assets/e7f7ff4eebfd69d9e3534673369a990690f25d1b8f909b70ad56108795ac044d.png",
-          "hash": "e7f7ff4eebfd69d9e3534673369a990690f25d1b8f909b70ad56108795ac044d"
+          "hash": "e7f7ff4eebfd69d9e3534673369a990690f25d1b8f909b70ad56108795ac044d",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "嘲讽眼",
           "path": "assets/5a6ec9beeec3dc2b831e70923945e9901f4a4c5a64ecb9f81b5ae8732ef0ffee.png",
-          "hash": "5a6ec9beeec3dc2b831e70923945e9901f4a4c5a64ecb9f81b5ae8732ef0ffee"
+          "hash": "5a6ec9beeec3dc2b831e70923945e9901f4a4c5a64ecb9f81b5ae8732ef0ffee",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "腼腆眼",
           "path": "assets/5a14efce84708c3557b5a0028524ff79652a65599c11cc688acb543e35da68ad.png",
-          "hash": "5a14efce84708c3557b5a0028524ff79652a65599c11cc688acb543e35da68ad"
+          "hash": "5a14efce84708c3557b5a0028524ff79652a65599c11cc688acb543e35da68ad",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "愤怒眼",
           "path": "assets/702dc6f90ed6b73c9fa81b385f92c4b50b701573f014a0fe341d018dc1530781.png",
-          "hash": "702dc6f90ed6b73c9fa81b385f92c4b50b701573f014a0fe341d018dc1530781"
+          "hash": "702dc6f90ed6b73c9fa81b385f92c4b50b701573f014a0fe341d018dc1530781",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "委屈眉眼",
           "path": "assets/ed3210d4aad40711a61966f9b5c36ccdd89cc9b8384d83a867a9475903ab8dba.png",
-          "hash": "ed3210d4aad40711a61966f9b5c36ccdd89cc9b8384d83a867a9475903ab8dba"
+          "hash": "ed3210d4aad40711a61966f9b5c36ccdd89cc9b8384d83a867a9475903ab8dba",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "石化",
           "path": "assets/48d15b9eb097cef5b3d06803dd596bfa8af700e550345c215716c7efc1ac4c03.png",
-          "hash": "48d15b9eb097cef5b3d06803dd596bfa8af700e550345c215716c7efc1ac4c03"
+          "hash": "48d15b9eb097cef5b3d06803dd596bfa8af700e550345c215716c7efc1ac4c03",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "石化眼",
           "path": "assets/59b30b346ed7b3b9ab79c240db6da97bf15328b0fa2636ac9c36aef8a748f7aa.png",
-          "hash": "59b30b346ed7b3b9ab79c240db6da97bf15328b0fa2636ac9c36aef8a748f7aa"
+          "hash": "59b30b346ed7b3b9ab79c240db6da97bf15328b0fa2636ac9c36aef8a748f7aa",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "尬笑眼睛",
           "path": "assets/c2631bdf0a94a5e30e53eb3d6fe88393296334d95bdb69001f08579d5659698d.png",
-          "hash": "c2631bdf0a94a5e30e53eb3d6fe88393296334d95bdb69001f08579d5659698d"
+          "hash": "c2631bdf0a94a5e30e53eb3d6fe88393296334d95bdb69001f08579d5659698d",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "星星眼",
           "path": "assets/6dbcf37a11bd42aa9add0b8794c1972db52ddc4d9cb12740fb775be04f957508.png",
-          "hash": "6dbcf37a11bd42aa9add0b8794c1972db52ddc4d9cb12740fb775be04f957508"
+          "hash": "6dbcf37a11bd42aa9add0b8794c1972db52ddc4d9cb12740fb775be04f957508",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         }
       ],
       "眉毛": [
         {
           "name": "基础眉",
           "path": "assets/98453de11763e39e12b78314f7c527edcfab4f42b67bac227252160bd8f8126a.png",
-          "hash": "98453de11763e39e12b78314f7c527edcfab4f42b67bac227252160bd8f8126a"
+          "hash": "98453de11763e39e12b78314f7c527edcfab4f42b67bac227252160bd8f8126a",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "疑惑眉",
           "path": "assets/2e593afb6d33936288637ce569b2e1d47178c7d03b0451434c2a0a0e9b1a1896.png",
-          "hash": "2e593afb6d33936288637ce569b2e1d47178c7d03b0451434c2a0a0e9b1a1896"
+          "hash": "2e593afb6d33936288637ce569b2e1d47178c7d03b0451434c2a0a0e9b1a1896",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "怒眉",
           "path": "assets/03017554f91ef29f6b902d7410c687b096c35adb9de381260de4c21c5303aea7.png",
-          "hash": "03017554f91ef29f6b902d7410c687b096c35adb9de381260de4c21c5303aea7"
+          "hash": "03017554f91ef29f6b902d7410c687b096c35adb9de381260de4c21c5303aea7",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "弯眉",
           "path": "assets/5c337eb9c69438356bfb5465a1359399c4850acd80ce8fe257391333992e0aa8.png",
-          "hash": "5c337eb9c69438356bfb5465a1359399c4850acd80ce8fe257391333992e0aa8"
+          "hash": "5c337eb9c69438356bfb5465a1359399c4850acd80ce8fe257391333992e0aa8",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "不屑眉",
           "path": "assets/f7f5abf81515021d6c766c4041427f124933101b62740ac536c8397526ed04ab.png",
-          "hash": "f7f5abf81515021d6c766c4041427f124933101b62740ac536c8397526ed04ab"
+          "hash": "f7f5abf81515021d6c766c4041427f124933101b62740ac536c8397526ed04ab",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "嘲讽眉",
           "path": "assets/56895c9a7ebabd2f981b9eef9bfdf6d5ca9053a5e095c4ae539ec9a680138600.png",
-          "hash": "56895c9a7ebabd2f981b9eef9bfdf6d5ca9053a5e095c4ae539ec9a680138600"
+          "hash": "56895c9a7ebabd2f981b9eef9bfdf6d5ca9053a5e095c4ae539ec9a680138600",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "腼腆眉",
           "path": "assets/44b2b060f58204492c4f5668a3e22c9d107c8271a10fb0fafe5a165f6a95a080.png",
-          "hash": "44b2b060f58204492c4f5668a3e22c9d107c8271a10fb0fafe5a165f6a95a080"
+          "hash": "44b2b060f58204492c4f5668a3e22c9d107c8271a10fb0fafe5a165f6a95a080",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "愤怒眉",
           "path": "assets/608d759cd35301eadc83ec7f65b0b0e3f7a7d81555d945cd81cd40560e291fbd.png",
-          "hash": "608d759cd35301eadc83ec7f65b0b0e3f7a7d81555d945cd81cd40560e291fbd"
+          "hash": "608d759cd35301eadc83ec7f65b0b0e3f7a7d81555d945cd81cd40560e291fbd",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "委屈眉",
           "path": "assets/7f7e4d9a023165100ee93edae96e0d1127f3d6ccb0b86fd14aa205d7cb984938.png",
-          "hash": "7f7e4d9a023165100ee93edae96e0d1127f3d6ccb0b86fd14aa205d7cb984938"
+          "hash": "7f7e4d9a023165100ee93edae96e0d1127f3d6ccb0b86fd14aa205d7cb984938",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "石化眉",
           "path": "assets/cd71846bf2bf9b2a27097385193377a79435b6efa0c493033af0f03ff41cc365.png",
-          "hash": "cd71846bf2bf9b2a27097385193377a79435b6efa0c493033af0f03ff41cc365"
+          "hash": "cd71846bf2bf9b2a27097385193377a79435b6efa0c493033af0f03ff41cc365",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         },
         {
           "name": "尬笑眉毛",
           "path": "assets/c141a5f253068ddd8c7134037726e200b8858c6d1446cf4284a93f5b8c61d14a.png",
-          "hash": "c141a5f253068ddd8c7134037726e200b8858c6d1446cf4284a93f5b8c61d14a"
+          "hash": "c141a5f253068ddd8c7134037726e200b8858c6d1446cf4284a93f5b8c61d14a",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         }
       ],
       "脸型": [
         {
           "name": "男基础脸",
           "path": "assets/52bd4437bc85ca72ca686dcfee2188a593cc5c0b564ae9a0aabd113e8d2af11a.png",
-          "hash": "52bd4437bc85ca72ca686dcfee2188a593cc5c0b564ae9a0aabd113e8d2af11a"
+          "hash": "52bd4437bc85ca72ca686dcfee2188a593cc5c0b564ae9a0aabd113e8d2af11a",
+          "bbox": [
+            0,
+            0,
+            1920,
+            1080
+          ]
         }
       ]
     }
@@ -3480,419 +3972,905 @@
         {
           "name": "基础",
           "path": "assets/42f85f7a693a248fe83bb42837ae6410036db25671703fcfb42c754317801335.png",
-          "hash": "42f85f7a693a248fe83bb42837ae6410036db25671703fcfb42c754317801335"
+          "hash": "42f85f7a693a248fe83bb42837ae6410036db25671703fcfb42c754317801335",
+          "bbox": [
+            1078,
+            462,
+            146,
+            438
+          ]
         },
         {
           "name": "打招呼",
           "path": "assets/17bec3b0e2a6387f6945730e175abf32a6448d498e4748fcbc15072cda6596f5.png",
-          "hash": "17bec3b0e2a6387f6945730e175abf32a6448d498e4748fcbc15072cda6596f5"
+          "hash": "17bec3b0e2a6387f6945730e175abf32a6448d498e4748fcbc15072cda6596f5",
+          "bbox": [
+            1062,
+            183,
+            298,
+            361
+          ]
         },
         {
           "name": "点破",
           "path": "assets/7dd97b359c7fac84fdd791bdda784b01a759d2e501f185153d1d6697fb9d1817.png",
-          "hash": "7dd97b359c7fac84fdd791bdda784b01a759d2e501f185153d1d6697fb9d1817"
+          "hash": "7dd97b359c7fac84fdd791bdda784b01a759d2e501f185153d1d6697fb9d1817",
+          "bbox": [
+            1066,
+            355,
+            336,
+            239
+          ]
         },
         {
           "name": "伸展",
           "path": "assets/ac409832cd66022293e1206c3f560ad160b08348910fead6ef4de2c522741e12.png",
-          "hash": "ac409832cd66022293e1206c3f560ad160b08348910fead6ef4de2c522741e12"
+          "hash": "ac409832cd66022293e1206c3f560ad160b08348910fead6ef4de2c522741e12",
+          "bbox": [
+            1072,
+            463,
+            367,
+            169
+          ]
         },
         {
           "name": "掐腰",
           "path": "assets/cacd75f6ab3c673579e75577e7470db31bcb6972326b3ea9a3e6242c07e95c7f.png",
-          "hash": "cacd75f6ab3c673579e75577e7470db31bcb6972326b3ea9a3e6242c07e95c7f"
+          "hash": "cacd75f6ab3c673579e75577e7470db31bcb6972326b3ea9a3e6242c07e95c7f",
+          "bbox": [
+            1076,
+            463,
+            167,
+            389
+          ]
         },
         {
           "name": "出拳",
           "path": "assets/0ee56ebd2e01b635a20a538909813de65ebcf0ccb76da6856a705037e8b4b853.png",
-          "hash": "0ee56ebd2e01b635a20a538909813de65ebcf0ccb76da6856a705037e8b4b853"
+          "hash": "0ee56ebd2e01b635a20a538909813de65ebcf0ccb76da6856a705037e8b4b853",
+          "bbox": [
+            1069,
+            423,
+            409,
+            151
+          ]
         },
         {
           "name": "过来",
           "path": "assets/e6958c6600b9dd44c891e868608de5f5726571f55ce2e9014c0f84d770fec97d.png",
-          "hash": "e6958c6600b9dd44c891e868608de5f5726571f55ce2e9014c0f84d770fec97d"
+          "hash": "e6958c6600b9dd44c891e868608de5f5726571f55ce2e9014c0f84d770fec97d",
+          "bbox": [
+            1069,
+            401,
+            413,
+            174
+          ]
         },
         {
           "name": "指指点点",
           "path": "assets/5205f9156d31f13536ae844cc83c0cfc5684c6e58fc309b4472eccb8774d7299.png",
-          "hash": "5205f9156d31f13536ae844cc83c0cfc5684c6e58fc309b4472eccb8774d7299"
+          "hash": "5205f9156d31f13536ae844cc83c0cfc5684c6e58fc309b4472eccb8774d7299",
+          "bbox": [
+            1065,
+            303,
+            470,
+            333
+          ]
         },
         {
           "name": "指点",
           "path": "assets/049c17ae2ceedce28eec5402c3c616641d1dfddfe72cd28e66b2d5bd326e8974.png",
-          "hash": "049c17ae2ceedce28eec5402c3c616641d1dfddfe72cd28e66b2d5bd326e8974"
+          "hash": "049c17ae2ceedce28eec5402c3c616641d1dfddfe72cd28e66b2d5bd326e8974",
+          "bbox": [
+            1069,
+            402,
+            426,
+            173
+          ]
         },
         {
           "name": "捂耳朵",
           "path": "assets/9ff4ce5b362b5f3111dbe423db878446d14ea8a704fd663e878725e96164138d.png",
-          "hash": "9ff4ce5b362b5f3111dbe423db878446d14ea8a704fd663e878725e96164138d"
+          "hash": "9ff4ce5b362b5f3111dbe423db878446d14ea8a704fd663e878725e96164138d",
+          "bbox": [
+            1076,
+            252,
+            215,
+            295
+          ]
         }
       ],
       "下身": [
         {
           "name": "图层 1317",
           "path": "assets/45ddc448bb978401c2cf7647686ff9c3704ecc5d304d1f6a2422ad8603ba61d2.png",
-          "hash": "45ddc448bb978401c2cf7647686ff9c3704ecc5d304d1f6a2422ad8603ba61d2"
+          "hash": "45ddc448bb978401c2cf7647686ff9c3704ecc5d304d1f6a2422ad8603ba61d2",
+          "bbox": [
+            877,
+            738,
+            285,
+            741
+          ]
         },
         {
           "name": "图层 1725",
           "path": "assets/40e11fb253b0a9f51e7916a57cbd3180ded8e83f58316a7e1f5c9a1b0adeee94.png",
-          "hash": "40e11fb253b0a9f51e7916a57cbd3180ded8e83f58316a7e1f5c9a1b0adeee94"
+          "hash": "40e11fb253b0a9f51e7916a57cbd3180ded8e83f58316a7e1f5c9a1b0adeee94",
+          "bbox": [
+            873,
+            758,
+            296,
+            726
+          ]
         }
       ],
       "上身": [
         {
           "name": "图层 1354",
           "path": "assets/24a8621276c3e148546c381fc5f76fe679ccf1e6d8df173beefbc4fd024b0bd4.png",
-          "hash": "24a8621276c3e148546c381fc5f76fe679ccf1e6d8df173beefbc4fd024b0bd4"
+          "hash": "24a8621276c3e148546c381fc5f76fe679ccf1e6d8df173beefbc4fd024b0bd4",
+          "bbox": [
+            871,
+            341,
+            263,
+            433
+          ]
         },
         {
           "name": "图层 1720",
           "path": "assets/9eaa843a9c61b79aaf247da52cc1a07babbbf73f3570a96b0bb8afaf44d485db.png",
-          "hash": "9eaa843a9c61b79aaf247da52cc1a07babbbf73f3570a96b0bb8afaf44d485db"
+          "hash": "9eaa843a9c61b79aaf247da52cc1a07babbbf73f3570a96b0bb8afaf44d485db",
+          "bbox": [
+            834,
+            412,
+            323,
+            946
+          ]
         }
       ],
       "前手": [
         {
           "name": "基础",
           "path": "assets/21d90a22ee989d23f45f79b85da4986578db5735efe9a6a161cf75f9ae3ac2b3.png",
-          "hash": "21d90a22ee989d23f45f79b85da4986578db5735efe9a6a161cf75f9ae3ac2b3"
+          "hash": "21d90a22ee989d23f45f79b85da4986578db5735efe9a6a161cf75f9ae3ac2b3",
+          "bbox": [
+            805,
+            452,
+            123,
+            461
+          ]
         },
         {
           "name": "插兜",
           "path": "assets/5055afeedbe94aa2bb54e1a5d67c4dfa79aace21bfba13235c9a7c7d9b8f9f22.png",
-          "hash": "5055afeedbe94aa2bb54e1a5d67c4dfa79aace21bfba13235c9a7c7d9b8f9f22"
+          "hash": "5055afeedbe94aa2bb54e1a5d67c4dfa79aace21bfba13235c9a7c7d9b8f9f22",
+          "bbox": [
+            773,
+            453,
+            193,
+            420
+          ]
         },
         {
           "name": "掐腰",
           "path": "assets/9dd09c44c38848c5ebe5630157caa7469f5c4b79f6ae402fb327d807c5c0461f.png",
-          "hash": "9dd09c44c38848c5ebe5630157caa7469f5c4b79f6ae402fb327d807c5c0461f"
+          "hash": "9dd09c44c38848c5ebe5630157caa7469f5c4b79f6ae402fb327d807c5c0461f",
+          "bbox": [
+            753,
+            451,
+            213,
+            376
+          ]
         },
         {
           "name": "伏案左",
           "path": "assets/9c4464d00c265b1ffea44dcdae134571ec6d49ee9d75c556f44eb4ebf6a97aec.png",
-          "hash": "9c4464d00c265b1ffea44dcdae134571ec6d49ee9d75c556f44eb4ebf6a97aec"
+          "hash": "9c4464d00c265b1ffea44dcdae134571ec6d49ee9d75c556f44eb4ebf6a97aec",
+          "bbox": [
+            783,
+            449,
+            256,
+            256
+          ]
         },
         {
           "name": "伏案右",
           "path": "assets/e3c158e85022f0d1545ae78fc2a372a61be50ad2bcf47367af1357153a10fc8d.png",
-          "hash": "e3c158e85022f0d1545ae78fc2a372a61be50ad2bcf47367af1357153a10fc8d"
+          "hash": "e3c158e85022f0d1545ae78fc2a372a61be50ad2bcf47367af1357153a10fc8d",
+          "bbox": [
+            1067,
+            468,
+            184,
+            236
+          ]
         },
         {
           "name": "握持",
           "path": "assets/48dbd83615c55d56b73b24ce90f0e7693b2552192e3a4f8e265a2444044f865e.png",
-          "hash": "48dbd83615c55d56b73b24ce90f0e7693b2552192e3a4f8e265a2444044f865e"
+          "hash": "48dbd83615c55d56b73b24ce90f0e7693b2552192e3a4f8e265a2444044f865e",
+          "bbox": [
+            790,
+            451,
+            260,
+            242
+          ]
         },
         {
           "name": "端起",
           "path": "assets/95aabb25c8af6878a7b71cf46407dee4bc53c4ab221508d4dbc61b263b685aa0.png",
-          "hash": "95aabb25c8af6878a7b71cf46407dee4bc53c4ab221508d4dbc61b263b685aa0"
+          "hash": "95aabb25c8af6878a7b71cf46407dee4bc53c4ab221508d4dbc61b263b685aa0",
+          "bbox": [
+            1074,
+            465,
+            175,
+            287
+          ]
         },
         {
           "name": "揉眼",
           "path": "assets/d07975e1285ba2a80596b693f0c248b965164aea14fe6442b1195d597abf51a0.png",
-          "hash": "d07975e1285ba2a80596b693f0c248b965164aea14fe6442b1195d597abf51a0"
+          "hash": "d07975e1285ba2a80596b693f0c248b965164aea14fe6442b1195d597abf51a0",
+          "bbox": [
+            764,
+            267,
+            256,
+            274
+          ]
         },
         {
           "name": "捂耳朵",
           "path": "assets/5483e708fdeb78eae36dfef2fca3077d59b4ec32650f35cf72cdcd42c054a668.png",
-          "hash": "5483e708fdeb78eae36dfef2fca3077d59b4ec32650f35cf72cdcd42c054a668"
+          "hash": "5483e708fdeb78eae36dfef2fca3077d59b4ec32650f35cf72cdcd42c054a668",
+          "bbox": [
+            723,
+            236,
+            204,
+            303
+          ]
         },
         {
           "name": "接电话",
           "path": "assets/698cfd37573911d346bb21c24d7c935d30fe0b5e0fc26331cb0ad76b91b5dd07.png",
-          "hash": "698cfd37573911d346bb21c24d7c935d30fe0b5e0fc26331cb0ad76b91b5dd07"
+          "hash": "698cfd37573911d346bb21c24d7c935d30fe0b5e0fc26331cb0ad76b91b5dd07",
+          "bbox": [
+            769,
+            294,
+            165,
+            344
+          ]
         },
         {
           "name": "摸头",
           "path": "assets/8c9d10fb793c52e57d0d0be7bb14c6ba7913ab7597d3ef3e0df8d138a53a6ab2.png",
-          "hash": "8c9d10fb793c52e57d0d0be7bb14c6ba7913ab7597d3ef3e0df8d138a53a6ab2"
+          "hash": "8c9d10fb793c52e57d0d0be7bb14c6ba7913ab7597d3ef3e0df8d138a53a6ab2",
+          "bbox": [
+            724,
+            105,
+            205,
+            437
+          ]
         },
         {
           "name": "托腮",
           "path": "assets/62d4203c248317db19fb5ae375584c88fa29d27260084f197c28e2103dfb77b0.png",
-          "hash": "62d4203c248317db19fb5ae375584c88fa29d27260084f197c28e2103dfb77b0"
+          "hash": "62d4203c248317db19fb5ae375584c88fa29d27260084f197c28e2103dfb77b0",
+          "bbox": [
+            863,
+            380,
+            212,
+            281
+          ]
         },
         {
           "name": "拍胸",
           "path": "assets/fdb9e4b1cd312d511c8e10dc202a6f19ee64b388b6789988313a181cb6166190.png",
-          "hash": "fdb9e4b1cd312d511c8e10dc202a6f19ee64b388b6789988313a181cb6166190"
+          "hash": "fdb9e4b1cd312d511c8e10dc202a6f19ee64b388b6789988313a181cb6166190",
+          "bbox": [
+            1018,
+            467,
+            215,
+            247
+          ]
         },
         {
           "name": "伸展",
           "path": "assets/715bff758770bb6846ede199cfbe7200747c9b1cf56d4c476e9ff43c480e5a30.png",
-          "hash": "715bff758770bb6846ede199cfbe7200747c9b1cf56d4c476e9ff43c480e5a30"
+          "hash": "715bff758770bb6846ede199cfbe7200747c9b1cf56d4c476e9ff43c480e5a30",
+          "bbox": [
+            566,
+            449,
+            369,
+            202
+          ]
         },
         {
           "name": "抱拳",
           "path": "assets/2dacdc16d7bb12e30cea3c7b4d7741168629b772584e0a34bc3839d750c6f979.png",
-          "hash": "2dacdc16d7bb12e30cea3c7b4d7741168629b772584e0a34bc3839d750c6f979"
+          "hash": "2dacdc16d7bb12e30cea3c7b4d7741168629b772584e0a34bc3839d750c6f979",
+          "bbox": [
+            864,
+            448,
+            357,
+            234
+          ]
         },
         {
           "name": "合十",
           "path": "assets/19b7db5ae934db4d036cc9c7f917117f721773b05717a6d346b64b019072f1e7.png",
-          "hash": "19b7db5ae934db4d036cc9c7f917117f721773b05717a6d346b64b019072f1e7"
+          "hash": "19b7db5ae934db4d036cc9c7f917117f721773b05717a6d346b64b019072f1e7",
+          "bbox": [
+            865,
+            445,
+            357,
+            237
+          ]
         },
         {
           "name": "结印",
           "path": "assets/9d672999905578000814f1614244ec03dd7e65871b66ba2b50de925d6cd65889.png",
-          "hash": "9d672999905578000814f1614244ec03dd7e65871b66ba2b50de925d6cd65889"
+          "hash": "9d672999905578000814f1614244ec03dd7e65871b66ba2b50de925d6cd65889",
+          "bbox": [
+            865,
+            417,
+            357,
+            265
+          ]
         },
         {
           "name": "交叉",
           "path": "assets/ad8783de63fdab2ee55a7cbe210177fb9bae1ddf93980af90d0bcd53384055c2.png",
-          "hash": "ad8783de63fdab2ee55a7cbe210177fb9bae1ddf93980af90d0bcd53384055c2"
+          "hash": "ad8783de63fdab2ee55a7cbe210177fb9bae1ddf93980af90d0bcd53384055c2",
+          "bbox": [
+            851,
+            450,
+            357,
+            252
+          ]
         },
         {
           "name": "托脸",
           "path": "assets/1696acf9aa61e7e80301ed678486f3fe8a7de0ede303f3662c92170350cccda5.png",
-          "hash": "1696acf9aa61e7e80301ed678486f3fe8a7de0ede303f3662c92170350cccda5"
+          "hash": "1696acf9aa61e7e80301ed678486f3fe8a7de0ede303f3662c92170350cccda5",
+          "bbox": [
+            861,
+            366,
+            288,
+            308
+          ]
         },
         {
           "name": "戳手指",
           "path": "assets/b97f6f7255df52abc23fcf47f0a5136051bd1a0b9b8a2313a079e93706d6b0b8.png",
-          "hash": "b97f6f7255df52abc23fcf47f0a5136051bd1a0b9b8a2313a079e93706d6b0b8"
+          "hash": "b97f6f7255df52abc23fcf47f0a5136051bd1a0b9b8a2313a079e93706d6b0b8",
+          "bbox": [
+            815,
+            454,
+            382,
+            269
+          ]
         },
         {
           "name": "捂嘴左",
           "path": "assets/801d6923ee6703165e7be22946f5370ff6cfc6178b40eb303c3674bdb83c4f82.png",
-          "hash": "801d6923ee6703165e7be22946f5370ff6cfc6178b40eb303c3674bdb83c4f82"
+          "hash": "801d6923ee6703165e7be22946f5370ff6cfc6178b40eb303c3674bdb83c4f82",
+          "bbox": [
+            861,
+            324,
+            236,
+            293
+          ]
         },
         {
           "name": "捂嘴右",
           "path": "assets/33fb30b5af254cd84d6fa471971c1837fbfdcf1dd185f6c6d0a35bdf8e6b7e53.png",
-          "hash": "33fb30b5af254cd84d6fa471971c1837fbfdcf1dd185f6c6d0a35bdf8e6b7e53"
+          "hash": "33fb30b5af254cd84d6fa471971c1837fbfdcf1dd185f6c6d0a35bdf8e6b7e53",
+          "bbox": [
+            1028,
+            335,
+            200,
+            267
+          ]
         }
       ],
       "表情": [
         {
           "name": "基础",
           "path": "assets/9a67717a8aaa08b994c09a34888177742c62f8f3a6b0230e6cad5b144d074766.png",
-          "hash": "9a67717a8aaa08b994c09a34888177742c62f8f3a6b0230e6cad5b144d074766"
+          "hash": "9a67717a8aaa08b994c09a34888177742c62f8f3a6b0230e6cad5b144d074766",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "开心",
           "path": "assets/43aa9837bf6aaae667436d635be175c6d3448a345e5faa860846b61272785e24.png",
-          "hash": "43aa9837bf6aaae667436d635be175c6d3448a345e5faa860846b61272785e24"
+          "hash": "43aa9837bf6aaae667436d635be175c6d3448a345e5faa860846b61272785e24",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "难过",
           "path": "assets/a7b3afbb1710d365fa487a71cc74eddd88e4a52e09bf42d7f1f3c607662b8f3a.png",
-          "hash": "a7b3afbb1710d365fa487a71cc74eddd88e4a52e09bf42d7f1f3c607662b8f3a"
+          "hash": "a7b3afbb1710d365fa487a71cc74eddd88e4a52e09bf42d7f1f3c607662b8f3a",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "担忧",
           "path": "assets/e1cd57ff27dd50b91e1036c752653b47500ff8eb9418de1518ac0edf1f980058.png",
-          "hash": "e1cd57ff27dd50b91e1036c752653b47500ff8eb9418de1518ac0edf1f980058"
+          "hash": "e1cd57ff27dd50b91e1036c752653b47500ff8eb9418de1518ac0edf1f980058",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "生气",
           "path": "assets/84614e2efe2038a190ba04fd4ebca58727fa508d2b98a1feddc469d8123a223a.png",
-          "hash": "84614e2efe2038a190ba04fd4ebca58727fa508d2b98a1feddc469d8123a223a"
+          "hash": "84614e2efe2038a190ba04fd4ebca58727fa508d2b98a1feddc469d8123a223a",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "怒骂",
           "path": "assets/933a1b1ad8be305f05d3ed95d70289c9d8366dd7a0b51f3fbbcb0fdec8a5c1cc.png",
-          "hash": "933a1b1ad8be305f05d3ed95d70289c9d8366dd7a0b51f3fbbcb0fdec8a5c1cc"
+          "hash": "933a1b1ad8be305f05d3ed95d70289c9d8366dd7a0b51f3fbbcb0fdec8a5c1cc",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "含泪",
           "path": "assets/66ecf2431bc5282719e1a96518e11b5226d2b9cc59c04530f99405ae832a04f1.png",
-          "hash": "66ecf2431bc5282719e1a96518e11b5226d2b9cc59c04530f99405ae832a04f1"
+          "hash": "66ecf2431bc5282719e1a96518e11b5226d2b9cc59c04530f99405ae832a04f1",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "哭泣",
           "path": "assets/acfc27a56f3a05a22b028303fb55476f1aee7fdde2543968645b34fffc332f1f.png",
-          "hash": "acfc27a56f3a05a22b028303fb55476f1aee7fdde2543968645b34fffc332f1f"
+          "hash": "acfc27a56f3a05a22b028303fb55476f1aee7fdde2543968645b34fffc332f1f",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "害羞",
           "path": "assets/dfa792fe8d37beb81f1b9c8f689047ba3744b40918060f40f15a0c1e566ce0ff.png",
-          "hash": "dfa792fe8d37beb81f1b9c8f689047ba3744b40918060f40f15a0c1e566ce0ff"
+          "hash": "dfa792fe8d37beb81f1b9c8f689047ba3744b40918060f40f15a0c1e566ce0ff",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "坚定",
           "path": "assets/d2b8ceababbcb7ef60c205bb677df0974e760b401c1ffd29380340d301976d95.png",
-          "hash": "d2b8ceababbcb7ef60c205bb677df0974e760b401c1ffd29380340d301976d95"
+          "hash": "d2b8ceababbcb7ef60c205bb677df0974e760b401c1ffd29380340d301976d95",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "惊喜",
           "path": "assets/d5d0b557e1d44d0e19141545823bf2f3ea8ae530a90c131d07ffb880dc11d6ae.png",
-          "hash": "d5d0b557e1d44d0e19141545823bf2f3ea8ae530a90c131d07ffb880dc11d6ae"
+          "hash": "d5d0b557e1d44d0e19141545823bf2f3ea8ae530a90c131d07ffb880dc11d6ae",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "呆滞",
           "path": "assets/a044b698ff6696d9777eefed7efbea1b204c2d3f4cd1bae5b69ba434ca346ef8.png",
-          "hash": "a044b698ff6696d9777eefed7efbea1b204c2d3f4cd1bae5b69ba434ca346ef8"
+          "hash": "a044b698ff6696d9777eefed7efbea1b204c2d3f4cd1bae5b69ba434ca346ef8",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "咀嚼",
           "path": "assets/e9a216243e963db46c040051c6de734f23a4b82314a2e4d0d548852c9567296f.png",
-          "hash": "e9a216243e963db46c040051c6de734f23a4b82314a2e4d0d548852c9567296f"
+          "hash": "e9a216243e963db46c040051c6de734f23a4b82314a2e4d0d548852c9567296f",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "闭眼",
           "path": "assets/5d226614f747c6eedee3a47b324bd5821c68a368ec51eb6fb87dfbba7ca2bc0e.png",
-          "hash": "5d226614f747c6eedee3a47b324bd5821c68a368ec51eb6fb87dfbba7ca2bc0e"
+          "hash": "5d226614f747c6eedee3a47b324bd5821c68a368ec51eb6fb87dfbba7ca2bc0e",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "轻蔑",
           "path": "assets/d6ac872d52d6c1e97c3c99a338ca29f2dc855b3a5330b1e9e1b291714b9152f6.png",
-          "hash": "d6ac872d52d6c1e97c3c99a338ca29f2dc855b3a5330b1e9e1b291714b9152f6"
+          "hash": "d6ac872d52d6c1e97c3c99a338ca29f2dc855b3a5330b1e9e1b291714b9152f6",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "调皮",
           "path": "assets/de119b8156e9bbecbafc405c68efa94d1ce3f915572e0d70451ae9d560eb6792.png",
-          "hash": "de119b8156e9bbecbafc405c68efa94d1ce3f915572e0d70451ae9d560eb6792"
+          "hash": "de119b8156e9bbecbafc405c68efa94d1ce3f915572e0d70451ae9d560eb6792",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "叹气",
           "path": "assets/3abe4d5d3438b5d99db2d50ab6e8bc09d07e755709e15e5a59a1c0a19396f696.png",
-          "hash": "3abe4d5d3438b5d99db2d50ab6e8bc09d07e755709e15e5a59a1c0a19396f696"
+          "hash": "3abe4d5d3438b5d99db2d50ab6e8bc09d07e755709e15e5a59a1c0a19396f696",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "嘟嘴",
           "path": "assets/d535a688e04fd6a2418b7cae86c4890e74d64872421363738d55793ab6ccf23c.png",
-          "hash": "d535a688e04fd6a2418b7cae86c4890e74d64872421363738d55793ab6ccf23c"
+          "hash": "d535a688e04fd6a2418b7cae86c4890e74d64872421363738d55793ab6ccf23c",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "尴尬",
           "path": "assets/c96b64b79ace6fd89d018c2dd9d6115d41f1a63286350ffdd4634bd8f59d4962.png",
-          "hash": "c96b64b79ace6fd89d018c2dd9d6115d41f1a63286350ffdd4634bd8f59d4962"
+          "hash": "c96b64b79ace6fd89d018c2dd9d6115d41f1a63286350ffdd4634bd8f59d4962",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "大哭",
           "path": "assets/8f91bede02a2f363c01d4941ce944a7c60bbe8e94b13914b83b3b3233c826a79.png",
-          "hash": "8f91bede02a2f363c01d4941ce944a7c60bbe8e94b13914b83b3b3233c826a79"
+          "hash": "8f91bede02a2f363c01d4941ce944a7c60bbe8e94b13914b83b3b3233c826a79",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "品尝",
           "path": "assets/4de13414aaa37b01f70b76b6f1619407318448d128c287308992df71d14b856d.png",
-          "hash": "4de13414aaa37b01f70b76b6f1619407318448d128c287308992df71d14b856d"
+          "hash": "4de13414aaa37b01f70b76b6f1619407318448d128c287308992df71d14b856d",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "完蛋",
           "path": "assets/f6a9b8a4fcdeb821a2905d9d0e25a3d18e0b92f131b67f9b6eb725604a2f1cfa.png",
-          "hash": "f6a9b8a4fcdeb821a2905d9d0e25a3d18e0b92f131b67f9b6eb725604a2f1cfa"
+          "hash": "f6a9b8a4fcdeb821a2905d9d0e25a3d18e0b92f131b67f9b6eb725604a2f1cfa",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "喷血",
           "path": "assets/24feeefa90d2b234cc05c26944ec4317d8d91c77c031fa4a20ada30619fe1b35.png",
-          "hash": "24feeefa90d2b234cc05c26944ec4317d8d91c77c031fa4a20ada30619fe1b35"
+          "hash": "24feeefa90d2b234cc05c26944ec4317d8d91c77c031fa4a20ada30619fe1b35",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "吐血",
           "path": "assets/55940ded03b02cf116990c57ccc66d0382b76d5008fd6ab9bb700cec377049e1.png",
-          "hash": "55940ded03b02cf116990c57ccc66d0382b76d5008fd6ab9bb700cec377049e1"
+          "hash": "55940ded03b02cf116990c57ccc66d0382b76d5008fd6ab9bb700cec377049e1",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "呕吐",
           "path": "assets/27f76ed2ae28a9f6d73360c5cb3b336b30f6025fa41d4598976881a90627afa6.png",
-          "hash": "27f76ed2ae28a9f6d73360c5cb3b336b30f6025fa41d4598976881a90627afa6"
+          "hash": "27f76ed2ae28a9f6d73360c5cb3b336b30f6025fa41d4598976881a90627afa6",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "尖牙",
           "path": "assets/367bc566479706f6f67778a68e7bc80dbcb4d68e3c1f4ca9cf4dd5862f6504b1.png",
-          "hash": "367bc566479706f6f67778a68e7bc80dbcb4d68e3c1f4ca9cf4dd5862f6504b1"
+          "hash": "367bc566479706f6f67778a68e7bc80dbcb4d68e3c1f4ca9cf4dd5862f6504b1",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "坏笑",
           "path": "assets/a215d853986bd885f5d1a742aee300986f7c1865fe217ad293f048c982476dbd.png",
-          "hash": "a215d853986bd885f5d1a742aee300986f7c1865fe217ad293f048c982476dbd"
+          "hash": "a215d853986bd885f5d1a742aee300986f7c1865fe217ad293f048c982476dbd",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "狂怒",
           "path": "assets/e3aba826082ef78df9f4ad009f100b715cdbeb89448b322930b7b95ed396aacb.png",
-          "hash": "e3aba826082ef78df9f4ad009f100b715cdbeb89448b322930b7b95ed396aacb"
+          "hash": "e3aba826082ef78df9f4ad009f100b715cdbeb89448b322930b7b95ed396aacb",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "奸笑",
           "path": "assets/c30b83357651b77464ab0261773c39d7751c91ee3297fc4f7a461dff5e2e58d8.png",
-          "hash": "c30b83357651b77464ab0261773c39d7751c91ee3297fc4f7a461dff5e2e58d8"
+          "hash": "c30b83357651b77464ab0261773c39d7751c91ee3297fc4f7a461dff5e2e58d8",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "邪恶",
           "path": "assets/fdbe24e16fb1271eafd79b792c53d944d9e4496f33b0bbecbe3ddeae09f42cb7.png",
-          "hash": "fdbe24e16fb1271eafd79b792c53d944d9e4496f33b0bbecbe3ddeae09f42cb7"
+          "hash": "fdbe24e16fb1271eafd79b792c53d944d9e4496f33b0bbecbe3ddeae09f42cb7",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "无奈",
           "path": "assets/dfae1dcdf2302320d769440c003e36a452ab12deabdd5966c7c5b169a0c123ea.png",
-          "hash": "dfae1dcdf2302320d769440c003e36a452ab12deabdd5966c7c5b169a0c123ea"
+          "hash": "dfae1dcdf2302320d769440c003e36a452ab12deabdd5966c7c5b169a0c123ea",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "赌气",
           "path": "assets/bff52b90c81651a92f9eb944b6c604ef71e57f5aa91e62e1b9210d13612a8193.png",
-          "hash": "bff52b90c81651a92f9eb944b6c604ef71e57f5aa91e62e1b9210d13612a8193"
+          "hash": "bff52b90c81651a92f9eb944b6c604ef71e57f5aa91e62e1b9210d13612a8193",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "嘲讽",
           "path": "assets/ccecd11e2a957d83d6847577eae94bcc729a61bc92289aaa93ae8872f7424af3.png",
-          "hash": "ccecd11e2a957d83d6847577eae94bcc729a61bc92289aaa93ae8872f7424af3"
+          "hash": "ccecd11e2a957d83d6847577eae94bcc729a61bc92289aaa93ae8872f7424af3",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "惊讶",
           "path": "assets/50647e95e5b0519a5df4e383c3176797918bf59ce2f7be434aa684ee243bcaa3.png",
-          "hash": "50647e95e5b0519a5df4e383c3176797918bf59ce2f7be434aa684ee243bcaa3"
+          "hash": "50647e95e5b0519a5df4e383c3176797918bf59ce2f7be434aa684ee243bcaa3",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "疑惑",
           "path": "assets/dfdbf807fb519a98bd5a238b3d5c5b124846552c9fe648c69b6f0611a1179d39.png",
-          "hash": "dfdbf807fb519a98bd5a238b3d5c5b124846552c9fe648c69b6f0611a1179d39"
+          "hash": "dfdbf807fb519a98bd5a238b3d5c5b124846552c9fe648c69b6f0611a1179d39",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "不屑",
           "path": "assets/3f9b62f3954a50b373b22e1d8e09670b6efe95508098b5e0b70b8a32bfba343e.png",
-          "hash": "3f9b62f3954a50b373b22e1d8e09670b6efe95508098b5e0b70b8a32bfba343e"
+          "hash": "3f9b62f3954a50b373b22e1d8e09670b6efe95508098b5e0b70b8a32bfba343e",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "小丑",
           "path": "assets/7bdffd34dd826d30295aaf6704fb4b000cdff854b9ce9dd05dffd3fa4d0b5a80.png",
-          "hash": "7bdffd34dd826d30295aaf6704fb4b000cdff854b9ce9dd05dffd3fa4d0b5a80"
+          "hash": "7bdffd34dd826d30295aaf6704fb4b000cdff854b9ce9dd05dffd3fa4d0b5a80",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "爱心",
           "path": "assets/7b0f2e7309be154f842c34032d06048abbf05a5ce4b26cc488a32957aeea9133.png",
-          "hash": "7b0f2e7309be154f842c34032d06048abbf05a5ce4b26cc488a32957aeea9133"
+          "hash": "7b0f2e7309be154f842c34032d06048abbf05a5ce4b26cc488a32957aeea9133",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "好色",
           "path": "assets/d387b0140b1223f06c20fa195e4dc5f36e1430265e6c89d23edee12680ce5d64.png",
-          "hash": "d387b0140b1223f06c20fa195e4dc5f36e1430265e6c89d23edee12680ce5d64"
+          "hash": "d387b0140b1223f06c20fa195e4dc5f36e1430265e6c89d23edee12680ce5d64",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "头晕",
           "path": "assets/556e6cfd311430859baef8622a558856bc11a8b5caf8738be45c3bf7516bc4f2.png",
-          "hash": "556e6cfd311430859baef8622a558856bc11a8b5caf8738be45c3bf7516bc4f2"
+          "hash": "556e6cfd311430859baef8622a558856bc11a8b5caf8738be45c3bf7516bc4f2",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "星星",
           "path": "assets/90857ba73a62179c8692cbd1a2d9e0496bcf9bb76b11ae93dc7d5fe14231a59d.png",
-          "hash": "90857ba73a62179c8692cbd1a2d9e0496bcf9bb76b11ae93dc7d5fe14231a59d"
+          "hash": "90857ba73a62179c8692cbd1a2d9e0496bcf9bb76b11ae93dc7d5fe14231a59d",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         }
       ],
       "脸型": [
         {
           "name": "图层 1354",
           "path": "assets/dabc54d6c23b09393a00cc51bc5f67d0be0c0e55c679b400ef996bcd39b2b5c9.png",
-          "hash": "dabc54d6c23b09393a00cc51bc5f67d0be0c0e55c679b400ef996bcd39b2b5c9"
+          "hash": "dabc54d6c23b09393a00cc51bc5f67d0be0c0e55c679b400ef996bcd39b2b5c9",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "图层 1557",
           "path": "assets/feb78dc90e9e32e933e22b7fc3c3504c0882c4ca5b47a3e5059f561fb96c2f89.png",
-          "hash": "feb78dc90e9e32e933e22b7fc3c3504c0882c4ca5b47a3e5059f561fb96c2f89"
+          "hash": "feb78dc90e9e32e933e22b7fc3c3504c0882c4ca5b47a3e5059f561fb96c2f89",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         },
         {
           "name": "图层 1315",
           "path": "assets/75c101ef866d72b6a0583ca9e75be496579d54f5ec58f78a3e4840babf6591a4.png",
-          "hash": "75c101ef866d72b6a0583ca9e75be496579d54f5ec58f78a3e4840babf6591a4"
+          "hash": "75c101ef866d72b6a0583ca9e75be496579d54f5ec58f78a3e4840babf6591a4",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         }
       ],
       "发型": [
         {
           "name": "图层 1723",
           "path": "assets/ad814bee3ad38f0dd1e429db5420a619e9b6a9bc01d040c9cae5006e55b837e2.png",
-          "hash": "ad814bee3ad38f0dd1e429db5420a619e9b6a9bc01d040c9cae5006e55b837e2"
+          "hash": "ad814bee3ad38f0dd1e429db5420a619e9b6a9bc01d040c9cae5006e55b837e2",
+          "bbox": [
+            0,
+            0,
+            2028,
+            1603
+          ]
         }
       ]
     }

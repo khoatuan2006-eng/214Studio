@@ -699,7 +699,7 @@ def _generate_compat_fields(result: JointedCharacter):
     for part_name, part in sorted_parts:
         group_order.append(part_name)
         layer_groups[part_name] = [
-            {"name": v.name, "path": v.asset_path, "hash": v.hash}
+            {"name": v.name, "path": v.asset_path, "hash": v.hash, "bbox": list(v.bbox)}
             for v in part.variants
         ]
 
@@ -709,19 +709,19 @@ def _generate_compat_fields(result: JointedCharacter):
             if result.head.mouths:
                 group_order.append("嘴")
                 layer_groups["嘴"] = [
-                    {"name": v.name, "path": v.asset_path, "hash": v.hash}
+                    {"name": v.name, "path": v.asset_path, "hash": v.hash, "bbox": list(v.bbox)}
                     for v in result.head.mouths
                 ]
             if result.head.eyes:
                 group_order.append("眼睛")
                 layer_groups["眼睛"] = [
-                    {"name": v.name, "path": v.asset_path, "hash": v.hash}
+                    {"name": v.name, "path": v.asset_path, "hash": v.hash, "bbox": list(v.bbox)}
                     for v in result.head.eyes
                 ]
             if result.head.eyebrows:
                 group_order.append("眉毛")
                 layer_groups["眉毛"] = [
-                    {"name": v.name, "path": v.asset_path, "hash": v.hash}
+                    {"name": v.name, "path": v.asset_path, "hash": v.hash, "bbox": list(v.bbox)}
                     for v in result.head.eyebrows
                 ]
         else:
@@ -730,7 +730,7 @@ def _generate_compat_fields(result: JointedCharacter):
             if exprs:
                 group_order.append("表情")
                 layer_groups["表情"] = [
-                    {"name": v.name, "path": v.asset_path, "hash": v.hash}
+                    {"name": v.name, "path": v.asset_path, "hash": v.hash, "bbox": list(v.bbox)}
                     for v in exprs
                 ]
 
@@ -738,13 +738,13 @@ def _generate_compat_fields(result: JointedCharacter):
         if result.head.face_shapes:
             group_order.append("脸型")
             layer_groups["脸型"] = [
-                {"name": v.name, "path": v.asset_path, "hash": v.hash}
+                {"name": v.name, "path": v.asset_path, "hash": v.hash, "bbox": list(v.bbox)}
                 for v in result.head.face_shapes
             ]
         if result.head.hairstyles:
             group_order.append("发型")
             layer_groups["发型"] = [
-                {"name": v.name, "path": v.asset_path, "hash": v.hash}
+                {"name": v.name, "path": v.asset_path, "hash": v.hash, "bbox": list(v.bbox)}
                 for v in result.head.hairstyles
             ]
 

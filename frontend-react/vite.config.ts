@@ -23,6 +23,16 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    proxy: {
+      '/static': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+      },
+      '/oss': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+      },
+    },
   },
   // 18.4: Optimized build chunking for faster initial load
   build: {
