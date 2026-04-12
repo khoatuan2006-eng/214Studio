@@ -295,8 +295,9 @@ class SceneToolExecutor:
         result = executor.execute("set_position", {"object_id": "char-1", "x": 5.0, "y": 7.5})
     """
 
-    def __init__(self, graph: SceneGraph):
+    def __init__(self, graph: SceneGraph, asset_registry=None):
         self.graph = graph
+        self.asset_registry = asset_registry
         self._action_log: list[dict] = []
 
     @property
@@ -453,18 +454,68 @@ class SceneToolExecutor:
     # ── Scene Mutation Handlers ──
 
     def _handle_add_character(self, params: dict) -> ToolResult:
+        char_id = params["character_id"]
+        
+        # Look up character info from asset registry to get pose/face URLs
+        char_info = None
+        if self.asset_registry:
+            char_info = self.asset_registry.get_character(char_id)
+            if not char_info:
+                # Try fuzzy match by name
+                char_info = self.asset_registry.find_character(char_id)
+        
+        # Build metadata with asset URLs for frontend rendering
+        metadata = {}
+        active_layers = {}
+        available_layers = {}
+        
+        if char_info:
+            # Pose URLs: { "站立": { "url": "/static/..." }, ... }
+            pose_urls = {}
+            for name, asset in char_info.poses.items():
+                pose_urls[name] = {"url": asset.url_path, "filename": asset.filename}
+            
+            # Face URLs
+            face_urls = {}
+            for name, asset in char_info.faces.items():
+                face_urls[name] = {"url": asset.url_path, "filename": asset.filename}
+            
+            metadata["poseUrls"] = pose_urls
+            metadata["faceUrls"] = face_urls
+            metadata["characterFolder"] = char_info.relative_folder
+            
+            # Set default pose/face
+            if char_info.default_pose:
+                active_layers["pose"] = char_info.default_pose
+                metadata["poseUrl"] = char_info.get_pose_url(char_info.default_pose)
+            if char_info.default_face:
+                active_layers["face"] = char_info.default_face
+                metadata["faceUrl"] = char_info.get_face_url(char_info.default_face)
+            
+            # Available layers for AI to know what it can switch to
+            available_layers["pose"] = char_info.pose_names
+            available_layers["face"] = char_info.face_names
+            
+            logger.info(f"[ToolExecutor] Resolved character '{char_info.name}': "
+                        f"{len(pose_urls)} poses, {len(face_urls)} faces")
+        else:
+            logger.warning(f"[ToolExecutor] Character '{char_id}' not found in asset registry")
+        
         node = CharacterNode(
             name=params["name"],
-            character_id=params["character_id"],
+            character_id=char_id,
             transform=Transform(
                 x=params["x"],
                 y=params["y"],
                 scale_x=params.get("scale", 1.0),
                 scale_y=params.get("scale", 1.0),
             ),
+            metadata=metadata,
+            active_layers=active_layers,
+            available_layers=available_layers,
         )
         node_id = self.graph.add_node(node)
-        return ToolResult(success=True, data=f"Added character '{params['name']}' (id: {node_id})")
+        return ToolResult(success=True, data=f"Added character '{params['name']}' (id: {node_id}) with {len(active_layers)} default layers")
 
     def _handle_add_background_layer(self, params: dict) -> ToolResult:
         node = BackgroundLayerNode(
