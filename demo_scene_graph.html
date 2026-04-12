@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnimeStudio — Scene Graph Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #484f58;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+            --accent-purple: #bc8cff;
+            --accent-cyan: #39d2c0;
+            --hero-color: #58a6ff;
+            --villain-color: #f85149;
+            --bg-layer-sky: #1a1c2e;
+            --bg-layer-mountain: #2d2e4a;
+            --bg-layer-tree: #1e3a2f;
+            --bg-layer-ground: #3d3020;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .app {
+            display: grid;
+            grid-template-rows: 48px 1fr 200px;
+            height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            gap: 16px;
+        }
+        .header .logo {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent-cyan);
+            letter-spacing: 0.5px;
+        }
+        .header .scene-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+        .header .controls {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-weight: 500;
+        }
+        .btn:hover { background: #30363d; }
+        .btn.primary { background: #238636; border-color: #2ea043; }
+        .btn.primary:hover { background: #2ea043; }
+        .time-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent-cyan);
+            min-width: 70px;
+            text-align: center;
+        }
+
+        /* ── Main Area ── */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            overflow: hidden;
+        }
+
+        /* ── Canvas (Scene Preview) ── */
+        .canvas-container {
+            position: relative;
+            background: #0a0e14;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        #sceneCanvas {
+            border-radius: 4px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        }
+
+        /* ── Side Panel ── */
+        .side-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .panel-content::-webkit-scrollbar { width: 4px; }
+        .panel-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        /* ── Object List ── */
+        .obj-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 2px;
+            gap: 8px;
+            font-size: 12px;
+            transition: background 0.15s;
+        }
+        .obj-item:hover { background: var(--bg-tertiary); }
+        .obj-item .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .obj-item .name { font-weight: 500; flex: 1; }
+        .obj-item .info {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .obj-item .pose-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        /* ── AI Log ── */
+        .log-entry {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+        .log-entry .tool-name { color: var(--accent-purple); font-weight: 500; }
+        .log-entry .param-key { color: var(--accent-orange); }
+        .log-entry .param-val { color: var(--accent-green); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } }
+
+        /* ── Timeline ── */
+        .timeline {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-rows: 24px 1fr;
+        }
+        .timeline-ruler {
+            display: flex;
+            align-items: center;
+            padding: 0 80px 0 80px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+        .ruler-mark {
+            position: absolute;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            transform: translateX(-50%);
+        }
+        .timeline-tracks {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+        .track {
+            display: flex;
+            align-items: center;
+            height: 28px;
+            min-height: 28px;
+        }
+        .track-label {
+            width: 80px;
+            padding: 0 8px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .track-content {
+            flex: 1;
+            height: 100%;
+            position: relative;
+            border-bottom: 1px solid #1c2129;
+        }
+        .keyframe-dot {
+            position: absolute;
+            width: 8px; height: 8px;
+            border-radius: 2px;
+            transform: rotate(45deg) translate(-50%, -50%);
+            top: 50%;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .keyframe-dot:hover { transform: rotate(45deg) translate(-50%, -50%) scale(1.5); }
+        .track-bar {
+            position: absolute;
+            height: 6px;
+            border-radius: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.3;
+        }
+        .playhead {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: var(--accent-cyan);
+            z-index: 10;
+            pointer-events: none;
+            transition: left 0.05s linear;
+        }
+        .playhead::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+        }
+
+        /* ── Panel Tabs ── */
+        .panel-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+        .panel-tab {
+            padding: 8px 14px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .panel-tab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+        .panel-tab:hover { color: var(--text-secondary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Status bar ── */
+        .status-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 2px 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">▶ ANIMESTUDIO</div>
+        <div class="scene-name">Forest Encounter</div>
+        <div class="controls">
+            <button class="btn" onclick="resetScene()">⟲ Reset</button>
+            <button class="btn" id="playBtn" onclick="togglePlay()">▶ Play</button>
+            <div class="time-display" id="timeDisplay">0.00s</div>
+            <button class="btn primary" onclick="runAIDemo()">🤖 AI Director</button>
+        </div>
+    </div>
+
+    <!-- Main Area -->
+    <div class="main">
+        <!-- Canvas -->
+        <div class="canvas-container">
+            <canvas id="sceneCanvas" width="768" height="432"></canvas>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="side-panel">
+            <div class="panel-tabs">
+                <div class="panel-tab active" onclick="switchTab('objects')">Objects</div>
+                <div class="panel-tab" onclick="switchTab('ai-log')">AI Log</div>
+                <div class="panel-tab" onclick="switchTab('json')">JSON</div>
+            </div>
+            <div class="panel-content">
+                <div id="tab-objects" class="tab-content active"></div>
+                <div id="tab-ai-log" class="tab-content"></div>
+                <div id="tab-json" class="tab-content">
+                    <pre id="jsonView" style="font-size:9px;color:var(--text-muted);white-space:pre-wrap;word-break:break-all;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline">
+        <div class="timeline-ruler" id="timelineRuler"></div>
+        <div class="timeline-tracks" id="timelineTracks"></div>
+    </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  SCENE GRAPH ENGINE (TypeScript mirror in JS)
+// ══════════════════════════════════════════════
+
+const WORLD_W = 19.2, WORLD_H = 10.8, PPU = 100;
+const CANVAS_W = 768, CANVAS_H = 432;
+const SCALE = CANVAS_W / (WORLD_W * PPU); // canvas pixels per world pixel
+
+function applyEasing(t, easing) {
+    t = Math.max(0, Math.min(1, t));
+    switch (easing) {
+        case 'easeIn': return t*t;
+        case 'easeOut': return 1-(1-t)*(1-t);
+        case 'easeInOut': return 3*t*t - 2*t*t*t;
+        case 'easeInCubic': return t*t*t;
+        case 'easeOutCubic': { const i=1-t; return 1-i*i*i; }
+        case 'easeInOutCubic': return t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+        case 'step': return t<1?0:1;
+        default: return t;
+    }
+}
+
+function interpolateKF(kfs, time) {
+    if (!kfs||!kfs.length) return null;
+    if (time<=kfs[0].time) return kfs[0].value;
+    if (time>=kfs[kfs.length-1].time) return kfs[kfs.length-1].value;
+    for (let i=0;i<kfs.length-1;i++) {
+        if (kfs[i].time<=time&&time<=kfs[i+1].time) {
+            const dur=kfs[i+1].time-kfs[i].time;
+            if (dur<=0) return kfs[i+1].value;
+            const lt=(time-kfs[i].time)/dur;
+            const et=applyEasing(lt,kfs[i].easing||'linear');
+            return kfs[i].value+(kfs[i+1].value-kfs[i].value)*et;
+        }
+    }
+    return kfs[kfs.length-1].value;
+}
+
+// ── SceneGraph ──
+
+class SceneGraph {
+    constructor() {
+        this.nodes = {};
+        this.rootOrder = [];
+        this.duration = 6.0;
+        this.name = 'Untitled';
+    }
+
+    addNode(node) {
+        this.nodes[node.id] = node;
+        this.rootOrder.push(node.id);
+    }
+
+    getSnapshot(time) {
+        const snap = {};
+        for (const [id, node] of Object.entries(this.nodes)) {
+            const s = {
+                id, name: node.name, type: node.type,
+                x: node.keyframes.x?.length ? interpolateKF(node.keyframes.x, time) : node.x,
+                y: node.keyframes.y?.length ? interpolateKF(node.keyframes.y, time) : node.y,
+                scaleX: node.keyframes.scale_x?.length ? interpolateKF(node.keyframes.scale_x, time) : node.scaleX,
+                scaleY: node.keyframes.scale_y?.length ? interpolateKF(node.keyframes.scale_y, time) : node.scaleY,
+                rotation: node.keyframes.rotation?.length ? interpolateKF(node.keyframes.rotation, time) : node.rotation,
+                opacity: node.keyframes.opacity?.length ? interpolateKF(node.keyframes.opacity, time) : node.opacity,
+                zIndex: node.zIndex, visible: node.visible,
+            };
+            if (node.type === 'character' && node.frameSequence?.length) {
+                let layers = {...node.activeLayers};
+                for (const f of node.frameSequence) {
+                    if (f.time <= time) layers = {...layers, ...f.layers};
+                    else break;
+                }
+                s.activeLayers = layers;
+            } else if (node.activeLayers) {
+                s.activeLayers = {...node.activeLayers};
+            }
+            snap[id] = s;
+        }
+        return snap;
+    }
+
+    toJSON() { return JSON.stringify({name:this.name,duration:this.duration,nodes:this.nodes}, null, 2); }
+}
+
+// ── Tool Executor ──
+let aiLog = [];
+
+class ToolExecutor {
+    constructor(scene) { this.scene = scene; }
+
+    execute(name, params) {
+        const logEntry = { tool: name, params: {...params}, ok: true };
+        try {
+            this['_'+name](params);
+        } catch(e) {
+            logEntry.ok = false;
+            logEntry.error = e.message;
+        }
+        aiLog.push(logEntry);
+        renderAILog();
+        return logEntry;
+    }
+
+    _add_background_layer(p) {
+        const id = 'bg-' + Math.random().toString(36).slice(2,8);
+        this.scene.addNode({
+            id, name: p.name, type: 'background_layer',
+            x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0,
+            opacity: 1, zIndex: p.z_index, visible: true,
+            assetPath: p.asset_path, parallaxSpeed: p.parallax_speed||1,
+            keyframes: {}, metadata: {}
+        });
+    }
+
+    _add_character(p) {
+        const id = 'char-' + Math.random().toString(36).slice(2,8);
+        this.scene.addNode({
+            id, name: p.name, type: 'character', characterId: p.character_id,
+            x: p.x, y: p.y, scaleX: p.scale||1, scaleY: p.scale||1,
+            rotation: 0, opacity: 1, zIndex: 0, visible: true,
+            activeLayers: {}, availableLayers: {}, frameSequence: [],
+            keyframes: {}, metadata: {}
+        });
+    }
+
+    _set_character_pose(p) {
+        const n = this.scene.nodes[p.object_id];
+        if (n) Object.assign(n.activeLayers, p.layers);
+    }
+
+    _add_keyframe(p) {
+        const n = this.scene.nodes[p.object_id];
+        if (!n) return;
+        if (!n.keyframes[p.property]) n.keyframes[p.property] = [];
+        n.keyframes[p.property] = n.keyframes[p.property].filter(k=>Math.abs(k.time-p.time)>0.001);
+        n.keyframes[p.property].push({time:p.time, value:p.value, easing:p.easing||'linear'});
+        n.keyframes[p.property].sort((a,b)=>a.time-b.time);
+    }
+
+    _set_position(p) {
+        const n = this.scene.nodes[p.object_id];
+        if (n) { n.x = p.x; n.y = p.y; }
+    }
+
+    _set_scale(p) {
+        const n = this.scene.nodes[p.object_id];
+        if (n) { n.scaleX = p.scale; n.scaleY = p.scale; }
+    }
+
+    _add_character_frame(p) {
+        const n = this.scene.nodes[p.object_id];
+        if (!n) return;
+        n.frameSequence = n.frameSequence.filter(f=>Math.abs(f.time-p.time)>0.001);
+        n.frameSequence.push({time:p.time, layers:p.layers});
+        n.frameSequence.sort((a,b)=>a.time-b.time);
+    }
+}
+
+// ══════════════════════════════════════════════
+//  CANVAS RENDERER
+// ══════════════════════════════════════════════
+
+const canvas = document.getElementById('sceneCanvas');
+const ctx = canvas.getContext('2d');
+
+const BG_COLORS = {
+    'Sky': ['#0f0c29','#302b63','#24243e'],
+    'Mountains': '#4a4569',
+    'Trees': '#2d5a3d',
+    'Ground': '#5c4a2e',
+};
+
+const CHAR_EMOJIS = {
+    'standing': '🧍', 'walking': '🚶', 'fighting_stance': '🥷', 'waving': '👋'
+};
+const FACE_EMOJIS = {
+    'smile': '😊', 'determined': '😤', 'surprised': '😲', 'angry': '😡',
+    'smirk': '😏', 'evil_laugh': '😈', 'laugh': '😂'
+};
+
+function worldToCanvas(wx, wy) {
+    return [wx * PPU * SCALE, wy * PPU * SCALE];
+}
+
+function renderScene(scene, time) {
+    const snap = scene.getSnapshot(time);
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Sort by z-index
+    const sorted = Object.values(snap).sort((a,b) => a.zIndex - b.zIndex);
+
+    for (const node of sorted) {
+        if (!node.visible || node.opacity <= 0.001) continue;
+        ctx.globalAlpha = Math.max(0, Math.min(1, node.opacity));
+
+        if (node.type === 'background_layer') {
+            renderBackgroundLayer(node);
+        } else if (node.type === 'character') {
+            renderCharacter(node);
+        }
+    }
+    ctx.globalAlpha = 1;
+
+    // Render time overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(CANVAS_W-80, 8, 72, 22);
+    ctx.fillStyle = '#39d2c0';
+    ctx.font = '500 12px "JetBrains Mono"';
+    ctx.fillText(`t=${time.toFixed(2)}s`, CANVAS_W-74, 23);
+}
+
+function renderBackgroundLayer(node) {
+    const [cx, cy] = worldToCanvas(0, 0);
+    const name = node.name;
+
+    if (name === 'Sky') {
+        const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H * 0.6);
+        grad.addColorStop(0, '#0f0c29');
+        grad.addColorStop(0.5, '#302b63');
+        grad.addColorStop(1, '#24243e');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H * 0.6);
+
+        // Stars
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        for (let i=0;i<30;i++) {
+            const sx = (i*137.5)%CANVAS_W, sy = (i*97.3)%(CANVAS_H*0.4);
+            ctx.fillRect(sx, sy, 1.5, 1.5);
+        }
+        // Moon
+        ctx.beginPath();
+        ctx.arc(CANVAS_W*0.8, CANVAS_H*0.12, 20, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,255,230,0.9)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(CANVAS_W*0.8+8, CANVAS_H*0.12-3, 17, 0, Math.PI*2);
+        ctx.fillStyle = '#1a1c3a';
+        ctx.fill();
+    } else if (name === 'Mountains') {
+        ctx.fillStyle = '#3d3760';
+        ctx.beginPath();
+        ctx.moveTo(0, CANVAS_H*0.55);
+        for (let x=0;x<=CANVAS_W;x+=40) {
+            ctx.lineTo(x, CANVAS_H*0.35 + Math.sin(x*0.008)*50 + Math.sin(x*0.015)*30);
+        }
+        ctx.lineTo(CANVAS_W, CANVAS_H*0.7);
+        ctx.lineTo(0, CANVAS_H*0.7);
+        ctx.fill();
+    } else if (name === 'Trees') {
+        for (let i=0;i<12;i++) {
+            const tx = i*70+20, ty = CANVAS_H*0.5+Math.sin(i*2.3)*15;
+            ctx.fillStyle = `hsl(${140+i*5},40%,${20+i*2}%)`;
+            ctx.beginPath();
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(tx-15-i%3*5, ty+35);
+            ctx.lineTo(tx+15+i%3*5, ty+35);
+            ctx.fill();
+            ctx.fillRect(tx-2, ty+35, 4, 10);
+            ctx.fillStyle = `hsl(${140+i*5},40%,${16+i}%)`;
+            ctx.beginPath();
+            ctx.moveTo(tx, ty-15);
+            ctx.lineTo(tx-12-i%2*3, ty+15);
+            ctx.lineTo(tx+12+i%2*3, ty+15);
+            ctx.fill();
+        }
+    } else if (name === 'Ground') {
+        const grad = ctx.createLinearGradient(0, CANVAS_H*0.72, 0, CANVAS_H);
+        grad.addColorStop(0, '#3d5a32');
+        grad.addColorStop(0.3, '#4a6338');
+        grad.addColorStop(1, '#2a3f20');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, CANVAS_H*0.72, CANVAS_W, CANVAS_H*0.28);
+        // Grass texture
+        ctx.strokeStyle = 'rgba(80,120,50,0.3)';
+        ctx.lineWidth = 1;
+        for (let i=0;i<60;i++) {
+            const gx=(i*13.7)%CANVAS_W, gy=CANVAS_H*0.72+(i*7.3)%(CANVAS_H*0.25);
+            ctx.beginPath();
+            ctx.moveTo(gx, gy);
+            ctx.lineTo(gx+3, gy-6);
+            ctx.stroke();
+        }
+    }
+}
+
+function renderCharacter(node) {
+    const [cx, cy] = worldToCanvas(node.x, node.y);
+    const scale = node.scaleX || 1;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+
+    const isHero = node.name === 'Hero';
+    const color = isHero ? '#58a6ff' : '#f85149';
+    const pose = node.activeLayers?.pose || 'standing';
+    const face = node.activeLayers?.face || 'smile';
+
+    // Body
+    const bodyW = 30, bodyH = 60;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, bodyH*0.5+2, bodyW*0.7, 6, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Legs
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    if (pose==='walking') {
+        ctx.beginPath(); ctx.moveTo(-6, bodyH*0.2); ctx.lineTo(-10, bodyH*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(6, bodyH*0.2); ctx.lineTo(10, bodyH*0.45); ctx.stroke();
+    } else {
+        ctx.beginPath(); ctx.moveTo(-6, bodyH*0.2); ctx.lineTo(-6, bodyH*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(6, bodyH*0.2); ctx.lineTo(6, bodyH*0.5); ctx.stroke();
+    }
+
+    // Body
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(-bodyW/2, -bodyH*0.3, bodyW, bodyH*0.5, 8);
+    ctx.fill();
+
+    // Arms
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    if (pose === 'fighting_stance') {
+        ctx.beginPath(); ctx.moveTo(-bodyW/2, -bodyH*0.1); ctx.lineTo(-bodyW/2-15, -bodyH*0.25); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(bodyW/2, -bodyH*0.1); ctx.lineTo(bodyW/2+12, -bodyH*0.2); ctx.stroke();
+    } else if (pose === 'waving') {
+        ctx.beginPath(); ctx.moveTo(-bodyW/2, -bodyH*0.1); ctx.lineTo(-bodyW/2-10, bodyH*0.05); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(bodyW/2, -bodyH*0.1); ctx.lineTo(bodyW/2+15, -bodyH*0.4); ctx.stroke();
+    } else {
+        ctx.beginPath(); ctx.moveTo(-bodyW/2, -bodyH*0.1); ctx.lineTo(-bodyW/2-8, bodyH*0.1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(bodyW/2, -bodyH*0.1); ctx.lineTo(bodyW/2+8, bodyH*0.1); ctx.stroke();
+    }
+
+    // Head
+    ctx.fillStyle = '#fce4c9';
+    ctx.beginPath();
+    ctx.arc(0, -bodyH*0.4, 14, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Hair
+    ctx.fillStyle = isHero ? '#3b6fa8' : '#8b2020';
+    ctx.beginPath();
+    ctx.arc(0, -bodyH*0.4-4, 14, Math.PI, Math.PI*2);
+    ctx.fill();
+
+    // Face expression
+    const faceY = -bodyH*0.4;
+    ctx.fillStyle = '#333';
+    ctx.font = '16px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const emoji = FACE_EMOJIS[face] || '😐';
+    ctx.fillText(emoji, 0, faceY+2);
+
+    // Name tag
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    const nameW = ctx.measureText(node.name).width;
+    ctx.fillRect(-nameW/2-4, -bodyH*0.7, nameW+8, 16);
+    ctx.fillStyle = color;
+    ctx.font = '600 10px Inter';
+    ctx.fillText(node.name, 0, -bodyH*0.7+11);
+
+    // Pose label
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.font = '9px "JetBrains Mono"';
+    const poseText = `${pose}`;
+    ctx.fillText(poseText, 0, bodyH*0.55+10);
+
+    ctx.restore();
+}
+
+// ══════════════════════════════════════════════
+//  UI RENDERING
+// ══════════════════════════════════════════════
+
+function renderObjectList(scene, time) {
+    const snap = scene.getSnapshot(time);
+    const container = document.getElementById('tab-objects');
+    let html = '';
+
+    const sorted = Object.values(snap).sort((a,b) => a.zIndex - b.zIndex);
+    for (const node of sorted) {
+        const colors = {
+            background_layer: '#6e7681',
+            character: node.name==='Hero'?'#58a6ff':'#f85149',
+            camera: '#d29922'
+        };
+        const dotColor = colors[node.type] || '#8b949e';
+
+        html += `<div class="obj-item">
+            <div class="dot" style="background:${dotColor}"></div>
+            <div class="name">${node.name}</div>`;
+
+        if (node.type === 'character') {
+            const pose = node.activeLayers?.pose || 'idle';
+            const face = node.activeLayers?.face || '';
+            html += `<span class="pose-badge" style="background:rgba(${dotColor==='#58a6ff'?'88,166,255':'248,81,73'},0.15);color:${dotColor}">${pose}</span>`;
+            html += `<div class="info">x=${node.x.toFixed(1)}</div>`;
+        } else if (node.type === 'background_layer') {
+            html += `<div class="info">z=${node.zIndex}</div>`;
+        }
+        html += `</div>`;
+    }
+    container.innerHTML = html;
+}
+
+function renderAILog() {
+    const container = document.getElementById('tab-ai-log');
+    let html = '';
+    for (const entry of aiLog.slice(-30)) {
+        const status = entry.ok ? '✓' : '✗';
+        const statusColor = entry.ok ? 'var(--accent-green)' : 'var(--accent-red)';
+        let paramsStr = Object.entries(entry.params).map(([k,v]) => {
+            const val = typeof v === 'object' ? JSON.stringify(v) : v;
+            return `<span class="param-key">${k}</span>=<span class="param-val">${val}</span>`;
+        }).join(', ');
+        html += `<div class="log-entry"><span style="color:${statusColor}">${status}</span> <span class="tool-name">${entry.tool}</span>(${paramsStr})</div>`;
+    }
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+}
+
+function renderTimeline(scene, time) {
+    const tracks = document.getElementById('timelineTracks');
+    const ruler = document.getElementById('timelineRuler');
+    const dur = scene.duration;
+    const leftPad = 80;
+
+    // Ruler
+    let rulerHtml = '';
+    for (let t=0;t<=dur;t++) {
+        const pct = (t/dur)*100;
+        rulerHtml += `<div class="ruler-mark" style="left:calc(${leftPad}px + ${pct}% * (100% - ${leftPad}px) / 100%);left:${leftPad + (CANVAS_W - leftPad - 80) * t / dur}px">${t}s</div>`;
+    }
+    ruler.innerHTML = rulerHtml;
+
+    // Tracks
+    let tracksHtml = '';
+    const trackW = CANVAS_W - leftPad - 80;
+
+    // Playhead
+    const phX = leftPad + trackW * (time / dur);
+
+    for (const [id, node] of Object.entries(scene.nodes)) {
+        if (node.type === 'background_layer') continue;
+        const color = node.name==='Hero'?'#58a6ff':node.name==='Villain'?'#f85149':'#d29922';
+
+        // Property tracks
+        for (const [prop, kfs] of Object.entries(node.keyframes)) {
+            if (!kfs.length) continue;
+            tracksHtml += `<div class="track">
+                <div class="track-label" style="color:${color}">${node.name}.${prop}</div>
+                <div class="track-content">`;
+
+            // Bar
+            const startPct = (kfs[0].time/dur)*100;
+            const endPct = (kfs[kfs.length-1].time/dur)*100;
+            tracksHtml += `<div class="track-bar" style="left:${startPct}%;width:${endPct-startPct}%;background:${color}"></div>`;
+
+            // Keyframe dots
+            for (const kf of kfs) {
+                const kfPct = (kf.time/dur)*100;
+                tracksHtml += `<div class="keyframe-dot" style="left:${kfPct}%;background:${color}" title="t=${kf.time}s v=${kf.value} ${kf.easing}"></div>`;
+            }
+            tracksHtml += `</div></div>`;
+        }
+
+        // Frame sequence track
+        if (node.frameSequence?.length) {
+            tracksHtml += `<div class="track">
+                <div class="track-label" style="color:${color}">${node.name}.pose</div>
+                <div class="track-content">`;
+            for (const f of node.frameSequence) {
+                const fPct = (f.time/dur)*100;
+                tracksHtml += `<div class="keyframe-dot" style="left:${fPct}%;background:var(--accent-orange)" title="t=${f.time}s ${JSON.stringify(f.layers)}"></div>`;
+            }
+            tracksHtml += `</div></div>`;
+        }
+    }
+
+    // Add playhead
+    const phPct = (time/dur)*100;
+    tracksHtml = `<div style="position:relative">${tracksHtml}<div class="playhead" style="left:${phPct}%"></div></div>`;
+    tracks.innerHTML = tracksHtml;
+}
+
+// ══════════════════════════════════════════════
+//  DEMO SCENARIO
+// ══════════════════════════════════════════════
+
+let scene = new SceneGraph();
+let executor = new ToolExecutor(scene);
+let currentTime = 0;
+let isPlaying = false;
+let animFrame = null;
+let aiStepIndex = 0;
+let aiInterval = null;
+
+const AI_STEPS = [
+    ['add_background_layer', {name:'Sky', asset_path:'forest/sky.png', z_index:-30, parallax_speed:0.1}],
+    ['add_background_layer', {name:'Mountains', asset_path:'forest/mountains.png', z_index:-20, parallax_speed:0.3}],
+    ['add_background_layer', {name:'Trees', asset_path:'forest/trees.png', z_index:-10, parallax_speed:0.7}],
+    ['add_background_layer', {name:'Ground', asset_path:'forest/ground.png', z_index:-5, parallax_speed:1}],
+    ['add_character', {character_id:'hero-001', name:'Hero', x:2.0, y:7.5, scale:1.0}],
+    ['add_character', {character_id:'villain-001', name:'Villain', x:17.0, y:7.5, scale:1.0}],
+];
+
+function getCharId(name) {
+    return Object.values(scene.nodes).find(n=>n.name===name)?.id;
+}
+
+const AI_STEPS_AFTER = () => [
+    ['set_character_pose', {object_id:getCharId('Hero'), layers:{pose:'walking', face:'determined'}}],
+    ['set_character_pose', {object_id:getCharId('Villain'), layers:{pose:'standing', face:'smirk'}}],
+    ['add_keyframe', {object_id:getCharId('Hero'), property:'x', time:0, value:2}],
+    ['add_keyframe', {object_id:getCharId('Hero'), property:'x', time:3, value:8, easing:'easeInOut'}],
+    ['add_keyframe', {object_id:getCharId('Hero'), property:'x', time:6, value:8.5, easing:'easeOut'}],
+    ['add_keyframe', {object_id:getCharId('Villain'), property:'x', time:0, value:17}],
+    ['add_keyframe', {object_id:getCharId('Villain'), property:'x', time:2, value:17}],
+    ['add_keyframe', {object_id:getCharId('Villain'), property:'x', time:4, value:11, easing:'easeInOut'}],
+    ['add_keyframe', {object_id:getCharId('Villain'), property:'opacity', time:0, value:0}],
+    ['add_keyframe', {object_id:getCharId('Villain'), property:'opacity', time:2, value:0}],
+    ['add_keyframe', {object_id:getCharId('Villain'), property:'opacity', time:3, value:1, easing:'easeIn'}],
+    ['add_character_frame', {object_id:getCharId('Hero'), time:0, layers:{pose:'walking', face:'determined'}}],
+    ['add_character_frame', {object_id:getCharId('Hero'), time:3, layers:{pose:'standing', face:'surprised'}}],
+    ['add_character_frame', {object_id:getCharId('Hero'), time:4.5, layers:{pose:'fighting_stance', face:'angry'}}],
+    ['add_character_frame', {object_id:getCharId('Villain'), time:2, layers:{pose:'walking', face:'smirk'}}],
+    ['add_character_frame', {object_id:getCharId('Villain'), time:4, layers:{pose:'standing', face:'evil_laugh'}}],
+];
+
+function runAIDemo() {
+    resetScene();
+    aiStepIndex = 0;
+    const allSteps = [...AI_STEPS];
+    let phase2Added = false;
+
+    aiInterval = setInterval(() => {
+        if (aiStepIndex < allSteps.length) {
+            const [tool, params] = allSteps[aiStepIndex];
+            executor.execute(tool, params);
+            aiStepIndex++;
+            updateAll();
+        } else if (!phase2Added) {
+            allSteps.push(...AI_STEPS_AFTER());
+            phase2Added = true;
+        } else if (aiStepIndex < allSteps.length) {
+            const [tool, params] = allSteps[aiStepIndex];
+            executor.execute(tool, params);
+            aiStepIndex++;
+            updateAll();
+        } else {
+            clearInterval(aiInterval);
+            // Auto-play after AI finishes
+            setTimeout(() => { togglePlay(); }, 500);
+        }
+    }, 150);
+}
+
+function resetScene() {
+    if (aiInterval) clearInterval(aiInterval);
+    if (animFrame) cancelAnimationFrame(animFrame);
+    isPlaying = false;
+    currentTime = 0;
+    aiLog = [];
+    scene = new SceneGraph();
+    scene.name = 'Forest Encounter';
+    scene.duration = 6.0;
+    executor = new ToolExecutor(scene);
+    document.getElementById('playBtn').textContent = '▶ Play';
+    updateAll();
+}
+
+function togglePlay() {
+    isPlaying = !isPlaying;
+    document.getElementById('playBtn').textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+    if (isPlaying) {
+        if (currentTime >= scene.duration) currentTime = 0;
+        let lastTs = performance.now();
+        function tick(ts) {
+            if (!isPlaying) return;
+            const dt = (ts - lastTs) / 1000;
+            lastTs = ts;
+            currentTime += dt;
+            if (currentTime >= scene.duration) {
+                currentTime = 0; // loop
+            }
+            updateAll();
+            animFrame = requestAnimationFrame(tick);
+        }
+        animFrame = requestAnimationFrame(tick);
+    }
+}
+
+function updateAll() {
+    renderScene(scene, currentTime);
+    renderObjectList(scene, currentTime);
+    renderTimeline(scene, currentTime);
+    document.getElementById('timeDisplay').textContent = `${currentTime.toFixed(2)}s`;
+    document.getElementById('jsonView').textContent = scene.toJSON();
+}
+
+// ── Tab switching ──
+function switchTab(tabName) {
+    document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.panel-tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+}
+
+// ── Init ──
+updateAll();
+// Auto-run demo on load
+setTimeout(runAIDemo, 500);
+</script>
+</body>
+</html>

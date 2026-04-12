@@ -11,7 +11,7 @@ const OnboardingOverlay = lazy(() => import('./components/OnboardingOverlay'));
 // Lazy-load heavy tab components — only fetched when user switches to that tab
 const BaseMode = lazy(() => import('./components/BaseMode'));
 const DressingRoomMode = lazy(() => import('./components/DressingRoomMode'));
-const WorkflowMode = lazy(() => import('./components/workflow/WorkflowMode'));
+import StudioModeComponent from './components/studio/editor/StudioMode';
 
 // Shared loading fallback
 function TabLoadingFallback() {
@@ -25,7 +25,7 @@ function TabLoadingFallback() {
   );
 }
 
-type Tab = 'base' | 'dressing' | 'workflow';
+type Tab = 'base' | 'dressing' | 'studio';
 
 function App() {
   // Suppress browser defaults (Ctrl+S, Ctrl+P, zoom, drag, etc.)
@@ -117,7 +117,7 @@ function App() {
           {([
             { id: 'base' as Tab, label: 'Base Characters', icon: Palette },
             { id: 'dressing' as Tab, label: 'Dressing Room', icon: Shirt },
-            { id: 'workflow' as Tab, label: 'Workflow', icon: GitBranch },
+            { id: 'studio' as Tab, label: 'Anime Studio', icon: GitBranch },
           ]).map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -164,7 +164,7 @@ function App() {
           </button>
           {!isSidebarCollapsed && (
             <div className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
-              v2.0 — Premium Edition
+              v2.2 — WebGL Edition
             </div>
           )}
         </div>
@@ -191,7 +191,7 @@ function App() {
             <div className="h-full animate-tab-enter" key={activeTab}>
               {activeTab === 'base' && <BaseMode />}
               {activeTab === 'dressing' && <DressingRoomMode />}
-              {activeTab === 'workflow' && <WorkflowMode />}
+              {activeTab === 'studio' && <StudioModeComponent />}
             </div>
           </Suspense>
         </div>

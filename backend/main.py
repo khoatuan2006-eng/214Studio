@@ -22,7 +22,7 @@ from backend.core.database import init_db
 from backend.core.psd_processor import load_db
 
 # Import routers
-from backend.routers import projects, psd, psd_v2, assets, library, export, ai, backgrounds, foregrounds, stages, tts
+from backend.routers import projects, psd, psd_v2, assets, library, export, ai, backgrounds, foregrounds, stages, tts, scene_graph
 
 # Set up logging configuration
 logging.basicConfig(
@@ -84,12 +84,10 @@ app.mount("/static", StaticFiles(directory=STORAGE_DIR), name="static")
 # Mount the shared asset pool explicitly at /assets so frontend can request /assets/<hash>.png
 os.makedirs(os.path.join(STORAGE_DIR, "assets"), exist_ok=True)
 app.mount("/assets", StaticFiles(directory=os.path.join(STORAGE_DIR, "assets")), name="assets")
+app.mount("/s_assets", StaticFiles(directory=os.path.join(STORAGE_DIR, "assets")), name="s_assets_bypass")
 
 # Mount thumbnails
 app.mount("/thumbnails", StaticFiles(directory=THUMBNAILS_DIR), name="thumbnails")
-
-app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="frontend_css")
-app.mount("/js", StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")), name="frontend_js")
 
 
 # ── Core endpoints (kept in main) ──
@@ -119,6 +117,7 @@ app.include_router(backgrounds.router)
 app.include_router(foregrounds.router)
 app.include_router(stages.router)
 app.include_router(tts.router)
+app.include_router(scene_graph.router)
 
 
 if __name__ == "__main__":

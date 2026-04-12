@@ -72,6 +72,32 @@ function classifyLayerType(
     return 'prop';
 }
 
+function getCanvasBoundingBox(canvas: HTMLCanvasElement): [number, number, number, number] | null {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    const width = canvas.width;
+    const height = canvas.height;
+    const data = ctx.getImageData(0, 0, width, height).data;
+    let minX = width, minY = height, maxX = 0, maxY = 0;
+    let hasVisible = false;
+
+    // Use a 32-bit view for faster scanning
+    const data32 = new Uint32Array(data.buffer);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            if ((data32[y * width + x] & 0xff000000) !== 0) {
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+                hasVisible = true;
+            }
+        }
+    }
+    if (!hasVisible) return null;
+    return [minX, minY, maxX - minX + 1, maxY - minY + 1];
+}
+
 /**
  * Parse a .fla file and extract layers as StageLayer[].
  *
@@ -189,6 +215,9 @@ export async function parseFLAToStageLayers(
                 // Render frame 0 with only this element visible
                 renderer.renderFrame(0);
 
+                const bbox = getCanvasBoundingBox(offscreenCanvas);
+                if (!bbox) continue; // Skip completely transparent/empty element
+
                 // Export to PNG blob
                 const blob = await new Promise<Blob | null>((resolve) => {
                     offscreenCanvas.toBlob(resolve, 'image/png');
@@ -233,20 +262,21 @@ export async function parseFLAToStageLayers(
                                 }
                             }
 
-                            // Each PNG is full-canvas-sized with the element at its
-                            // correct position baked in. StageCanvas uses center-anchor
-                            // rendering, so position = center of 1920×1080 canvas.
+                            // Each PNG is full-canvas-sized (doc.width × doc.height)
+                            // with the element at its correct position baked in.
+                            // Position at origin — no offset needed.
                             stageLayers.push({
                                 id: `layer-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
                                 type: elType,
                                 source: 'fla',
                                 label: elementLabel,
                                 assetPath: uploaded.path,
-                                posX: Math.round((doc.width / 2) * scaleFactor),
-                                posY: Math.round((doc.height / 2) * scaleFactor),
+                                posX: 0,
+                                posY: 0,
                                 zIndex: currentItem - 1,
-                                width: Math.round(doc.width * scaleFactor),
-                                height: Math.round(doc.height * scaleFactor),
+                                width: doc.width,
+                                height: doc.height,
+                                bbox: bbox,
                                 opacity: layer.alphaPercent !== undefined ? layer.alphaPercent / 100 : 1,
                                 rotation: 0,
                                 blur: 0,
@@ -269,9 +299,12 @@ export async function parseFLAToStageLayers(
             });
 
             // Clear any element-level hiding
+            // Clear any element-level hiding
             renderer.setHiddenElements(new Map());
-
             renderer.renderFrame(0);
+
+            const bbox = getCanvasBoundingBox(offscreenCanvas);
+            if (!bbox) continue; // Skip completely transparent layer
 
             const blob = await new Promise<Blob | null>((resolve) => {
                 offscreenCanvas.toBlob(resolve, 'image/png');
@@ -311,11 +344,12 @@ export async function parseFLAToStageLayers(
                             source: 'fla',
                             label: layer.name,
                             assetPath: uploaded.path,
-                            posX: Math.round((doc.width / 2) * scaleFactor),
-                            posY: Math.round((doc.height / 2) * scaleFactor),
+                            posX: 0,
+                            posY: 0,
                             zIndex: currentItem - 1,
-                            width: Math.round(doc.width * scaleFactor),
-                            height: Math.round(doc.height * scaleFactor),
+                            width: doc.width,
+                            height: doc.height,
+                            bbox: bbox,
                             opacity: layer.alphaPercent !== undefined ? layer.alphaPercent / 100 : 1,
                             rotation: 0,
                             blur: 0,

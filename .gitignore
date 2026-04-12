@@ -2,21 +2,45 @@
 __pycache__/
 *.pyc
 venv/
+.venv/
 env/
 .env
 
-# Anime Studio Project Specifics
+# Anime Studio Project Data
 backend/storage/
-backend/data/app.log
 backend/uploads/
+backend/data/*.log
+backend/data/*.db
+backend/data/*.json
+backend/.autosave/
+
+# Media Files
 *.psd
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.mp4
+*.webm
+
+# Frontend / JS
+node_modules/
+dist/
+.env.local
+.DS_Store
+
+# Cloned / Temp Repositories
+external_repos/
+temp_clones/
+_clone_shadcn/
 
 # IDEs
 .vscode/
 .idea/
 
+# Third-party Binaries
 backend/bin/ffmpeg/*.exe
 
+# Research
 references/
 research/
-*.png
