@@ -1,12 +1,17 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Settings } from 'lucide-react';
+import { Sparkles, Settings, Layers, Film, FileText, MessageSquare } from 'lucide-react';
 import AssetSidebar from './AssetSidebar';
 import { useStudioStore } from '@/stores/useStudioStore';
 import type { StudioLayer } from '@/stores/useStudioStore';
+import { useSceneGraphStore } from '@/stores/useSceneGraphStore';
 import PropertiesPanel from './PropertiesPanel';
 import { StageTransformer } from './StageTransformer';
 import { BottomTimeline } from './BottomTimeline';
 import { PixiStage } from './PixiStage';
+import { SceneRenderer } from './SceneRenderer';
+import { AIChatPanel } from './AIChatPanel';
+import { ScriptImport } from './ScriptImport';
+import { ExportDialog } from './ExportDialog';
 
 // ═══════════════════════════════════════════════════════════
 // Stage Canvas — renders layers onto a 1920×1080 virtual viewport
@@ -99,7 +104,125 @@ const StageCanvas: React.FC<{ layers: StudioLayer[]; currentFrame: number }> = (
 };
 
 // ═══════════════════════════════════════════════════════════
-// Layer List (Right Panel)
+// Scene Graph Canvas — renders SceneGraph nodes via SceneRenderer
+// ═══════════════════════════════════════════════════════════
+const SceneGraphCanvas: React.FC = () => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [scale, setScale] = useState(1);
+    const currentTime = useSceneGraphStore(s => s.currentTime);
+    const sceneNodeIds = useSceneGraphStore(s => s.sceneNodeIds);
+
+    // Auto-fit
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const observer = new ResizeObserver(entries => {
+            const { width, height } = entries[0].contentRect;
+            const s = Math.min(width / 1920, height / 1080);
+            setScale(s);
+        });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div ref={containerRef} className="w-full h-full flex items-center justify-center overflow-hidden">
+            <div
+                style={{
+                    width: Math.floor(1920 * scale),
+                    height: Math.floor(1080 * scale),
+                    position: 'relative',
+                    overflow: 'hidden',
+                    backgroundColor: '#111118',
+                    borderRadius: '8px',
+                    boxShadow: '0 0 80px rgba(6,182,212,0.08), 0 4px 32px rgba(0,0,0,0.5)',
+                    border: '1px solid rgba(6,182,212,0.1)',
+                }}
+            >
+                <div style={{
+                    width: 1920,
+                    height: 1080,
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                }}>
+                    <SceneRenderer />
+                </div>
+
+                {/* HUD Overlay */}
+                <div style={{
+                    position: 'absolute', bottom: 16, left: 16,
+                    color: '#22d3ee', fontSize: 12, fontFamily: 'monospace',
+                    background: 'rgba(0,0,0,0.7)', padding: '4px 12px', borderRadius: 6,
+                    zIndex: 99999,
+                }}>
+                    t={currentTime.toFixed(2)}s · {sceneNodeIds.length} nodes · Scene Graph Mode
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════
+// Scene Graph Node List (Right Panel)
+// ═══════════════════════════════════════════════════════════
+const SceneNodeList: React.FC = () => {
+    const sceneNodeIds = useSceneGraphStore(s => s.sceneNodeIds);
+    const manager = useSceneGraphStore(s => s.manager);
+    const snapshot = useSceneGraphStore(s => s.snapshot);
+    const removeFromScene = useSceneGraphStore(s => s.removeFromScene);
+
+    return (
+        <div className="flex-1 flex flex-col min-h-0">
+            <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
+                <h3 className="text-xs font-bold text-cyan-500 uppercase tracking-wider">Scene Nodes</h3>
+                <span className="text-[10px] text-neutral-600 font-mono">{sceneNodeIds.length} nodes</span>
+            </div>
+            <div className="flex-1 overflow-y-auto min-h-[30%] p-3 space-y-1.5">
+                {sceneNodeIds.length > 0 ? (
+                    sceneNodeIds.map(id => {
+                        const node = manager.getNode(id);
+                        const snap = snapshot[id];
+                        if (!node) return null;
+                        return (
+                            <div key={id} className="text-[10px] rounded-lg p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-bold text-white truncate flex-1">{node.name}</span>
+                                    <span className="text-cyan-500/60 font-mono ml-2 text-[8px]">{node.nodeType}</span>
+                                </div>
+                                <div className="text-neutral-500 font-mono mt-1">
+                                    pos({snap?.x?.toFixed(1)}, {snap?.y?.toFixed(1)}) · α={snap?.opacity?.toFixed(2)}
+                                </div>
+                                {node.nodeType === 'character' && (
+                                    <div className="text-neutral-600 font-mono mt-0.5">
+                                        pose: {(node as any).activeLayers?.pose} · face: {(node as any).activeLayers?.face}
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => removeFromScene(id)}
+                                    className="text-[9px] text-red-500/50 hover:text-red-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        );
+                    })
+                ) : (
+                    <div className="text-center py-12 opacity-30 text-[10px] space-y-2">
+                        <div className="text-3xl">🎭</div>
+                        <p>No scene nodes</p>
+                        <p>Add characters from sidebar</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════
+// Layer List (Right Panel) — Legacy mode
 // ═══════════════════════════════════════════════════════════
 const LayerList: React.FC<{ layers: StudioLayer[] }> = ({ layers }) => {
     const clearLayers = useStudioStore(s => s.clearLayers);
@@ -162,11 +285,118 @@ const LayerList: React.FC<{ layers: StudioLayer[] }> = ({ layers }) => {
 };
 
 // ═══════════════════════════════════════════════════════════
+// Scene Graph Playback Controls
+// ═══════════════════════════════════════════════════════════
+const ScenePlaybackBar: React.FC = () => {
+    const currentTime = useSceneGraphStore(s => s.currentTime);
+    const duration = useSceneGraphStore(s => s.duration);
+    const isPlaying = useSceneGraphStore(s => s.isPlaying);
+    const togglePlay = useSceneGraphStore(s => s.togglePlay);
+    const setTime = useSceneGraphStore(s => s.setTime);
+
+    return (
+        <div className="h-16 border-t border-cyan-500/20 flex items-center px-6 gap-4" style={{ backgroundColor: 'var(--surface-sunken)' }}>
+            <button
+                onClick={togglePlay}
+                className="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                style={{
+                    background: isPlaying
+                        ? 'linear-gradient(135deg, #ef4444, #f97316)'
+                        : 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+                    boxShadow: isPlaying
+                        ? '0 2px 12px rgba(239,68,68,0.3)'
+                        : '0 2px 12px rgba(6,182,212,0.3)',
+                }}
+            >
+                {isPlaying ? '⏸ Pause' : '▶ Play'}
+            </button>
+
+            {/* Time scrubber */}
+            <input
+                type="range"
+                min={0}
+                max={duration}
+                step={0.01}
+                value={currentTime}
+                onChange={e => setTime(parseFloat(e.target.value))}
+                className="flex-1 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer"
+                style={{
+                    background: `linear-gradient(to right, #06b6d4 ${(currentTime / duration) * 100}%, rgba(255,255,255,0.1) ${(currentTime / duration) * 100}%)`,
+                }}
+            />
+
+            <span className="text-sm font-mono text-cyan-400 min-w-[80px] text-right">
+                {currentTime.toFixed(2)}s / {duration}s
+            </span>
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════
+// Scene Graph Right Sidebar — Tabs: Nodes | AI Chat | Script
+// ═══════════════════════════════════════════════════════════
+const SceneGraphSidebar: React.FC = () => {
+    const [activeTab, setActiveTab] = useState<'nodes' | 'chat' | 'script'>('chat');
+
+    return (
+        <div className="w-80 border-l border-white/10 flex flex-col" style={{ backgroundColor: 'var(--surface-base)' }}>
+            {/* Tab Buttons */}
+            <div className="flex border-b border-white/5 shrink-0">
+                <button
+                    onClick={() => setActiveTab('nodes')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
+                        activeTab === 'nodes'
+                            ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/5'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                    }`}
+                >
+                    <Layers className="w-3 h-3" />
+                    Nodes
+                </button>
+                <button
+                    onClick={() => setActiveTab('chat')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
+                        activeTab === 'chat'
+                            ? 'text-violet-400 border-b-2 border-violet-400 bg-violet-500/5'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                    }`}
+                >
+                    <MessageSquare className="w-3 h-3" />
+                    AI Chat
+                </button>
+                <button
+                    onClick={() => setActiveTab('script')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
+                        activeTab === 'script'
+                            ? 'text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                    }`}
+                >
+                    <FileText className="w-3 h-3" />
+                    Script
+                </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+                {activeTab === 'nodes' && <SceneNodeList />}
+                {activeTab === 'chat' && <AIChatPanel />}
+                {activeTab === 'script' && <ScriptImport />}
+            </div>
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════
 // Main Studio Mode
 // ═══════════════════════════════════════════════════════════
 const StudioMode: React.FC = () => {
     const durationInFrames = useStudioStore(s => s.durationInFrames);
     const layers = useStudioStore(s => s.layers);
+
+    // Mode toggle: 'legacy' (PSD layers) vs 'scene' (Scene Graph)
+    const [mode, setMode] = useState<'legacy' | 'scene'>('scene');
+    const [showExport, setShowExport] = useState(false);
 
     const [currentFrame, setCurrentFrame] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -174,8 +404,9 @@ const StudioMode: React.FC = () => {
     const rafRef = useRef<number | null>(null);
     const lastTimeRef = useRef<number>(0);
 
-    // Playback loop
+    // Playback loop (legacy mode only)
     useEffect(() => {
+        if (mode !== 'legacy') return;
         if (!isPlaying) {
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
             return;
@@ -198,7 +429,7 @@ const StudioMode: React.FC = () => {
         };
         rafRef.current = requestAnimationFrame(tick);
         return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-    }, [isPlaying, fps, durationInFrames]);
+    }, [isPlaying, fps, durationInFrames, mode]);
 
     const onPlay = useCallback(() => setIsPlaying(true), []);
     const onPause = useCallback(() => setIsPlaying(false), []);
@@ -210,13 +441,43 @@ const StudioMode: React.FC = () => {
             <div className="h-12 border-b border-white/10 flex items-center justify-between px-4" style={{ backgroundColor: 'var(--surface-raised)' }}>
                 <div className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-indigo-400" />
-                    <span className="font-semibold text-sm tracking-wide">AnimeStudio Director v2.1 (WebGL Fix)</span>
+                    <span className="font-semibold text-sm tracking-wide">AnimeStudio Director</span>
                 </div>
+
+                {/* Mode Toggle */}
+                <div className="flex items-center gap-1 bg-black/40 rounded-lg p-0.5 border border-white/5">
+                    <button
+                        onClick={() => setMode('legacy')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
+                            mode === 'legacy'
+                                ? 'bg-indigo-500/20 text-indigo-300 shadow-sm'
+                                : 'text-neutral-500 hover:text-neutral-300'
+                        }`}
+                    >
+                        <Layers className="w-3.5 h-3.5" />
+                        Legacy
+                    </button>
+                    <button
+                        onClick={() => setMode('scene')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
+                            mode === 'scene'
+                                ? 'bg-cyan-500/20 text-cyan-300 shadow-sm'
+                                : 'text-neutral-500 hover:text-neutral-300'
+                        }`}
+                    >
+                        <Film className="w-3.5 h-3.5" />
+                        Scene Graph
+                    </button>
+                </div>
+
                 <div className="flex items-center gap-3">
                     <span className="text-[10px] font-mono text-neutral-500 bg-neutral-800/60 px-2.5 py-1 rounded-md border border-white/5">
-                        {layers.length} layers · {durationInFrames} frames
+                        {mode === 'legacy' 
+                            ? `${layers.length} layers · ${durationInFrames} frames` 
+                            : `Scene Graph Mode`
+                        }
                     </span>
-                    <button className="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                    <button onClick={() => setShowExport(true)} className="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors"
                         style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 2px 12px rgba(99,102,241,0.3)' }}>
                         Render Video
                     </button>
@@ -234,22 +495,39 @@ const StudioMode: React.FC = () => {
                 {/* Center Canvas */}
                 <div 
                     className="flex-1 relative flex flex-col bg-black/40"
-                    onClick={() => useStudioStore.getState().setSelectedLayer(null)}
+                    onClick={() => {
+                        if (mode === 'legacy') {
+                            useStudioStore.getState().setSelectedLayer(null);
+                        }
+                    }}
                 >
                     <div className="absolute top-4 left-4 text-[10px] text-neutral-500 font-mono tracking-wider z-10 bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
-                        STAGE · 1920×1080
+                        {mode === 'legacy' ? 'STAGE · 1920×1080' : 'SCENE GRAPH · 1920×1080'}
                     </div>
                     <div className="flex-1 min-h-0 p-6">
-                        <StageCanvas layers={layers} currentFrame={currentFrame} />
+                        {mode === 'legacy' 
+                            ? <StageCanvas layers={layers} currentFrame={currentFrame} />
+                            : <SceneGraphCanvas />
+                        }
                     </div>
                 </div>
 
-                {/* Right Sidebar — Layer List & Properties */}
-                <LayerList layers={layers} />
+                {/* Right Sidebar */}
+                {mode === 'legacy' ? (
+                    <LayerList layers={layers} />
+                ) : (
+                    <SceneGraphSidebar />
+                )}
             </div>
 
             {/* Bottom Timeline & Playback */}
-            <BottomTimeline />
+            {mode === 'legacy'
+                ? <BottomTimeline />
+                : <ScenePlaybackBar />
+            }
+
+            {/* Export Dialog */}
+            <ExportDialog isOpen={showExport} onClose={() => setShowExport(false)} />
         </div>
     );
 };

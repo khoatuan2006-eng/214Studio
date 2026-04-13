@@ -60,3 +60,45 @@ async def rescan_assets():
 async def get_tool_definitions():
     """Get all available AI tool definitions for function calling."""
     return TOOL_DEFINITIONS
+
+
+# ── AI API Endpoints ──
+
+from pydantic import BaseModel
+
+class AIDirectRequest(BaseModel):
+    prompt: str
+    current_scene: dict | None = None
+
+@router.post("/ai/direct")
+async def ai_direct_scene(body: AIDirectRequest):
+    """
+    Directly build a scene from text using Gemini Function Calling.
+    If current_scene is provided, AI will modify it instead of starting from scratch.
+    """
+    from backend.core.agents.scene_director import SceneDirector
+    
+    try:
+        if body.current_scene:
+            scene_graph = SceneGraph.from_dict(body.current_scene)
+        else:
+            scene_graph = SceneGraph()
+            
+        director = SceneDirector(scene_graph=scene_graph, asset_registry=_registry)
+        
+        # Start AI session with available characters context
+        characters_desc = _registry.describe_all()
+        director.start_session(characters_desc)
+        
+        # Process the prompt
+        response_text = director.process_message(body.prompt)
+        
+        return {
+            "success": True,
+            "scene": director.scene_graph.to_dict(),
+            "message": response_text
+        }
+    except Exception as e:
+        logger.error(f"AI Direct failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+

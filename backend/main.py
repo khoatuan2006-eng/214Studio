@@ -22,7 +22,7 @@ from backend.core.database import init_db
 from backend.core.psd_processor import load_db
 
 # Import routers
-from backend.routers import projects, psd, psd_v2, assets, library, export, ai, backgrounds, foregrounds, stages, tts, scene_graph
+from backend.routers import projects, psd, psd_v2, assets, library, export, ai, backgrounds, foregrounds, stages, tts, scene_graph, automation
 
 # Set up logging configuration
 logging.basicConfig(
@@ -53,6 +53,10 @@ async def lifespan(app: FastAPI):
     # Initialize database on startup
     init_db()
     logger.info("Database initialized successfully")
+    # Share asset registry with automation router
+    from backend.routers.scene_graph import _registry
+    automation.set_registry(_registry)
+    logger.info("Asset registry shared with automation router")
     yield
     # Cleanup
     psd.shutdown_psd_executor()
@@ -118,6 +122,7 @@ app.include_router(foregrounds.router)
 app.include_router(stages.router)
 app.include_router(tts.router)
 app.include_router(scene_graph.router)
+app.include_router(automation.router)
 
 
 if __name__ == "__main__":

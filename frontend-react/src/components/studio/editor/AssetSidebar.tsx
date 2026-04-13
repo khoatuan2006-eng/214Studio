@@ -1,13 +1,15 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { UploadCloud, Palette, Layers, User, Loader2 } from 'lucide-react';
+import { UploadCloud, Palette, Layers, User, Loader2, Film } from 'lucide-react';
 import { useAppStore, STATIC_BASE } from '@/stores/useAppStore';
 import { useCharacterV2Store } from '@/stores/useCharacterV2Store';
 import { API_BASE_URL } from '@/config/api';
 import { useStudioStore } from '@/stores/useStudioStore';
 import type { StudioLayer } from '@/stores/useStudioStore';
+import { useSceneGraphStore } from '@/stores/useSceneGraphStore';
+import type { CharacterNodeData } from '@/core/scene-graph/types';
 
 const AssetSidebar: React.FC = () => {
-    const [sidebarTab, setSidebarTab] = useState<'psd' | 'fla'>('psd');
+    const [sidebarTab, setSidebarTab] = useState<'psd' | 'fla' | 'scene'>('scene');
 
     // PSD Store
     const psdCharacters = useAppStore(s => s.characters);
@@ -180,13 +182,13 @@ const AssetSidebar: React.FC = () => {
         <div className="w-72 flex flex-col border-r border-white/10" style={{ backgroundColor: 'var(--surface-base)' }}>
             {/* Tabs */}
             <div className="flex border-b border-white/5">
-                {(['psd', 'fla'] as const).map(t => (
+                {(['scene', 'psd', 'fla'] as const).map(t => (
                     <button
                         key={t}
                         onClick={() => setSidebarTab(t)}
                         className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 flex items-center justify-center gap-2 ${sidebarTab === t ? 'border-indigo-500 text-indigo-300 bg-white/5' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
                     >
-                        {t === 'psd' ? <Palette className="w-4 h-4" /> : <Layers className="w-4 h-4" />}
+                        {t === 'scene' ? <Film className="w-4 h-4" /> : t === 'psd' ? <Palette className="w-4 h-4" /> : <Layers className="w-4 h-4" />}
                         {t}
                     </button>
                 ))}
@@ -276,9 +278,148 @@ const AssetSidebar: React.FC = () => {
                         <p className="text-[10px]">No PSDs uploaded yet</p>
                     </div>
                 )}
+
+                {/* Scene Graph Characters Tab */}
+                {sidebarTab === 'scene' && <SceneCharacterPanel />}
             </div>
         </div>
     );
 };
 
+// ═══════════════════════════════════════════════════════════
+// Scene Graph Character Panel — lists characters from AssetRegistry
+// ═══════════════════════════════════════════════════════════
+const SceneCharacterPanel: React.FC = () => {
+    const characters = useSceneGraphStore(s => s.characters);
+    const fetchCharacters = useSceneGraphStore(s => s.fetchCharacters);
+    const addCharacterToScene = useSceneGraphStore(s => s.addCharacterToScene);
+    const sceneNodeIds = useSceneGraphStore(s => s.sceneNodeIds);
+    const manager = useSceneGraphStore(s => s.manager);
+    const setPose = useSceneGraphStore(s => s.setPose);
+    const setFace = useSceneGraphStore(s => s.setFace);
+    const snapshot = useSceneGraphStore(s => s.snapshot);
+
+    useEffect(() => { fetchCharacters(); }, [fetchCharacters]);
+
+    // Get scene character nodes for inline editing
+    const sceneCharNodes = sceneNodeIds
+        .map(id => manager.getNode(id))
+        .filter((n): n is CharacterNodeData => n?.nodeType === 'character') as CharacterNodeData[];
+
+    return (
+        <div className="space-y-3">
+            {/* Available Characters */}
+            <h4 className="text-[9px] uppercase tracking-widest text-cyan-500 font-bold">
+                Available ({characters.length})
+            </h4>
+
+            {characters.length === 0 && (
+                <div className="text-center py-6 opacity-40 space-y-2">
+                    <Film className="w-8 h-8 mx-auto opacity-50" />
+                    <p className="text-[10px]">Backend offline or no characters</p>
+                    <button onClick={fetchCharacters} className="text-[10px] text-indigo-400 hover:underline">
+                        Retry
+                    </button>
+                </div>
+            )}
+
+            {characters.map(char => {
+                const isInScene = sceneCharNodes.some(n => n.characterId === char.id);
+                return (
+                    <div key={char.id} className="bg-white/5 rounded-lg border border-white/5 overflow-hidden">
+                        <div
+                            className={`flex gap-3 p-2.5 items-center cursor-pointer transition-all ${
+                                isInScene
+                                    ? 'bg-cyan-500/10 border-l-2 border-l-cyan-500'
+                                    : 'hover:bg-white/10'
+                            }`}
+                            onClick={async () => {
+                                if (!isInScene) {
+                                    await addCharacterToScene(char.id);
+                                }
+                            }}
+                        >
+                            <div className="w-10 h-10 rounded bg-black/40 flex items-center justify-center flex-shrink-0">
+                                <User className="w-5 h-5 text-cyan-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs font-bold truncate text-white">
+                                    {char.name.split('_')[0]}
+                                </div>
+                                <div className="text-[10px] text-neutral-500">
+                                    {char.poses} poses · {char.faces} faces
+                                </div>
+                            </div>
+                            {isInScene && (
+                                <span className="text-[8px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded font-bold">
+                                    IN SCENE
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Inline Pose/Face selector for chars already in scene */}
+                        {isInScene && sceneCharNodes
+                            .filter(n => n.characterId === char.id)
+                            .map(node => (
+                                <div key={node.id} className="px-2.5 pb-2.5 space-y-2 border-t border-white/5 pt-2">
+                                    {/* Pose pills */}
+                                    <div>
+                                        <div className="text-[9px] text-neutral-400 font-medium mb-1">Pose (动作)</div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {node.availableLayers.pose?.slice(0, 8).map(p => (
+                                                <button
+                                                    key={p}
+                                                    onClick={(e) => { e.stopPropagation(); setPose(node.id, p); }}
+                                                    className={`px-1.5 py-0.5 text-[9px] rounded border transition-colors ${
+                                                        node.activeLayers.pose === p
+                                                            ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
+                                                            : 'border-white/10 text-neutral-500 hover:text-white hover:border-white/20'
+                                                    }`}
+                                                >
+                                                    {p}
+                                                </button>
+                                            ))}
+                                            {(node.availableLayers.pose?.length || 0) > 8 && (
+                                                <span className="text-[9px] text-neutral-600 px-1.5 py-0.5">
+                                                    +{(node.availableLayers.pose?.length || 0) - 8}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Face pills */}
+                                    <div>
+                                        <div className="text-[9px] text-neutral-400 font-medium mb-1">Face (表情)</div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {node.availableLayers.face?.slice(0, 8).map(f => (
+                                                <button
+                                                    key={f}
+                                                    onClick={(e) => { e.stopPropagation(); setFace(node.id, f); }}
+                                                    className={`px-1.5 py-0.5 text-[9px] rounded border transition-colors ${
+                                                        node.activeLayers.face === f
+                                                            ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                                                            : 'border-white/10 text-neutral-500 hover:text-white hover:border-white/20'
+                                                    }`}
+                                                >
+                                                    {f}
+                                                </button>
+                                            ))}
+                                            {(node.availableLayers.face?.length || 0) > 8 && (
+                                                <span className="text-[9px] text-neutral-600 px-1.5 py-0.5">
+                                                    +{(node.availableLayers.face?.length || 0) - 8}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        }
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
 export default AssetSidebar;
+
