@@ -1,16 +1,4 @@
-# AnimeStudio — TODO Roadmap
-
-> Công cụ sản xuất video hoạt hình 2D tự động, AI có thể điều khiển toàn bộ cảnh phim.
-> Cập nhật: 2026-04-12
-
----
-
-## Phase 1: Scene Graph — Video DOM ✅ DONE
-
-> Nền tảng dữ liệu để AI đọc/ghi nội dung cảnh phim.
-
-- [x] `Transform` + `BoundingBox` — hệ tọa độ world units (19.2×10.8)
-- [x] `Keyframe` — animation engine, 8 easing functions (bao gồm STEP cho pose/face swap)
+hap)
 - [x] `SceneNode` — base class (inspired by Motion Canvas `Node.ts`)
 - [x] `CharacterNode` — PSD character với pose/face layer swapping
 - [x] `BackgroundLayerNode` — FLA background layer với parallax speed
@@ -199,7 +187,7 @@
 |------|---------|
 | Motion Canvas | Scene Graph pattern |
 | Theatre.js | Animation sequencing |
-| react-video-editor | Timeline UI |
+hi
 | manim | Mobject hierarchy |
 | MoneyPrinterTurbo | Auto video pipeline |
 | OpenCut | EditorCore pattern |
@@ -207,3 +195,4 @@
 ---
 
 > **Bước tiếp theo được khuyến nghị: Phase 2.1** — kết nối PixiJS renderer với SceneGraph để nhân vật thật hiển thị trong editor chính.
+hi
