@@ -438,6 +438,10 @@ class SceneToolExecutor:
         if not isinstance(node, CharacterNode):
             return ToolResult(success=False, error=f"'{params['object_id']}' is not a character")
         node.set_layers(params["layers"])
+        
+        # Update metadata URLs so frontend can render the new pose/face
+        self._sync_character_metadata_urls(node, params["layers"])
+        
         layer_str = ", ".join(f"{k}={v}" for k, v in params["layers"].items())
         return ToolResult(success=True, data=f"Set pose of '{node.name}': {layer_str}")
 
@@ -450,6 +454,21 @@ class SceneToolExecutor:
         node.add_frame(params["time"], params["layers"])
         layer_str = ", ".join(f"{k}={v}" for k, v in params["layers"].items())
         return ToolResult(success=True, data=f"Added frame at t={params['time']:.2f}s: {layer_str}")
+
+    def _sync_character_metadata_urls(self, node: CharacterNode, layers: dict) -> None:
+        """Update metadata.poseUrl/faceUrl when active layers change."""
+        pose_urls = node.metadata.get("poseUrls", {})
+        face_urls = node.metadata.get("faceUrls", {})
+        
+        if "pose" in layers and layers["pose"] in pose_urls:
+            url_info = pose_urls[layers["pose"]]
+            node.metadata["poseUrl"] = url_info.get("url", "") if isinstance(url_info, dict) else url_info
+            logger.info(f"[ToolExecutor] Pose → {layers['pose']}: {node.metadata['poseUrl']}")
+        
+        if "face" in layers and layers["face"] in face_urls:
+            url_info = face_urls[layers["face"]]
+            node.metadata["faceUrl"] = url_info.get("url", "") if isinstance(url_info, dict) else url_info
+            logger.info(f"[ToolExecutor] Face → {layers['face']}: {node.metadata['faceUrl']}")
 
     # ── Scene Mutation Handlers ──
 
