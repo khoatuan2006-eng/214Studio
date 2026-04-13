@@ -437,12 +437,31 @@ class SceneToolExecutor:
             return self._not_found(params["object_id"])
         if not isinstance(node, CharacterNode):
             return ToolResult(success=False, error=f"'{params['object_id']}' is not a character")
-        node.set_layers(params["layers"])
+        
+        # Validate layer names against available_layers
+        requested_layers = params["layers"]
+        invalid = []
+        for group, name in requested_layers.items():
+            available = node.available_layers.get(group, [])
+            if available and name not in available:
+                invalid.append((group, name, available))
+        
+        if invalid:
+            # Tell AI what's actually available so it can pick a correct one
+            msgs = []
+            for group, name, available in invalid:
+                msgs.append(
+                    f"'{name}' is not a valid {group}. "
+                    f"Available {group}s: {', '.join(available)}"
+                )
+            return ToolResult(success=False, error=" | ".join(msgs))
+        
+        node.set_layers(requested_layers)
         
         # Update metadata URLs so frontend can render the new pose/face
-        self._sync_character_metadata_urls(node, params["layers"])
+        self._sync_character_metadata_urls(node, requested_layers)
         
-        layer_str = ", ".join(f"{k}={v}" for k, v in params["layers"].items())
+        layer_str = ", ".join(f"{k}={v}" for k, v in requested_layers.items())
         return ToolResult(success=True, data=f"Set pose of '{node.name}': {layer_str}")
 
     def _handle_add_character_frame(self, params: dict) -> ToolResult:
