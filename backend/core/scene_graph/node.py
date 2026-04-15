@@ -160,6 +160,7 @@ class SceneNode:
             "scale_y": lambda: self.transform.scale_y,
             "rotation": lambda: self.transform.rotation,
             "opacity": lambda: self.opacity,
+            "z_index": lambda: float(self.z_index),
         }
         getter = prop_map.get(property_name)
         return getter() if getter else 0.0
@@ -176,7 +177,7 @@ class SceneNode:
             "scale_y": self.get_value_at_time("scale_y", time),
             "rotation": self.get_value_at_time("rotation", time),
             "opacity": self.get_value_at_time("opacity", time),
-            "z_index": self.z_index,
+            "z_index": int(round(self.get_value_at_time("z_index", time))),
             "visible": self.visible,
         }
 

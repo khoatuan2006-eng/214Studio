@@ -1,0 +1,1867 @@
+{
+  "success": true,
+  "scene": {
+    "id": "scene-652e4e30",
+    "name": "Untitled Scene",
+    "canvas_width": 1920,
+    "canvas_height": 1080,
+    "ppu": 100,
+    "fps": 30,
+    "duration": 6.2,
+    "root_order": [
+      "camera_main",
+      "bg-4S店_1760984889936-1",
+      "bg-4S店_1760984889936-2",
+      "bg-4S店_1760984889936-3",
+      "bg-4S店_1760984889936-4",
+      "bg-4S店_1760984889936-5",
+      "bg-4S店_1760984889936-6",
+      "bg-4S店_1760984889936-7",
+      "bg-4S店_1760984889936-8",
+      "bg-4S店_1760984889936-9",
+      "bg-4S店_1760984889936-10",
+      "character-ba7cccb7",
+      "character-b7edc085",
+      "subtitle_line_0",
+      "subtitle_line_1"
+    ],
+    "nodes": {
+      "camera_main": {
+        "id": "camera_main",
+        "name": "Main Camera",
+        "node_type": "camera",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": 0,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {
+          "x": [
+            {
+              "time": 0.0,
+              "value": 9.6,
+              "easing": "linear"
+            },
+            {
+              "time": 0.3,
+              "value": 10.12,
+              "easing": "easeOut"
+            },
+            {
+              "time": 2.4,
+              "value": 10.12,
+              "easing": "linear"
+            },
+            {
+              "time": 2.6999999999999997,
+              "value": 10.12,
+              "easing": "easeOut"
+            },
+            {
+              "time": 4.7,
+              "value": 9.6,
+              "easing": "easeOut"
+            }
+          ],
+          "y": [
+            {
+              "time": 0.0,
+              "value": 5.4,
+              "easing": "linear"
+            },
+            {
+              "time": 0.3,
+              "value": 6.4,
+              "easing": "easeOut"
+            },
+            {
+              "time": 2.4,
+              "value": 6.4,
+              "easing": "linear"
+            },
+            {
+              "time": 2.6999999999999997,
+              "value": 6.4,
+              "easing": "easeOut"
+            },
+            {
+              "time": 4.7,
+              "value": 5.4,
+              "easing": "easeOut"
+            }
+          ],
+          "scale_x": [
+            {
+              "time": 0.0,
+              "value": 1.0,
+              "easing": "linear"
+            },
+            {
+              "time": 0.3,
+              "value": 1.15,
+              "easing": "easeOut"
+            },
+            {
+              "time": 2.4,
+              "value": 1.15,
+              "easing": "linear"
+            },
+            {
+              "time": 2.6999999999999997,
+              "value": 1.15,
+              "easing": "easeOut"
+            },
+            {
+              "time": 4.7,
+              "value": 1.0,
+              "easing": "easeOut"
+            }
+          ],
+          "scale_y": [
+            {
+              "time": 0.0,
+              "value": 1.0,
+              "easing": "linear"
+            },
+            {
+              "time": 0.3,
+              "value": 1.15,
+              "easing": "easeOut"
+            },
+            {
+              "time": 2.4,
+              "value": 1.15,
+              "easing": "linear"
+            },
+            {
+              "time": 2.6999999999999997,
+              "value": 1.15,
+              "easing": "easeOut"
+            },
+            {
+              "time": 4.7,
+              "value": 1.0,
+              "easing": "easeOut"
+            }
+          ]
+        },
+        "metadata": {},
+        "children": [],
+        "zoom": 1.0,
+        "fov": 19.2,
+        "target_node_id": null
+      },
+      "bg-4S店_1760984889936-1": {
+        "id": "bg-4S店_1760984889936-1",
+        "name": "Layer 1",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": -50,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_1_1.png",
+        "parallax_speed": 0.05,
+        "blur": 0.0
+      },
+      "bg-4S店_1760984889936-2": {
+        "id": "bg-4S店_1760984889936-2",
+        "name": "Layer 2",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": -35,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_2_1.png",
+        "parallax_speed": 0.09999999999999998,
+        "blur": 0.0
+      },
+      "bg-4S店_1760984889936-3": {
+        "id": "bg-4S店_1760984889936-3",
+        "name": "Layer 3",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": -20,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_3_1.png",
+        "parallax_speed": 0.19999999999999996,
+        "blur": 0.0
+      },
+      "bg-4S店_1760984889936-4": {
+        "id": "bg-4S店_1760984889936-4",
+        "name": "Layer 4",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": -5,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_4_1.png",
+        "parallax_speed": 0.29999999999999993,
+        "blur": 0.0
+      },
+      "bg-4S店_1760984889936-5": {
+        "id": "bg-4S店_1760984889936-5",
+        "name": "Layer 5",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": 10,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_5_1.png",
+        "parallax_speed": 0.3999999999999999,
+        "blur": 0.0
+      },
+      "bg-4S店_1760984889936-6": {
+        "id": "bg-4S店_1760984889936-6",
+        "name": "Layer 6",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": 25,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_6_1.png",
+        "parallax_speed": 0.5,
+        "blur": 0.0
+      },
+      "bg-4S店_1760984889936-7": {
+        "id": "bg-4S店_1760984889936-7",
+        "name": "Layer 7",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": 40,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_7_1.png",
+        "parallax_speed": 0.6,
+        "blur": 0.0
+      },
+      "bg-4S店_1760984889936-8": {
+        "id": "bg-4S店_1760984889936-8",
+        "name": "Layer 8",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": 55,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_8_1.png",
+        "parallax_speed": 0.7,
+        "blur": 0.0
+      },
+      "bg-4S店_1760984889936-9": {
+        "id": "bg-4S店_1760984889936-9",
+        "name": "Layer 9",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": 70,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_9_1.png",
+        "parallax_speed": 0.8,
+        "blur": 0.0
+      },
+      "bg-4S店_1760984889936-10": {
+        "id": "bg-4S店_1760984889936-10",
+        "name": "Layer 10",
+        "node_type": "background_layer",
+        "transform": {
+          "x": 9.6,
+          "y": 5.4,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": 85,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {},
+        "metadata": {},
+        "children": [],
+        "asset_path": "/static/stages/4S店_1760984889936____1_element_10_1.png",
+        "parallax_speed": 0.9,
+        "blur": 0.0
+      },
+      "character-ba7cccb7": {
+        "id": "character-ba7cccb7",
+        "name": "Hoa",
+        "node_type": "character",
+        "transform": {
+          "x": 7.6,
+          "y": 8.370000000000001,
+          "scale_x": 0.25,
+          "scale_y": 0.25,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": 0,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {
+          "x": [
+            {
+              "time": 0.0,
+              "value": 7.6,
+              "easing": "linear"
+            },
+            {
+              "time": 0.3,
+              "value": 10.9,
+              "easing": "ease_out"
+            },
+            {
+              "time": 2.1,
+              "value": 10.9,
+              "easing": "linear"
+            },
+            {
+              "time": 2.4,
+              "value": 7.6,
+              "easing": "ease_out"
+            },
+            {
+              "time": 4.7,
+              "value": 7.6,
+              "easing": "ease_out"
+            }
+          ],
+          "y": [
+            {
+              "time": 2.1,
+              "value": 8.370000000000001,
+              "easing": "linear"
+            }
+          ],
+          "scale_x": [
+            {
+              "time": 2.1,
+              "value": 0.25,
+              "easing": "linear"
+            }
+          ],
+          "scale_y": [],
+          "z_index": []
+        },
+        "metadata": {
+          "poseUrls": {
+            "举手": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/举手_b2665d.png",
+              "filename": "举手_b2665d.png"
+            },
+            "举起拳头": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/举起拳头_87bfb5.png",
+              "filename": "举起拳头_87bfb5.png"
+            },
+            "介绍": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/介绍_e08828.png",
+              "filename": "介绍_e08828.png"
+            },
+            "偷笑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/偷笑_3322e8.png",
+              "filename": "偷笑_3322e8.png"
+            },
+            "出拳": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/出拳_153241.png",
+              "filename": "出拳_153241.png"
+            },
+            "勾手指": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/勾手指_b8ac98.png",
+              "filename": "勾手指_b8ac98.png"
+            },
+            "叉腰": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/叉腰_c4372b.png",
+              "filename": "叉腰_c4372b.png"
+            },
+            "坐姿思考": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/坐姿思考_74c8a8.png",
+              "filename": "坐姿思考_74c8a8.png"
+            },
+            "坐姿抬手": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/坐姿抬手_4ade8c.png",
+              "filename": "坐姿抬手_4ade8c.png"
+            },
+            "坐姿看": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/坐姿看_6e2056.png",
+              "filename": "坐姿看_6e2056.png"
+            },
+            "坐着": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/坐着_ef4438.png",
+              "filename": "坐着_ef4438.png"
+            },
+            "手指向前": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/手指向前_7a61bd.png",
+              "filename": "手指向前_7a61bd.png"
+            },
+            "打招呼": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/打招呼_8da37f.png",
+              "filename": "打招呼_8da37f.png"
+            },
+            "抱头": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/抱头_fe9a55.png",
+              "filename": "抱头_fe9a55.png"
+            },
+            "抱胸": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/抱胸_9d2964.png",
+              "filename": "抱胸_9d2964.png"
+            },
+            "拱手": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/拱手_b0e0b4.png",
+              "filename": "拱手_b0e0b4.png"
+            },
+            "指责": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/指责_bb6f83.png",
+              "filename": "指责_bb6f83.png"
+            },
+            "捂嘴": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/捂嘴_89a99a.png",
+              "filename": "捂嘴_89a99a.png"
+            },
+            "接电话": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/接电话_5c6e8e.png",
+              "filename": "接电话_5c6e8e.png"
+            },
+            "摊开手": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/摊开手_0b46bc.png",
+              "filename": "摊开手_0b46bc.png"
+            },
+            "摸摸头": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/摸摸头_91aebf.png",
+              "filename": "摸摸头_91aebf.png"
+            },
+            "疑惑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/疑惑_9ee524.png",
+              "filename": "疑惑_9ee524.png"
+            },
+            "祈祷": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/祈祷_8219ca.png",
+              "filename": "祈祷_8219ca.png"
+            },
+            "竖中指": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/竖中指_272805.png",
+              "filename": "竖中指_272805.png"
+            },
+            "站立": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/站立_4e39e4.png",
+              "filename": "站立_4e39e4.png"
+            },
+            "结印": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/结印_504e67.png",
+              "filename": "结印_504e67.png"
+            },
+            "请进": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/请进_f2dec3.png",
+              "filename": "请进_f2dec3.png"
+            },
+            "逃跑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/逃跑_0d4d7b.png",
+              "filename": "逃跑_0d4d7b.png"
+            }
+          },
+          "faceUrls": {
+            "不满": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/不满_a6d430.png",
+              "filename": "不满_a6d430.png"
+            },
+            "不爽": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/不爽_45608e.png",
+              "filename": "不爽_45608e.png"
+            },
+            "为难": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/为难_c3813d.png",
+              "filename": "为难_c3813d.png"
+            },
+            "侥幸": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/侥幸_391a06.png",
+              "filename": "侥幸_391a06.png"
+            },
+            "偷笑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/偷笑_cf02db.png",
+              "filename": "偷笑_cf02db.png"
+            },
+            "傲娇": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/傲娇_b39e55.png",
+              "filename": "傲娇_b39e55.png"
+            },
+            "傲慢": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/傲慢_763998.png",
+              "filename": "傲慢_763998.png"
+            },
+            "八卦": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/八卦_8f447b.png",
+              "filename": "八卦_8f447b.png"
+            },
+            "冷汗": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/冷汗_495249.png",
+              "filename": "冷汗_495249.png"
+            },
+            "冷漠": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/冷漠_962b4a.png",
+              "filename": "冷漠_962b4a.png"
+            },
+            "冷脸": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/冷脸_9fca9d.png",
+              "filename": "冷脸_9fca9d.png"
+            },
+            "发呆": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/发呆_49b00a.png",
+              "filename": "发呆_49b00a.png"
+            },
+            "发怒": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/发怒_5dab45.png",
+              "filename": "发怒_5dab45.png"
+            },
+            "可怕": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/可怕_660bfa.png",
+              "filename": "可怕_660bfa.png"
+            },
+            "叹气": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/叹气_50ca62.png",
+              "filename": "叹气_50ca62.png"
+            },
+            "吃惊": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/吃惊_fbbb70.png",
+              "filename": "吃惊_fbbb70.png"
+            },
+            "吐槽": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/吐槽_dfedb0.png",
+              "filename": "吐槽_dfedb0.png"
+            },
+            "吐血": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/吐血_43c05e.png",
+              "filename": "吐血_43c05e.png"
+            },
+            "吓哭": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/吓哭_7dc9e8.png",
+              "filename": "吓哭_7dc9e8.png"
+            },
+            "含泪": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/含泪_7abd6a.png",
+              "filename": "含泪_7abd6a.png"
+            },
+            "呕吐": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/呕吐_9cc1e5.png",
+              "filename": "呕吐_9cc1e5.png"
+            },
+            "咀嚼": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/咀嚼_3a4b6d.png",
+              "filename": "咀嚼_3a4b6d.png"
+            },
+            "咬牙": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/咬牙_f04991.png",
+              "filename": "咬牙_f04991.png"
+            },
+            "嘟嘴": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/嘟嘴_8da5ea.png",
+              "filename": "嘟嘴_8da5ea.png"
+            },
+            "嘟嘴不屑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/嘟嘴不屑_c04fa4.png",
+              "filename": "嘟嘴不屑_c04fa4.png"
+            },
+            "困扰": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/困扰_df1e6a.png",
+              "filename": "困扰_df1e6a.png"
+            },
+            "坏笑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/坏笑_68f9c9.png",
+              "filename": "坏笑_68f9c9.png"
+            },
+            "大吼": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/大吼_d75c81.png",
+              "filename": "大吼_d75c81.png"
+            },
+            "大哭": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/大哭_6d089f.png",
+              "filename": "大哭_6d089f.png"
+            },
+            "大笑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/大笑_dbfe2b.png",
+              "filename": "大笑_dbfe2b.png"
+            },
+            "大骂": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/大骂_0777d0.png",
+              "filename": "大骂_0777d0.png"
+            },
+            "头晕": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/头晕_090d9a.png",
+              "filename": "头晕_090d9a.png"
+            },
+            "好色": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/好色_1633d7.png",
+              "filename": "好色_1633d7.png"
+            },
+            "委屈": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/委屈_455377.png",
+              "filename": "委屈_455377.png"
+            },
+            "嫌弃": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/嫌弃_4e2f83.png",
+              "filename": "嫌弃_4e2f83.png"
+            },
+            "害怕": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/害怕_75542f.png",
+              "filename": "害怕_75542f.png"
+            },
+            "害羞": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/害羞_cfd87c.png",
+              "filename": "害羞_cfd87c.png"
+            },
+            "小丑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/小丑_0d0139.png",
+              "filename": "小丑_0d0139.png"
+            },
+            "尴尬": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/尴尬_33b92d.png",
+              "filename": "尴尬_33b92d.png"
+            },
+            "崇拜": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/崇拜_0095a2.png",
+              "filename": "崇拜_0095a2.png"
+            },
+            "强调": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/强调_5acf8c.png",
+              "filename": "强调_5acf8c.png"
+            },
+            "强颜欢笑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/强颜欢笑_616db1.png",
+              "filename": "强颜欢笑_616db1.png"
+            },
+            "微笑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/微笑_f89d6a.png",
+              "filename": "微笑_f89d6a.png"
+            },
+            "怀疑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/怀疑_360d45.png",
+              "filename": "怀疑_360d45.png"
+            },
+            "怒骂": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/怒骂_a5f009.png",
+              "filename": "怒骂_a5f009.png"
+            },
+            "恐吓": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/恐吓_fcf991.png",
+              "filename": "恐吓_fcf991.png"
+            },
+            "恶心": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/恶心_509406.png",
+              "filename": "恶心_509406.png"
+            },
+            "惊吓": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/惊吓_d9ec16.png",
+              "filename": "惊吓_d9ec16.png"
+            },
+            "惊讶": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/惊讶_0543ea.png",
+              "filename": "惊讶_0543ea.png"
+            },
+            "感动": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/感动_da607b.png",
+              "filename": "感动_da607b.png"
+            },
+            "愤怒": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/愤怒_7e6a70.png",
+              "filename": "愤怒_7e6a70.png"
+            },
+            "憋笑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/憋笑_771781.png",
+              "filename": "憋笑_771781.png"
+            },
+            "打击": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/打击_a1a41b.png",
+              "filename": "打击_a1a41b.png"
+            },
+            "打哈欠": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/打哈欠_760ed3.png",
+              "filename": "打哈欠_760ed3.png"
+            },
+            "打脸": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/打脸_df9982.png",
+              "filename": "打脸_df9982.png"
+            },
+            "抱怨": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/抱怨_913d7a.png",
+              "filename": "抱怨_913d7a.png"
+            },
+            "担忧": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/担忧_234b3d.png",
+              "filename": "担忧_234b3d.png"
+            },
+            "挑眉": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/挑眉_084379.png",
+              "filename": "挑眉_084379.png"
+            },
+            "无奈": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/无奈_a196d3.png",
+              "filename": "无奈_a196d3.png"
+            },
+            "无表情": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/无表情_256d2c.png",
+              "filename": "无表情_256d2c.png"
+            },
+            "无语": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/无语_168d6e.png",
+              "filename": "无语_168d6e.png"
+            },
+            "昏迷": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/昏迷_c8146b.png",
+              "filename": "昏迷_c8146b.png"
+            },
+            "流泪": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/流泪_69bce1.png",
+              "filename": "流泪_69bce1.png"
+            },
+            "流鼻血": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/流鼻血_f45f1a.png",
+              "filename": "流鼻血_f45f1a.png"
+            },
+            "灵魂出窍": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/灵魂出窍_d182fc.png",
+              "filename": "灵魂出窍_d182fc.png"
+            },
+            "瑟瑟发抖": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/瑟瑟发抖_361bd6.png",
+              "filename": "瑟瑟发抖_361bd6.png"
+            },
+            "生气": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/生气_3cf88c.png",
+              "filename": "生气_3cf88c.png"
+            },
+            "疑惑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/疑惑_029ae3.png",
+              "filename": "疑惑_029ae3.png"
+            },
+            "疲倦": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/疲倦_92c6f8.png",
+              "filename": "疲倦_92c6f8.png"
+            },
+            "皱眉": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/皱眉_188d77.png",
+              "filename": "皱眉_188d77.png"
+            },
+            "眼红": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/眼红_8868d3.png",
+              "filename": "眼红_8868d3.png"
+            },
+            "睡觉": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/睡觉_bb630b.png",
+              "filename": "睡觉_bb630b.png"
+            },
+            "瞧好了": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/瞧好了_56f059.png",
+              "filename": "瞧好了_56f059.png"
+            },
+            "笑嘻嘻": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/笑嘻嘻_4e9797.png",
+              "filename": "笑嘻嘻_4e9797.png"
+            },
+            "笑脸": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/笑脸_1725f6.png",
+              "filename": "笑脸_1725f6.png"
+            },
+            "紧闭双眼": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/紧闭双眼_83a000.png",
+              "filename": "紧闭双眼_83a000.png"
+            },
+            "翻白眼": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/翻白眼_b92735.png",
+              "filename": "翻白眼_b92735.png"
+            },
+            "臆想": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/臆想_7a36bf.png",
+              "filename": "臆想_7a36bf.png"
+            },
+            "自信": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/自信_73ed88.png",
+              "filename": "自信_73ed88.png"
+            },
+            "舒坦": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/舒坦_b9269d.png",
+              "filename": "舒坦_b9269d.png"
+            },
+            "色狼": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/色狼_e7d049.png",
+              "filename": "色狼_e7d049.png"
+            },
+            "苦笑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/苦笑_2973ae.png",
+              "filename": "苦笑_2973ae.png"
+            },
+            "装蒜": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/装蒜_e62652.png",
+              "filename": "装蒜_e62652.png"
+            },
+            "装酷": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/装酷_3a0991.png",
+              "filename": "装酷_3a0991.png"
+            },
+            "说话": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/说话_e973c6.png",
+              "filename": "说话_e973c6.png"
+            },
+            "调皮": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/调皮_c9ca5d.png",
+              "filename": "调皮_c9ca5d.png"
+            },
+            "质问": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/质问_ac41da.png",
+              "filename": "质问_ac41da.png"
+            },
+            "赌气": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/赌气_3d7dd0.png",
+              "filename": "赌气_3d7dd0.png"
+            },
+            "赔笑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/赔笑_a2ac83.png",
+              "filename": "赔笑_a2ac83.png"
+            },
+            "迷惑": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/迷惑_f266f9.png",
+              "filename": "迷惑_f266f9.png"
+            },
+            "逞强": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/逞强_4098d4.png",
+              "filename": "逞强_4098d4.png"
+            },
+            "鄙视": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/鄙视_76182d.png",
+              "filename": "鄙视_76182d.png"
+            },
+            "闭眼": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/闭眼_a2960a.png",
+              "filename": "闭眼_a2960a.png"
+            },
+            "难受": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/难受_1ccf08.png",
+              "filename": "难受_1ccf08.png"
+            },
+            "难过": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/难过_23577a.png",
+              "filename": "难过_23577a.png"
+            },
+            "震惊": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/震惊_62ebba.png",
+              "filename": "震惊_62ebba.png"
+            },
+            "黑化": {
+              "url": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/黑化_69657f.png",
+              "filename": "黑化_69657f.png"
+            }
+          },
+          "characterFolder": "extracted_psds\\Q版花店姐姐长裙_1761648249312",
+          "poseUrl": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/动作/站立_4e39e4.png",
+          "faceUrl": "/static/extracted_psds/Q版花店姐姐长裙_1761648249312/表情/微笑_f89d6a.png"
+        },
+        "children": [],
+        "character_id": "q版花店姐姐长裙_1761648249312",
+        "active_layers": {
+          "pose": "站立",
+          "face": "微笑"
+        },
+        "available_layers": {
+          "pose": [
+            "举手",
+            "举起拳头",
+            "介绍",
+            "偷笑",
+            "出拳",
+            "勾手指",
+            "叉腰",
+            "坐姿思考",
+            "坐姿抬手",
+            "坐姿看",
+            "坐着",
+            "手指向前",
+            "打招呼",
+            "抱头",
+            "抱胸",
+            "拱手",
+            "指责",
+            "捂嘴",
+            "接电话",
+            "摊开手",
+            "摸摸头",
+            "疑惑",
+            "祈祷",
+            "竖中指",
+            "站立",
+            "结印",
+            "请进",
+            "逃跑"
+          ],
+          "face": [
+            "不满",
+            "不爽",
+            "为难",
+            "侥幸",
+            "偷笑",
+            "傲娇",
+            "傲慢",
+            "八卦",
+            "冷汗",
+            "冷漠",
+            "冷脸",
+            "发呆",
+            "发怒",
+            "可怕",
+            "叹气",
+            "吃惊",
+            "吐槽",
+            "吐血",
+            "吓哭",
+            "含泪",
+            "呕吐",
+            "咀嚼",
+            "咬牙",
+            "嘟嘴",
+            "嘟嘴不屑",
+            "困扰",
+            "坏笑",
+            "大吼",
+            "大哭",
+            "大笑",
+            "大骂",
+            "头晕",
+            "好色",
+            "委屈",
+            "嫌弃",
+            "害怕",
+            "害羞",
+            "小丑",
+            "尴尬",
+            "崇拜",
+            "强调",
+            "强颜欢笑",
+            "微笑",
+            "怀疑",
+            "怒骂",
+            "恐吓",
+            "恶心",
+            "惊吓",
+            "惊讶",
+            "感动",
+            "愤怒",
+            "憋笑",
+            "打击",
+            "打哈欠",
+            "打脸",
+            "抱怨",
+            "担忧",
+            "挑眉",
+            "无奈",
+            "无表情",
+            "无语",
+            "昏迷",
+            "流泪",
+            "流鼻血",
+            "灵魂出窍",
+            "瑟瑟发抖",
+            "生气",
+            "疑惑",
+            "疲倦",
+            "皱眉",
+            "眼红",
+            "睡觉",
+            "瞧好了",
+            "笑嘻嘻",
+            "笑脸",
+            "紧闭双眼",
+            "翻白眼",
+            "臆想",
+            "自信",
+            "舒坦",
+            "色狼",
+            "苦笑",
+            "装蒜",
+            "装酷",
+            "说话",
+            "调皮",
+            "质问",
+            "赌气",
+            "赔笑",
+            "迷惑",
+            "逞强",
+            "鄙视",
+            "闭眼",
+            "难受",
+            "难过",
+            "震惊",
+            "黑化"
+          ]
+        },
+        "frame_sequence": [
+          {
+            "time": 0.3,
+            "layers": {
+              "face": "说话"
+            }
+          },
+          {
+            "time": 0.55,
+            "layers": {
+              "face": "微笑"
+            }
+          },
+          {
+            "time": 0.8,
+            "layers": {
+              "face": "说话"
+            }
+          },
+          {
+            "time": 1.05,
+            "layers": {
+              "face": "微笑"
+            }
+          },
+          {
+            "time": 1.3,
+            "layers": {
+              "face": "说话"
+            }
+          },
+          {
+            "time": 1.55,
+            "layers": {
+              "face": "微笑"
+            }
+          },
+          {
+            "time": 1.8,
+            "layers": {
+              "face": "说话"
+            }
+          },
+          {
+            "time": 2.1,
+            "layers": {
+              "face": "无表情",
+              "pose": "站立"
+            }
+          },
+          {
+            "time": 2.6999999999999997,
+            "layers": {
+              "face": "微笑",
+              "pose": "抱胸"
+            }
+          },
+          {
+            "time": 4.7,
+            "layers": {
+              "pose": "站立",
+              "face": "微笑"
+            }
+          }
+        ]
+      },
+      "character-b7edc085": {
+        "id": "character-b7edc085",
+        "name": "Ech",
+        "node_type": "character",
+        "transform": {
+          "x": 11.6,
+          "y": 8.370000000000001,
+          "scale_x": -0.25,
+          "scale_y": 0.25,
+          "rotation": 0.0
+        },
+        "opacity": 1.0,
+        "z_index": 10,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {
+          "x": [
+            {
+              "time": 2.4,
+              "value": 11.6,
+              "easing": "linear"
+            },
+            {
+              "time": 2.6999999999999997,
+              "value": 10.9,
+              "easing": "ease_out"
+            },
+            {
+              "time": 4.3999999999999995,
+              "value": 10.9,
+              "easing": "linear"
+            },
+            {
+              "time": 4.7,
+              "value": 11.6,
+              "easing": "ease_out"
+            }
+          ],
+          "y": [
+            {
+              "time": 4.3999999999999995,
+              "value": 8.370000000000001,
+              "easing": "linear"
+            }
+          ],
+          "scale_x": [
+            {
+              "time": 4.3999999999999995,
+              "value": -0.25,
+              "easing": "linear"
+            }
+          ],
+          "scale_y": [],
+          "z_index": []
+        },
+        "metadata": {
+          "poseUrls": {
+            "举手": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/举手_b156ce.png",
+              "filename": "举手_b156ce.png"
+            },
+            "举起拳头": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/举起拳头_9235c8.png",
+              "filename": "举起拳头_9235c8.png"
+            },
+            "介绍": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/介绍_2f7651.png",
+              "filename": "介绍_2f7651.png"
+            },
+            "偷笑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/偷笑_c2c6fd.png",
+              "filename": "偷笑_c2c6fd.png"
+            },
+            "出拳": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/出拳_0734b7.png",
+              "filename": "出拳_0734b7.png"
+            },
+            "勾手指": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/勾手指_c955dc.png",
+              "filename": "勾手指_c955dc.png"
+            },
+            "叉腰": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/叉腰_e05e7c.png",
+              "filename": "叉腰_e05e7c.png"
+            },
+            "坐姿思考": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/坐姿思考_398dfb.png",
+              "filename": "坐姿思考_398dfb.png"
+            },
+            "坐姿抬手": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/坐姿抬手_57b837.png",
+              "filename": "坐姿抬手_57b837.png"
+            },
+            "坐姿看": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/坐姿看_5f4818.png",
+              "filename": "坐姿看_5f4818.png"
+            },
+            "坐着": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/坐着_0f8a07.png",
+              "filename": "坐着_0f8a07.png"
+            },
+            "手指向前": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/手指向前_874dec.png",
+              "filename": "手指向前_874dec.png"
+            },
+            "打招呼": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/打招呼_da1749.png",
+              "filename": "打招呼_da1749.png"
+            },
+            "抱头": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/抱头_71adfb.png",
+              "filename": "抱头_71adfb.png"
+            },
+            "抱胸": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/抱胸_a1be0c.png",
+              "filename": "抱胸_a1be0c.png"
+            },
+            "拱手": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/拱手_23d125.png",
+              "filename": "拱手_23d125.png"
+            },
+            "指责": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/指责_403bd2.png",
+              "filename": "指责_403bd2.png"
+            },
+            "捂嘴": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/捂嘴_66cf87.png",
+              "filename": "捂嘴_66cf87.png"
+            },
+            "接电话": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/接电话_31c1d2.png",
+              "filename": "接电话_31c1d2.png"
+            },
+            "摊开手": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/摊开手_04c323.png",
+              "filename": "摊开手_04c323.png"
+            },
+            "摸摸头": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/摸摸头_efb507.png",
+              "filename": "摸摸头_efb507.png"
+            },
+            "疑惑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/疑惑_1995ac.png",
+              "filename": "疑惑_1995ac.png"
+            },
+            "祈祷": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/祈祷_63d3d1.png",
+              "filename": "祈祷_63d3d1.png"
+            },
+            "竖中指": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/竖中指_fdadd1.png",
+              "filename": "竖中指_fdadd1.png"
+            },
+            "站立": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/站立_4025bc.png",
+              "filename": "站立_4025bc.png"
+            },
+            "结印": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/结印_f8f7ef.png",
+              "filename": "结印_f8f7ef.png"
+            },
+            "请进": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/请进_7e0e6a.png",
+              "filename": "请进_7e0e6a.png"
+            },
+            "逃跑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/动作/逃跑_fce69a.png",
+              "filename": "逃跑_fce69a.png"
+            }
+          },
+          "faceUrls": {
+            "侥幸": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/侥幸_6fab06.png",
+              "filename": "侥幸_6fab06.png"
+            },
+            "偷笑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/偷笑_ddb531.png",
+              "filename": "偷笑_ddb531.png"
+            },
+            "傲娇": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/傲娇_e39a4d.png",
+              "filename": "傲娇_e39a4d.png"
+            },
+            "傲慢": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/傲慢_43e5a3.png",
+              "filename": "傲慢_43e5a3.png"
+            },
+            "八卦": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/八卦_c7373c.png",
+              "filename": "八卦_c7373c.png"
+            },
+            "冷漠": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/冷漠_045da9.png",
+              "filename": "冷漠_045da9.png"
+            },
+            "发呆": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/发呆_29b83d.png",
+              "filename": "发呆_29b83d.png"
+            },
+            "发怒": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/发怒_ab5dc7.png",
+              "filename": "发怒_ab5dc7.png"
+            },
+            "叹气": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/叹气_98561e.png",
+              "filename": "叹气_98561e.png"
+            },
+            "吃惊": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/吃惊_4e1922.png",
+              "filename": "吃惊_4e1922.png"
+            },
+            "吐槽": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/吐槽_d333a7.png",
+              "filename": "吐槽_d333a7.png"
+            },
+            "吐血": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/吐血_eaefaf.png",
+              "filename": "吐血_eaefaf.png"
+            },
+            "吓哭": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/吓哭_191098.png",
+              "filename": "吓哭_191098.png"
+            },
+            "含泪": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/含泪_4f1915.png",
+              "filename": "含泪_4f1915.png"
+            },
+            "呕吐": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/呕吐_0b202c.png",
+              "filename": "呕吐_0b202c.png"
+            },
+            "咀嚼": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/咀嚼_323c4e.png",
+              "filename": "咀嚼_323c4e.png"
+            },
+            "咬牙": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/咬牙_9c1672.png",
+              "filename": "咬牙_9c1672.png"
+            },
+            "嘟嘴": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/嘟嘴_97e4bf.png",
+              "filename": "嘟嘴_97e4bf.png"
+            },
+            "坏笑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/坏笑_d0c896.png",
+              "filename": "坏笑_d0c896.png"
+            },
+            "大吼": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/大吼_56835e.png",
+              "filename": "大吼_56835e.png"
+            },
+            "大哭": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/大哭_1ba3b5.png",
+              "filename": "大哭_1ba3b5.png"
+            },
+            "大笑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/大笑_a3a99e.png",
+              "filename": "大笑_a3a99e.png"
+            },
+            "大骂": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/大骂_90f4b1.png",
+              "filename": "大骂_90f4b1.png"
+            },
+            "头晕": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/头晕_442c27.png",
+              "filename": "头晕_442c27.png"
+            },
+            "好色": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/好色_e40acc.png",
+              "filename": "好色_e40acc.png"
+            },
+            "委屈": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/委屈_827a2c.png",
+              "filename": "委屈_827a2c.png"
+            },
+            "嫌弃": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/嫌弃_6919e5.png",
+              "filename": "嫌弃_6919e5.png"
+            },
+            "害怕": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/害怕_259e7e.png",
+              "filename": "害怕_259e7e.png"
+            },
+            "害羞": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/害羞_8ad2cb.png",
+              "filename": "害羞_8ad2cb.png"
+            },
+            "小丑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/小丑_734333.png",
+              "filename": "小丑_734333.png"
+            },
+            "尴尬": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/尴尬_3ffe1c.png",
+              "filename": "尴尬_3ffe1c.png"
+            },
+            "崇拜": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/崇拜_d0b499.png",
+              "filename": "崇拜_d0b499.png"
+            },
+            "微笑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/微笑_d0e1d2.png",
+              "filename": "微笑_d0e1d2.png"
+            },
+            "怒骂": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/怒骂_00d422.png",
+              "filename": "怒骂_00d422.png"
+            },
+            "恐吓": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/恐吓_8c72a9.png",
+              "filename": "恐吓_8c72a9.png"
+            },
+            "恶心": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/恶心_1cfce0.png",
+              "filename": "恶心_1cfce0.png"
+            },
+            "惊吓": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/惊吓_390de9.png",
+              "filename": "惊吓_390de9.png"
+            },
+            "惊讶": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/惊讶_06277d.png",
+              "filename": "惊讶_06277d.png"
+            },
+            "感动": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/感动_9a5703.png",
+              "filename": "感动_9a5703.png"
+            },
+            "憋笑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/憋笑_0d55b7.png",
+              "filename": "憋笑_0d55b7.png"
+            },
+            "打哈欠": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/打哈欠_175773.png",
+              "filename": "打哈欠_175773.png"
+            },
+            "打脸": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/打脸_553db8.png",
+              "filename": "打脸_553db8.png"
+            },
+            "担忧": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/担忧_bb0f7e.png",
+              "filename": "担忧_bb0f7e.png"
+            },
+            "挑眉": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/挑眉_8e69fb.png",
+              "filename": "挑眉_8e69fb.png"
+            },
+            "无语": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/无语_1f8d7e.png",
+              "filename": "无语_1f8d7e.png"
+            },
+            "昏迷": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/昏迷_9172d9.png",
+              "filename": "昏迷_9172d9.png"
+            },
+            "流泪": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/流泪_e5c7f1.png",
+              "filename": "流泪_e5c7f1.png"
+            },
+            "流鼻血": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/流鼻血_bc366a.png",
+              "filename": "流鼻血_bc366a.png"
+            },
+            "生气": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/生气_d26292.png",
+              "filename": "生气_d26292.png"
+            },
+            "生闷气": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/生闷气_62b1f3.png",
+              "filename": "生闷气_62b1f3.png"
+            },
+            "疑惑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/疑惑_a5cd74.png",
+              "filename": "疑惑_a5cd74.png"
+            },
+            "疲倦": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/疲倦_ceb531.png",
+              "filename": "疲倦_ceb531.png"
+            },
+            "皱眉": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/皱眉_4c709c.png",
+              "filename": "皱眉_4c709c.png"
+            },
+            "眼红": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/眼红_c30f16.png",
+              "filename": "眼红_c30f16.png"
+            },
+            "睡觉": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/睡觉_256a97.png",
+              "filename": "睡觉_256a97.png"
+            },
+            "笑嘻嘻": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/笑嘻嘻_f9f250.png",
+              "filename": "笑嘻嘻_f9f250.png"
+            },
+            "笑脸": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/笑脸_db418d.png",
+              "filename": "笑脸_db418d.png"
+            },
+            "紧闭双眼": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/紧闭双眼_1570d7.png",
+              "filename": "紧闭双眼_1570d7.png"
+            },
+            "臆想": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/臆想_1de0ba.png",
+              "filename": "臆想_1de0ba.png"
+            },
+            "自信": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/自信_d454dd.png",
+              "filename": "自信_d454dd.png"
+            },
+            "舒坦": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/舒坦_9ff992.png",
+              "filename": "舒坦_9ff992.png"
+            },
+            "色狼": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/色狼_2187de.png",
+              "filename": "色狼_2187de.png"
+            },
+            "苦笑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/苦笑_26cb4e.png",
+              "filename": "苦笑_26cb4e.png"
+            },
+            "装酷": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/装酷_9e6408.png",
+              "filename": "装酷_9e6408.png"
+            },
+            "调皮": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/调皮_97ec42.png",
+              "filename": "调皮_97ec42.png"
+            },
+            "赌气": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/赌气_ceeb04.png",
+              "filename": "赌气_ceeb04.png"
+            },
+            "迷惑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/迷惑_376deb.png",
+              "filename": "迷惑_376deb.png"
+            },
+            "邪笑": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/邪笑_6d46df.png",
+              "filename": "邪笑_6d46df.png"
+            },
+            "鄙视": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/鄙视_8e44d9.png",
+              "filename": "鄙视_8e44d9.png"
+            },
+            "闭眼": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/闭眼_e678e5.png",
+              "filename": "闭眼_e678e5.png"
+            },
+            "难受": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/难受_ee03af.png",
+              "filename": "难受_ee03af.png"
+            },
+            "难过": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/难过_960053.png",
+              "filename": "难过_960053.png"
+            },
+            "震惊": {
+              "url": "/static/extracted_psds/青蛙哥_1761648323488/表情/震惊_2864f0.png",
+              "filename": "震惊_2864f0.png"
+            }
+          },
+          "characterFolder": "extracted_psds\\青蛙哥_1761648323488",
+          "poseUrl": "/static/extracted_psds/青蛙哥_1761648323488/动作/站立_4025bc.png",
+          "faceUrl": "/static/extracted_psds/青蛙哥_1761648323488/表情/微笑_d0e1d2.png"
+        },
+        "children": [],
+        "character_id": "青蛙哥_1761648323488",
+        "active_layers": {
+          "pose": "站立",
+          "face": "微笑"
+        },
+        "available_layers": {
+          "pose": [
+            "举手",
+            "举起拳头",
+            "介绍",
+            "偷笑",
+            "出拳",
+            "勾手指",
+            "叉腰",
+            "坐姿思考",
+            "坐姿抬手",
+            "坐姿看",
+            "坐着",
+            "手指向前",
+            "打招呼",
+            "抱头",
+            "抱胸",
+            "拱手",
+            "指责",
+            "捂嘴",
+            "接电话",
+            "摊开手",
+            "摸摸头",
+            "疑惑",
+            "祈祷",
+            "竖中指",
+            "站立",
+            "结印",
+            "请进",
+            "逃跑"
+          ],
+          "face": [
+            "侥幸",
+            "偷笑",
+            "傲娇",
+            "傲慢",
+            "八卦",
+            "冷漠",
+            "发呆",
+            "发怒",
+            "叹气",
+            "吃惊",
+            "吐槽",
+            "吐血",
+            "吓哭",
+            "含泪",
+            "呕吐",
+            "咀嚼",
+            "咬牙",
+            "嘟嘴",
+            "坏笑",
+            "大吼",
+            "大哭",
+            "大笑",
+            "大骂",
+            "头晕",
+            "好色",
+            "委屈",
+            "嫌弃",
+            "害怕",
+            "害羞",
+            "小丑",
+            "尴尬",
+            "崇拜",
+            "微笑",
+            "怒骂",
+            "恐吓",
+            "恶心",
+            "惊吓",
+            "惊讶",
+            "感动",
+            "憋笑",
+            "打哈欠",
+            "打脸",
+            "担忧",
+            "挑眉",
+            "无语",
+            "昏迷",
+            "流泪",
+            "流鼻血",
+            "生气",
+            "生闷气",
+            "疑惑",
+            "疲倦",
+            "皱眉",
+            "眼红",
+            "睡觉",
+            "笑嘻嘻",
+            "笑脸",
+            "紧闭双眼",
+            "臆想",
+            "自信",
+            "舒坦",
+            "色狼",
+            "苦笑",
+            "装酷",
+            "调皮",
+            "赌气",
+            "迷惑",
+            "邪笑",
+            "鄙视",
+            "闭眼",
+            "难受",
+            "难过",
+            "震惊"
+          ]
+        },
+        "frame_sequence": [
+          {
+            "time": 0.3,
+            "layers": {
+              "face": "疑惑",
+              "pose": "站立"
+            }
+          },
+          {
+            "time": 2.6999999999999997,
+            "layers": {
+              "pose": "站立",
+              "face": "微笑"
+            }
+          },
+          {
+            "time": 4.3999999999999995,
+            "layers": {
+              "face": "微笑",
+              "pose": "站立"
+            }
+          },
+          {
+            "time": 4.7,
+            "layers": {
+              "pose": "站立",
+              "face": "微笑"
+            }
+          }
+        ]
+      },
+      "subtitle_line_0": {
+        "id": "subtitle_line_0",
+        "name": "Sub: Hoa",
+        "node_type": "text",
+        "transform": {
+          "x": 9.6,
+          "y": 10.0,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 0.0,
+        "z_index": 9999,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {
+          "opacity": [
+            {
+              "time": 0.15,
+              "value": 0.0,
+              "easing": "linear"
+            },
+            {
+              "time": 0.3,
+              "value": 1.0,
+              "easing": "easeOut"
+            },
+            {
+              "time": 2.0,
+              "value": 1.0,
+              "easing": "linear"
+            },
+            {
+              "time": 2.2,
+              "value": 0.0,
+              "easing": "easeIn"
+            }
+          ]
+        },
+        "metadata": {},
+        "children": [],
+        "content": "Hoa: Chào anh, mua hoa à?",
+        "font_family": "Arial",
+        "font_size": 0.36,
+        "color": "#FFFFFF",
+        "text_align": "center"
+      },
+      "subtitle_line_1": {
+        "id": "subtitle_line_1",
+        "name": "Sub: Ech",
+        "node_type": "text",
+        "transform": {
+          "x": 9.6,
+          "y": 10.0,
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "rotation": 0.0
+        },
+        "opacity": 0.0,
+        "z_index": 9999,
+        "visible": true,
+        "parent_id": null,
+        "keyframes": {
+          "opacity": [
+            {
+              "time": 2.55,
+              "value": 0.0,
+              "easing": "linear"
+            },
+            {
+              "time": 2.6999999999999997,
+              "value": 1.0,
+              "easing": "easeOut"
+            },
+            {
+              "time": 4.3,
+              "value": 1.0,
+              "easing": "linear"
+            },
+            {
+              "time": 4.5,
+              "value": 0.0,
+              "easing": "easeIn"
+            }
+          ]
+        },
+        "metadata": {},
+        "children": [],
+        "content": "Ech: Ừ, cho anh bó hồng.",
+        "font_family": "Arial",
+        "font_size": 0.36,
+        "color": "#FFFFFF",
+        "text_align": "center"
+      }
+    },
+    "metadata": {}
+  },
+  "duration": 6.2,
+  "characters_added": 2,
+  "keyframes_added": 27,
+  "tts_audio_url": "",
+  "tts_lines": [],
+  "message": "Scene created with 15 nodes and 27 keyframes"
+}

@@ -92,6 +92,9 @@ class AIConfig:
                 self.model = saved["model"]
             if saved.get("vision_model"):
                 self.vision_model = saved["vision_model"]
+            else:
+                # Default vision_model to same as model
+                self.vision_model = self.model
             if saved.get("provider"):
                 self.provider = saved["provider"]
             if saved.get("max_review_rounds") is not None:

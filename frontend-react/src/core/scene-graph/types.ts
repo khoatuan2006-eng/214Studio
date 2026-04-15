@@ -198,6 +198,7 @@ export interface NodeSnapshot {
   opacity: number;
   zIndex: number;
   visible: boolean;
+  parallaxSpeed?: number;
   // Character-specific
   activeLayers?: Record<string, string>;
 }
@@ -220,6 +221,38 @@ export interface ToolResult {
   success: boolean;
   data?: unknown;
   error?: string;
+}
+
+// ══════════════════════════════════════════════
+//  MULTI-SCENE / VIDEO PROJECT TYPES
+// ══════════════════════════════════════════════
+
+/** Transition effect between two scenes. */
+export type TransitionType = 'cut' | 'fade' | 'dissolve' | 'slide_left' | 'slide_right' | 'wipe';
+
+export interface SceneTransitionData {
+  type: TransitionType;
+  duration: number; // seconds (typically 0.3 - 1.0)
+}
+
+/** Multi-scene video project — top-level container. */
+export interface VideoProjectData {
+  id: string;
+  name: string;
+  scenes: SceneGraphData[];
+  transitions: SceneTransitionData[];
+  totalDuration: number;
+  sceneBoundaries: SceneBoundary[];
+  metadata: Record<string, unknown>;
+}
+
+/** Computed time boundaries for a scene in the global timeline. */
+export interface SceneBoundary {
+  sceneIndex: number;
+  start: number;
+  end: number;
+  name: string;
+  backgroundId?: string;
 }
 
 // ══════════════════════════════════════════════

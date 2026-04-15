@@ -226,6 +226,29 @@ const AssetSidebar: React.FC = () => {
                 </div>
             </div>
 
+            {/* AUTO-TEST BUTTON START */}
+            <div className="p-4 border-b border-white/5">
+                <button 
+                    onClick={async () => {
+                        try {
+                            const res = await fetch('/stage.fla');
+                            const blob = await res.blob();
+                            const file = new File([blob], 'stage.fla', { type: 'application/octet-stream' });
+                            setSidebarTab('fla');
+                            handleUploadFLA(file);
+                        } catch (err) {
+                            console.error(err);
+                            alert("Auto test failed");
+                        }
+                    }}
+                    className="w-full py-2 bg-red-500/20 text-red-300 font-bold text-[10px] rounded hover:bg-red-500/40"
+                    id="auto-test-fla-btn"
+                >
+                    AUTO-TEST FLA PARSER
+                </button>
+            </div>
+            {/* AUTO-TEST BUTTON END */}
+
             {/* Library Grid */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 <h3 className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mb-2">

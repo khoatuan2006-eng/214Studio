@@ -150,3 +150,120 @@ async def delete_stage(filename: str):
     os.remove(fpath)
     logger.info(f"Stage asset deleted: {filename}")
     return JSONResponse(content={"message": "Deleted", "filename": filename})
+
+
+# ══════════════════════════════════════════════
+#  Stage Analysis (Vision AI)
+# ══════════════════════════════════════════════
+
+ANALYSIS_CACHE_DIR = os.path.join(STORAGE_DIR, "stage_analysis")
+os.makedirs(ANALYSIS_CACHE_DIR, exist_ok=True)
+
+
+def get_cached_analysis(stage_id: str) -> dict | None:
+    """Load cached analysis for a stage, or None if not cached."""
+    cache_file = os.path.join(ANALYSIS_CACHE_DIR, f"{stage_id}.json")
+    if os.path.exists(cache_file):
+        import json
+        with open(cache_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return None
+
+
+def save_analysis_cache(stage_id: str, data: dict):
+    """Save analysis result to cache."""
+    import json
+    cache_file = os.path.join(ANALYSIS_CACHE_DIR, f"{stage_id}.json")
+    with open(cache_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    logger.info(f"Saved stage analysis cache: {stage_id}")
+
+
+@router.get("/{stage_id}/analysis")
+async def get_stage_analysis(stage_id: str):
+    """Get cached analysis for a stage. Returns 404 if not analyzed yet."""
+    cached = get_cached_analysis(stage_id)
+    if cached:
+        return JSONResponse(content=cached)
+    raise HTTPException(status_code=404, detail="Stage not analyzed yet. Call POST /{stage_id}/analyze first.")
+
+
+@router.post("/{stage_id}/analyze")
+async def analyze_stage(stage_id: str):
+    """Analyze a stage's layers using Vision AI. Results are cached.
+    
+    Identifies objects, positions, interaction points (can_stand_on, can_sit_on),
+    and semantic z-index ordering for each layer element.
+    """
+    import base64
+    import re
+    from backend.core.agents.stage_analyzer_agent import analyze_stage_elements
+
+    # Check cache first
+    cached = get_cached_analysis(stage_id)
+    if cached:
+        return JSONResponse(content={"cached": True, **cached})
+
+    # Find element files for this stage
+    if not os.path.exists(STAGES_DIR):
+        raise HTTPException(status_code=404, detail="Stages directory not found")
+
+    all_files = os.listdir(STAGES_DIR)
+    # Prefer sub-crop files (_element_X_1.png) which have correct per-layer transparency
+    element_files = [
+        f for f in all_files
+        if f.startswith(stage_id) and f.endswith(".png")
+        and "_element_" in f
+        and re.search(r'_element_\d+_1\.png$', f)
+    ]
+    # Fallback to base elements if no sub-crops exist
+    if not element_files:
+        element_files = [
+            f for f in all_files
+            if f.startswith(stage_id) and f.endswith(".png")
+            and "_element_" in f
+            and not re.search(r'_element_\d+_\d+\.png$', f)
+        ]
+
+    if not element_files:
+        raise HTTPException(status_code=404, detail=f"No element files found for stage: {stage_id}")
+
+    # Sort by element index
+    def get_idx(fname):
+        m = re.search(r'element_(\d+)', fname)
+        return int(m.group(1)) if m else 0
+
+    element_files.sort(key=get_idx)
+
+    # Read images as base64
+    layer_images = []
+    for fname in element_files:
+        fpath = os.path.join(STAGES_DIR, fname)
+        with open(fpath, "rb") as f:
+            img_b64 = base64.b64encode(f.read()).decode("utf-8")
+        
+        idx = get_idx(fname)
+        layer_images.append({
+            "id": f"element_{idx}",
+            "label": f"Layer {idx}",
+            "image_base64": img_b64,
+            "type": "background" if idx <= 2 else "prop",
+            "zIndex": idx,
+        })
+
+    # Call Vision AI analyzer
+    try:
+        result = await analyze_stage_elements(layer_images)
+        result_dict = result.to_dict()
+        result_dict["stage_id"] = stage_id
+        result_dict["num_layers"] = len(element_files)
+        result_dict["layer_files"] = element_files
+
+        # Save to cache
+        save_analysis_cache(stage_id, result_dict)
+
+        return JSONResponse(content={"cached": False, **result_dict})
+    except Exception as e:
+        logger.error(f"Stage analysis failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
