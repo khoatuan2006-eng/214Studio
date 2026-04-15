@@ -78,6 +78,9 @@ class SceneGraph:
     # Root-level node IDs in rendering order (back to front)
     root_order: list[str] = field(default_factory=list)
 
+    # Scene-level metadata (e.g. background_id, mood, etc.)
+    metadata: dict = field(default_factory=dict)
+
     def __post_init__(self):
         if not self.id:
             self.id = f"scene-{uuid.uuid4().hex[:8]}"
@@ -314,6 +317,7 @@ class SceneGraph:
                 node_id: node.to_dict()
                 for node_id, node in self.nodes.items()
             },
+            "metadata": self.metadata,
         }
 
     @classmethod
@@ -328,6 +332,7 @@ class SceneGraph:
             fps=data.get("fps", DEFAULT_FPS),
             duration=data.get("duration", 10.0),
             root_order=data.get("root_order", []),
+            metadata=data.get("metadata", {}),
         )
 
         for node_id, node_data in data.get("nodes", {}).items():

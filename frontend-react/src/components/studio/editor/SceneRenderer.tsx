@@ -10,6 +10,12 @@
  * 2. This component diffs the snapshot against current sprites
  * 3. Creates/updates/removes PIXI.Sprites as needed
  * 4. Character = Container { poseSprite, faceSprite, nameLabel }
+ *
+ * Rendering layers (back to front):
+ * 1. Placeholder background (hidden when real BG layers exist)
+ * 2. Background container (parallax layers, responds to camera)
+ * 3. Scene container (characters, props — fully affected by camera)
+ * 4. Subtitle container (text overlays — NOT affected by camera)
  */
 
 import React, { useRef, useEffect, useCallback } from 'react';
@@ -17,6 +23,7 @@ import * as PIXI from 'pixi.js';
 import { useSceneGraphStore } from '@/stores/useSceneGraphStore';
 import type { CharacterFull } from '@/stores/useSceneGraphStore';
 import type { NodeSnapshot } from '@/core/scene-graph/types';
+import { TransitionRenderer } from '@/core/renderer/TransitionRenderer';
 import { API_BASE_URL } from '@/config/api';
 
 const CANVAS_W = 1920;
@@ -95,7 +102,6 @@ class CharacterDisplayObject {
     }
 
     update(snap: NodeSnapshot, ppu: number): void {
-        // Convert world coordinates to pixel coordinates
         const px = snap.x * ppu;
         const py = snap.y * ppu;
 
@@ -106,7 +112,6 @@ class CharacterDisplayObject {
         this.container.visible = snap.visible;
         this.container.zIndex = snap.zIndex;
 
-        // Update label position below character
         if (this.poseSprite) {
             this.label.y = (this.poseSprite.height * 0.15) / snap.scaleY;
         } else {
@@ -120,21 +125,14 @@ class CharacterDisplayObject {
 }
 
 // ══════════════════════════════════════════════
-//  Background rendering helper
+//  Background rendering helper (placeholder)
 // ══════════════════════════════════════════════
 function drawBackground(g: PIXI.Graphics): void {
-    // Night sky gradient (approximated with filled rects)
     g.clear();
-
-    // Sky
     g.rect(0, 0, CANVAS_W, CANVAS_H * 0.65);
     g.fill(0x1a1c2e);
-
-    // Ground
     g.rect(0, CANVAS_H * 0.65, CANVAS_W, CANVAS_H * 0.35);
     g.fill(0x3d5a32);
-
-    // Simple mountain silhouettes
     g.moveTo(0, CANVAS_H * 0.5);
     for (let x = 0; x <= CANVAS_W; x += 40) {
         const y = CANVAS_H * 0.4 + Math.sin(x * 0.008) * 60 + Math.sin(x * 0.015) * 30;
@@ -146,55 +144,218 @@ function drawBackground(g: PIXI.Graphics): void {
 }
 
 // ══════════════════════════════════════════════
-//  SceneRenderer Component
+//  Background Display Object — single background layer sprite
+// ══════════════════════════════════════════════
+class BackgroundDisplayObject {
+    container: PIXI.Container;
+    sprite: PIXI.Sprite | null = null;
+    private currentUrl: string = '';
+
+    constructor() {
+        this.container = new PIXI.Container();
+    }
+
+    async updateTexture(url: string): Promise<void> {
+        if (url === this.currentUrl && this.sprite) return;
+        this.currentUrl = url;
+
+        try {
+            const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+            const texture = await PIXI.Assets.load(fullUrl);
+            
+            if (this.sprite) {
+                this.container.removeChild(this.sprite);
+            }
+            this.sprite = new PIXI.Sprite(texture);
+            this.sprite.anchor.set(0, 0);
+            
+            const scaleX = CANVAS_W / texture.width;
+            const scaleY = CANVAS_H / texture.height;
+            const coverScale = Math.max(scaleX, scaleY);
+            this.sprite.scale.set(coverScale, coverScale);
+            
+            this.container.addChild(this.sprite);
+        } catch (err) {
+            console.warn(`[SceneRenderer] Failed to load background layer: ${url}`, err);
+        }
+    }
+
+    update(snap: NodeSnapshot, cameraSnap: NodeSnapshot | null, ppu: number): void {
+        this.container.alpha = snap.opacity;
+        this.container.visible = snap.visible;
+        this.container.zIndex = snap.zIndex;
+
+        if (cameraSnap && snap.parallaxSpeed !== undefined && snap.parallaxSpeed > 0) {
+            const p = snap.parallaxSpeed;
+            const cX = cameraSnap.x * ppu;
+            const cY = cameraSnap.y * ppu;
+            const cS = cameraSnap.scaleX || 1;
+
+            const effS = 1 + (cS - 1) * p;
+            this.container.pivot.set(cX, cY);
+
+            const pX = cX + ((CANVAS_W / 2) - cX) * p;
+            const pY = cY + ((CANVAS_H / 2) - cY) * p;
+
+            this.container.position.set(pX, pY);
+            this.container.scale.set(effS);
+            
+            const effR = -(cameraSnap.rotation || 0) * Math.PI / 180 * p;
+            this.container.rotation = effR;
+        } else {
+            this.container.pivot.set(0, 0);
+            this.container.position.set(0, 0);
+            this.container.scale.set(1);
+            this.container.rotation = 0;
+        }
+    }
+
+    destroy(): void {
+        this.container.destroy({ children: true });
+    }
+}
+
+// ══════════════════════════════════════════════
+//  Subtitle Display Object — cinematic text overlay
+//  Positioned at bottom of canvas. NOT affected by camera.
+// ══════════════════════════════════════════════
+class SubtitleDisplayObject {
+    container: PIXI.Container;
+    private bgGraphics: PIXI.Graphics;
+    private textObj: PIXI.Text;
+    private currentContent: string = '';
+
+    constructor() {
+        this.container = new PIXI.Container();
+        
+        this.bgGraphics = new PIXI.Graphics();
+        this.container.addChild(this.bgGraphics);
+        
+        this.textObj = new PIXI.Text({
+            text: '',
+            style: {
+                fontSize: 36,
+                fontFamily: '"Noto Sans SC", "Inter", "Arial", sans-serif',
+                fontWeight: '600',
+                fill: 0xffffff,
+                stroke: { color: 0x000000, width: 5 },
+                wordWrap: true,
+                wordWrapWidth: CANVAS_W * 0.85,
+                align: 'center',
+            }
+        });
+        this.textObj.anchor.set(0.5, 1);
+        this.container.addChild(this.textObj);
+    }
+
+    update(snap: NodeSnapshot, content: string): void {
+        this.container.alpha = snap.opacity;
+        this.container.visible = snap.visible && content.length > 0;
+        this.container.zIndex = snap.zIndex;
+
+        if (content !== this.currentContent) {
+            this.currentContent = content;
+            this.textObj.text = content;
+
+            // Position: bottom center of canvas
+            this.textObj.position.set(CANVAS_W / 2, CANVAS_H - 40);
+
+            // Draw semi-transparent background bar
+            this.bgGraphics.clear();
+            if (content.length > 0) {
+                const textBounds = this.textObj.getBounds();
+                const padX = 30;
+                const padY = 12;
+                const barW = Math.min(textBounds.width + padX * 2, CANVAS_W);
+                const barH = textBounds.height + padY * 2;
+                const barX = (CANVAS_W - barW) / 2;
+                const barY = CANVAS_H - 40 - textBounds.height - padY;
+
+                this.bgGraphics.roundRect(barX, barY, barW, barH, 8);
+                this.bgGraphics.fill({ color: 0x000000, alpha: 0.6 });
+            }
+        }
+    }
+
+    destroy(): void {
+        this.container.destroy({ children: true });
+    }
+}
+
+// ══════════════════════════════════════════════
+//  Main Scene Renderer Component
 // ══════════════════════════════════════════════
 export const SceneRenderer: React.FC = () => {
     const canvasRef = useRef<HTMLDivElement>(null);
     const appRef = useRef<PIXI.Application | null>(null);
-    const charsRef = useRef<Map<string, CharacterDisplayObject>>(new Map());
-    const bgRef = useRef<PIXI.Graphics | null>(null);
     const sceneContainerRef = useRef<PIXI.Container | null>(null);
+    const bgContainerRef = useRef<PIXI.Container | null>(null);
+    const subtitleContainerRef = useRef<PIXI.Container | null>(null);
+    const placeholderBgRef = useRef<PIXI.Graphics | null>(null);
+    const transitionRef = useRef<TransitionRenderer | null>(null);
+    const charsRef = useRef(new Map<string, CharacterDisplayObject>());
+    const bgsRef = useRef(new Map<string, BackgroundDisplayObject>());
+    const subsRef = useRef(new Map<string, SubtitleDisplayObject>());
 
     const snapshot = useSceneGraphStore(s => s.snapshot);
     const manager = useSceneGraphStore(s => s.manager);
-    const characterCache = useSceneGraphStore(s => s.characterCache);
+    const activeTransition = useSceneGraphStore(s => s.activeTransition);
 
-    // ── Initialize PIXI Application ──
+    // ── Initialize PixiJS ──
     useEffect(() => {
         if (!canvasRef.current) return;
-        if (appRef.current) return; // Already initialized
-
         let cancelled = false;
+
         const app = new PIXI.Application();
+        appRef.current = app;
 
         app.init({
             width: CANVAS_W,
             height: CANVAS_H,
-            backgroundColor: 0x111118,
+            backgroundColor: 0x0d0d14,
             antialias: true,
-            resolution: 1,
+            resolution: window.devicePixelRatio || 1,
+            autoDensity: true,
         }).then(() => {
-            if (cancelled || !canvasRef.current) {
-                // Component unmounted before init finished — destroy safely
-                try { app.destroy(true); } catch (_) {}
-                return;
-            }
-            canvasRef.current.appendChild(app.canvas as HTMLCanvasElement);
-            appRef.current = app;
+            if (cancelled || !canvasRef.current) return;
 
-            // Background
-            const bg = new PIXI.Graphics();
-            drawBackground(bg);
-            bg.zIndex = -1000;
-            app.stage.addChild(bg);
-            bgRef.current = bg;
+            const canvas = app.canvas as HTMLCanvasElement;
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.objectFit = 'contain';
+            canvasRef.current.appendChild(canvas);
 
-            // Scene container (everything except background)
+            app.stage.sortableChildren = true;
+
+            // Layer 1: Placeholder background
+            const bgPlaceholder = new PIXI.Graphics();
+            drawBackground(bgPlaceholder);
+            bgPlaceholder.zIndex = -2000;
+            app.stage.addChild(bgPlaceholder);
+            placeholderBgRef.current = bgPlaceholder;
+
+            // Layer 2: Background container (parallax, responds to camera)
+            const bgContainer = new PIXI.Container();
+            bgContainer.sortableChildren = true;
+            bgContainer.zIndex = -1000;
+            app.stage.addChild(bgContainer);
+            bgContainerRef.current = bgContainer;
+
+            // Layer 3: Scene container (characters — affected by camera)
             const container = new PIXI.Container();
             container.sortableChildren = true;
             app.stage.addChild(container);
-            app.stage.sortableChildren = true;
             sceneContainerRef.current = container;
+
+            // Layer 4: Subtitle container (NOT affected by camera)
+            const subtitleContainer = new PIXI.Container();
+            subtitleContainer.sortableChildren = true;
+            subtitleContainer.zIndex = 9000;
+            app.stage.addChild(subtitleContainer);
+            subtitleContainerRef.current = subtitleContainer;
+
+            // Layer 5: Transition overlay (fade-to-black between scenes)
+            transitionRef.current = new TransitionRenderer(app.stage);
         }).catch(err => {
             console.warn('[SceneRenderer] PIXI init failed:', err);
         });
@@ -203,6 +364,14 @@ export const SceneRenderer: React.FC = () => {
             cancelled = true;
             charsRef.current.forEach(c => c.destroy());
             charsRef.current.clear();
+            bgsRef.current.forEach(b => b.destroy());
+            bgsRef.current.clear();
+            subsRef.current.forEach(s => s.destroy());
+            subsRef.current.clear();
+            if (transitionRef.current) {
+                transitionRef.current.destroy();
+                transitionRef.current = null;
+            }
             if (appRef.current) {
                 try { appRef.current.destroy(true); } catch (_) {}
                 appRef.current = null;
@@ -213,18 +382,84 @@ export const SceneRenderer: React.FC = () => {
     // ── Sync snapshot to PIXI sprites ──
     useEffect(() => {
         const container = sceneContainerRef.current;
+        const bgContainer = bgContainerRef.current;
+        const subtitleContainer = subtitleContainerRef.current;
         if (!container) return;
 
         const ppu = manager.graph.ppu || 100;
         const chars = charsRef.current;
-        const activeIds = new Set<string>();
+        const bgs = bgsRef.current;
+        const subs = subsRef.current;
+        const activeCharIds = new Set<string>();
+        const activeBgIds = new Set<string>();
+        const activeSubIds = new Set<string>();
+        
+        let hasBgLayers = false;
 
-        // Process each node in snapshot
+        // ═══════════════════════════════════════
+        //  PASS 1: Find camera snapshot first
+        // ═══════════════════════════════════════
+        let cameraSnap: NodeSnapshot | null = null;
+        for (const [, snap] of Object.entries(snapshot)) {
+            if (snap.nodeType === 'camera') {
+                cameraSnap = snap;
+                break;
+            }
+        }
+
+        // ═══════════════════════════════════════
+        //  PASS 2: Render all nodes
+        // ═══════════════════════════════════════
         for (const [nodeId, snap] of Object.entries(snapshot)) {
-            if (snap.nodeType !== 'character') continue;
-            activeIds.add(nodeId);
+            if (snap.nodeType === 'camera') continue;
 
-            // Get or create CharacterDisplayObject
+            // ── Background layers ──
+            if (snap.nodeType === 'background_layer') {
+                hasBgLayers = true;
+                activeBgIds.add(nodeId);
+                if (!bgContainer) continue;
+
+                let bgObj = bgs.get(nodeId);
+                if (!bgObj) {
+                    bgObj = new BackgroundDisplayObject();
+                    bgs.set(nodeId, bgObj);
+                    bgContainer.addChild(bgObj.container);
+                }
+                bgObj.update(snap, cameraSnap, ppu);
+
+                const node = manager.getNode(nodeId);
+                if (node) {
+                    const assetPath = (node as any).assetPath as string
+                        || node.metadata?.assetPath as string;
+                    if (assetPath) {
+                        bgObj.updateTexture(assetPath);
+                    }
+                }
+                continue;
+            }
+
+            // ── Subtitle / Text nodes ──
+            if (snap.nodeType === 'text') {
+                activeSubIds.add(nodeId);
+                if (!subtitleContainer) continue;
+
+                let subObj = subs.get(nodeId);
+                if (!subObj) {
+                    subObj = new SubtitleDisplayObject();
+                    subs.set(nodeId, subObj);
+                    subtitleContainer.addChild(subObj.container);
+                }
+
+                const node = manager.getNode(nodeId);
+                const content = (node as any)?.content as string || '';
+                subObj.update(snap, content);
+                continue;
+            }
+
+            // ── Characters ──
+            if (snap.nodeType !== 'character') continue;
+            activeCharIds.add(nodeId);
+
             let charObj = chars.get(nodeId);
             if (!charObj) {
                 charObj = new CharacterDisplayObject(snap.name);
@@ -232,40 +467,74 @@ export const SceneRenderer: React.FC = () => {
                 container.addChild(charObj.container);
             }
 
-            // Update transform
             charObj.update(snap, ppu);
 
-            // Update pose/face textures
             const node = manager.getNode(nodeId);
             if (node) {
                 const poseUrl = node.metadata?.poseUrl as string;
                 const faceUrl = node.metadata?.faceUrl as string;
-
-                // Get current active layers to find URLs
                 const activePose = snap.activeLayers?.pose || (node as any).activeLayers?.pose;
                 const activeFace = snap.activeLayers?.face || (node as any).activeLayers?.face;
-
                 const poseUrls = node.metadata?.poseUrls as Record<string, { url: string }> | undefined;
                 const faceUrls = node.metadata?.faceUrls as Record<string, { url: string }> | undefined;
-
                 const resolvedPoseUrl = poseUrls?.[activePose]?.url || poseUrl || '';
                 const resolvedFaceUrl = faceUrls?.[activeFace]?.url || faceUrl || '';
-
                 if (resolvedPoseUrl) charObj.updatePose(resolvedPoseUrl);
                 if (resolvedFaceUrl) charObj.updateFace(resolvedFaceUrl);
             }
         }
 
-        // Remove characters no longer in snapshot
+        // ── Cleanup ──
         chars.forEach((charObj, id) => {
-            if (!activeIds.has(id)) {
+            if (!activeCharIds.has(id)) {
                 container.removeChild(charObj.container);
                 charObj.destroy();
                 chars.delete(id);
             }
         });
+        if (bgContainer) {
+            bgs.forEach((bgObj, id) => {
+                if (!activeBgIds.has(id)) {
+                    bgContainer.removeChild(bgObj.container);
+                    bgObj.destroy();
+                    bgs.delete(id);
+                }
+            });
+        }
+        if (subtitleContainer) {
+            subs.forEach((subObj, id) => {
+                if (!activeSubIds.has(id)) {
+                    subtitleContainer.removeChild(subObj.container);
+                    subObj.destroy();
+                    subs.delete(id);
+                }
+            });
+        }
 
-    }, [snapshot, manager]);
+        // ── Toggle placeholder ──
+        if (placeholderBgRef.current) {
+            placeholderBgRef.current.visible = !hasBgLayers;
+        }
+
+        // ── Camera: affects sceneContainer ──
+        if (cameraSnap) {
+            container.pivot.set(cameraSnap.x * ppu, cameraSnap.y * ppu);
+            container.position.set(CANVAS_W / 2, CANVAS_H / 2);
+            container.scale.set(cameraSnap.scaleX || 1, cameraSnap.scaleY || 1);
+            container.rotation = -(cameraSnap.rotation || 0) * Math.PI / 180;
+        } else {
+            container.pivot.set(CANVAS_W / 2, CANVAS_H / 2);
+            container.position.set(CANVAS_W / 2, CANVAS_H / 2);
+            container.scale.set(1, 1);
+            container.rotation = 0;
+        }
+
+        // ── Transition overlay ──
+        if (transitionRef.current) {
+            transitionRef.current.update(activeTransition);
+        }
+
+    }, [snapshot, manager, activeTransition]);
 
     // ── Playback animation loop ──
     useEffect(() => {

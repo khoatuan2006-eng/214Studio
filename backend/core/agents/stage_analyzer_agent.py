@@ -186,42 +186,60 @@ async def analyze_stage_elements(
         f"Current layer info:\n" + "\n".join(layer_context)
     )
 
-    # Call Vision AI
-    try:
-        if config.provider == "gemini":
-            raw_json = await _call_gemini_multi_image(
-                STAGE_ANALYZER_SYSTEM_PROMPT,
-                user_message,
-                [layer.get("image_base64", "") for layer in layer_images],
-                config,
-            )
-        elif config.provider == "openai":
-            raw_json = await _call_openai_multi_image(
-                STAGE_ANALYZER_SYSTEM_PROMPT,
-                user_message,
-                [layer.get("image_base64", "") for layer in layer_images],
-                config,
-            )
-        else:
-            raise ValueError(f"Unsupported provider: {config.provider}")
+    # Call Vision AI with key rotation on 429
+    images_b64 = [layer.get("image_base64", "") for layer in layer_images]
+    max_attempts = max(config.total_keys, 2)
+    last_error = None
 
-        return _parse_analysis_result(raw_json, layer_images)
+    for attempt in range(max_attempts):
+        try:
+            if config.provider == "gemini":
+                raw_json = await _call_gemini_multi_image(
+                    STAGE_ANALYZER_SYSTEM_PROMPT,
+                    user_message,
+                    images_b64,
+                    config,
+                )
+            elif config.provider == "openai":
+                raw_json = await _call_openai_multi_image(
+                    STAGE_ANALYZER_SYSTEM_PROMPT,
+                    user_message,
+                    images_b64,
+                    config,
+                )
+            else:
+                raise ValueError(f"Unsupported provider: {config.provider}")
 
-    except Exception as e:
-        logger.error(f"Stage analysis failed: {e}", exc_info=True)
-        # Return basic result with original labels
-        result = StageAnalysisResult(scene_description="Analysis failed")
-        for layer in layer_images:
-            result.elements.append(ElementInfo(
-                layer_id=layer.get("id", ""),
-                name_vi=layer.get("label", "unknown"),
-                name_en=layer.get("label", "unknown"),
-                category="other",
-            ))
-        return result
-    finally:
-        # Restore original model
-        config.vision_model = original_model
+            config.vision_model = original_model
+            return _parse_analysis_result(raw_json, layer_images)
+
+        except Exception as e:
+            last_error = e
+            err_str = str(e)
+            # Rotate key on quota/rate errors
+            if "429" in err_str or "quota" in err_str.lower() or "RESOURCE_EXHAUSTED" in err_str:
+                config.rotate_key()
+                logger.warning(f"Stage analysis attempt {attempt+1}/{max_attempts}: quota hit, rotated key")
+                import asyncio
+                await asyncio.sleep(2)  # Brief pause before retry
+                continue
+            else:
+                logger.error(f"Stage analysis failed (non-quota error): {e}", exc_info=True)
+                break
+
+    # All retries exhausted — return fallback
+    logger.error(f"Stage analysis failed after {max_attempts} attempts: {last_error}")
+    result = StageAnalysisResult(scene_description="Analysis failed")
+    for layer in layer_images:
+        result.elements.append(ElementInfo(
+            layer_id=layer.get("id", ""),
+            name_vi=layer.get("label", "unknown"),
+            name_en=layer.get("label", "unknown"),
+            category="other",
+        ))
+    # Restore original model
+    config.vision_model = original_model
+    return result
 
 
 # ══════════════════════════════════════════════

@@ -248,3 +248,100 @@ def _parse_analysis(raw_text: str, srt_content: str) -> ScriptAnalysisResult:
         result.characters.append(char)
 
     return result
+
+
+# ══════════════════════════════════════════════
+#  AUTO-ACTING SCRIPT ANALYZER (Task 4.1)
+# ══════════════════════════════════════════════
+
+AVAILABLE_POSES = [
+    "站立", "打招呼", "坐着", "逃跑", "疑惑", "手指向前", "介绍", "举手", 
+    "举起拳头", "出拳", "抱胸", "叉腰", "摊开手", "捂嘴", "摸摸头", "祈祷", 
+    "拱手", "接电话", "请进", "偷笑", "抱头", "勾手指", "坐姿思考", "指责"
+]
+
+AVAILABLE_FACES = [
+    "微笑", "大笑", "说话", "大吼", "难过", "害怕", "惊讶", "无表情", 
+    "害羞", "自信", "疑惑", "冷漠", "感动", "尴尬", "崇拜", "打哈欠", 
+    "流泪", "震惊", "笑嘻嘻", "皱眉"
+]
+
+AVAILABLE_MOVEMENTS = [
+    "enter_left", "enter_right", "exit_left", "exit_right", 
+    "walk_to_center", "step_forward", "step_back", "idle"
+]
+
+class ScriptAnalyzerAgent:
+    @staticmethod
+    def analyze(script_lines: list[dict[str, str]]) -> list[dict[str, str]]:
+        try:
+            from google import genai
+            from google.genai import types
+        except ImportError as e:
+            logger.error(f"google-genai pkg not installed. Using heuristic. {e}")
+            return []
+        
+        config = get_ai_config()
+        if not config.has_api_key:
+            logger.warning("No API key. Falling back to heuristic.")
+            return []
+            
+        if not script_lines:
+            return []
+
+        prompt = "Phân tích đoạn thoại và chỉ dẫn sân khấu (trong ngoặc vuông) sau. Trả về JSON form chứa một list các object [{'target_character':'', 'emotion':'', 'action':'', 'pose_name':'', 'face_name':'', 'movement':''}]. \n"
+        prompt += "1. 'target_character': Tên nhân vật đang thực hiện hành động hoặc nói trong dòng đó (quan trọng cho chỉ dẫn sân khấu như '[Hoa đi vào]').\n"
+        prompt += "2. Nếu có chỉ báo sân khấu như [đi vào], [rời đi], [tiến tới], hãy gán 'movement' tương ứng. Nếu không, gán 'idle'.\n"
+        prompt += f"Poses: {', '.join(AVAILABLE_POSES)}\nFaces: {', '.join(AVAILABLE_FACES)}\nMovements: {', '.join(AVAILABLE_MOVEMENTS)}\n\nThoại:\n"
+        for i, line in enumerate(script_lines):
+            char_part = line.get('character', '')
+            text_part = line.get('text', '')
+            prompt += f"{i+1} - {char_part}: {text_part}\n"
+
+        max_attempts = config.total_keys if config.total_keys > 0 else 1
+        for attempt in range(max_attempts):
+            try:
+                client = genai.Client(api_key=config.api_key)
+                
+                # Check available models
+                available_models = [m.name.split('/')[-1] for m in client.models.list() if "generateContent" in str(getattr(m, "supported_generation_methods", [])) or "generateContent" in str(getattr(m, "supported_actions", []))]
+                
+                # Select a fast flash model that is actually supported
+                target_model = None
+                for candidate in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-flash-latest"]:
+                    if candidate in available_models or f"models/{candidate}" in [m.name for m in client.models.list()]:
+                        target_model = candidate
+                        break
+                        
+                if not target_model:
+                    target_model = available_models[0] if available_models else "gemini-2.0-flash"
+                
+                logger.info(f"Using dynamically loaded model: {target_model}")
+                    
+                response = client.models.generate_content(
+                    model=target_model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.4,
+                        response_mime_type="application/json"
+                    )
+                )
+                
+                result = json.loads(response.text)
+                if isinstance(result, list) and len(result) == len(script_lines):
+                    for item in result:
+                        if item.get("pose_name") not in AVAILABLE_POSES:
+                            item["pose_name"] = "站立"
+                        if item.get("face_name") not in AVAILABLE_FACES:
+                            item["face_name"] = "微笑"
+                    return result
+                return []
+            except Exception as e:
+                msg = str(e).lower()
+                if "429" in msg or "quota" in msg or "resource_exhausted" in msg:
+                    if config.rotate_key() and attempt < max_attempts - 1:
+                        logger.warning(f"Key rotated due to quota limit: {e}")
+                        continue
+                logger.error(f"ScriptAnalyzerAgent failed on attempt {attempt}: {e}")
+                return []
+        return []

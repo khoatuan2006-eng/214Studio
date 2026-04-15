@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Settings, Layers, Film, FileText, MessageSquare } from 'lucide-react';
+import { Sparkles, Settings, Layers, Film, FileText, MessageSquare, Wand2 } from 'lucide-react';
 import AssetSidebar from './AssetSidebar';
 import { useStudioStore } from '@/stores/useStudioStore';
 import type { StudioLayer } from '@/stores/useStudioStore';
@@ -12,6 +12,8 @@ import { SceneRenderer } from './SceneRenderer';
 import { AIChatPanel } from './AIChatPanel';
 import { ScriptImport } from './ScriptImport';
 import { ExportDialog } from './ExportDialog';
+import { AutoVideoPanel } from './AutoVideoPanel';
+import { SceneTabs } from '@/components/SceneTabs';
 
 // ═══════════════════════════════════════════════════════════
 // Stage Canvas — renders layers onto a 1920×1080 virtual viewport
@@ -285,66 +287,153 @@ const LayerList: React.FC<{ layers: StudioLayer[] }> = ({ layers }) => {
 };
 
 // ═══════════════════════════════════════════════════════════
-// Scene Graph Playback Controls
+// Scene Graph Playback Controls — Multi-Scene Aware
 // ═══════════════════════════════════════════════════════════
 const ScenePlaybackBar: React.FC = () => {
     const currentTime = useSceneGraphStore(s => s.currentTime);
+    const globalDuration = useSceneGraphStore(s => s.globalDuration);
     const duration = useSceneGraphStore(s => s.duration);
+    const localTime = useSceneGraphStore(s => s.localTime);
     const isPlaying = useSceneGraphStore(s => s.isPlaying);
     const togglePlay = useSceneGraphStore(s => s.togglePlay);
+    const setGlobalTime = useSceneGraphStore(s => s.setGlobalTime);
     const setTime = useSceneGraphStore(s => s.setTime);
+    const scenes = useSceneGraphStore(s => s.scenes);
+    const sceneBoundaries = useSceneGraphStore(s => s.sceneBoundaries);
+    const activeSceneIndex = useSceneGraphStore(s => s.activeSceneIndex);
+    const activeTransition = useSceneGraphStore(s => s.activeTransition);
+
+    const isMultiScene = scenes.length > 1;
+    const totalDur = isMultiScene ? globalDuration : duration;
+    const displayTime = isMultiScene ? currentTime : localTime;
+
+    // Scene segment colors
+    const segColors = ['#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#6366f1'];
+
+    // Build gradient for multi-scene segments
+    const buildTimelineGradient = () => {
+        if (!isMultiScene || totalDur <= 0) {
+            const pct = (displayTime / totalDur) * 100;
+            return `linear-gradient(to right, #06b6d4 ${pct}%, rgba(255,255,255,0.1) ${pct}%)`;
+        }
+        const stops: string[] = [];
+        const playPct = (displayTime / totalDur) * 100;
+        sceneBoundaries.forEach((b, i) => {
+            const startPct = (b.start / totalDur) * 100;
+            const endPct = (b.end / totalDur) * 100;
+            const col = segColors[i % segColors.length];
+            const isBeforePlay = endPct <= playPct;
+            const isActive = startPct <= playPct && endPct > playPct;
+
+            if (isBeforePlay) {
+                stops.push(`${col} ${startPct}%`, `${col} ${endPct}%`);
+            } else if (isActive) {
+                stops.push(`${col} ${startPct}%`, `${col} ${playPct}%`);
+                stops.push(`rgba(255,255,255,0.08) ${playPct}%`, `rgba(255,255,255,0.08) ${endPct}%`);
+            } else {
+                stops.push(`rgba(255,255,255,0.08) ${startPct}%`, `rgba(255,255,255,0.08) ${endPct}%`);
+            }
+        });
+        return `linear-gradient(to right, ${stops.join(', ')})`;
+    };
 
     return (
-        <div className="h-16 border-t border-cyan-500/20 flex items-center px-6 gap-4" style={{ backgroundColor: 'var(--surface-sunken)' }}>
-            <button
-                onClick={togglePlay}
-                className="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                style={{
-                    background: isPlaying
-                        ? 'linear-gradient(135deg, #ef4444, #f97316)'
-                        : 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
-                    boxShadow: isPlaying
-                        ? '0 2px 12px rgba(239,68,68,0.3)'
-                        : '0 2px 12px rgba(6,182,212,0.3)',
-                }}
-            >
-                {isPlaying ? '⏸ Pause' : '▶ Play'}
-            </button>
+        <div className="border-t border-cyan-500/20 flex flex-col" style={{ backgroundColor: 'var(--surface-sunken)' }}>
+            {/* Scene Tabs — only show in multi-scene */}
+            {isMultiScene && <SceneTabs mode="scene" />}
 
-            {/* Time scrubber */}
-            <input
-                type="range"
-                min={0}
-                max={duration}
-                step={0.01}
-                value={currentTime}
-                onChange={e => setTime(parseFloat(e.target.value))}
-                className="flex-1 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer"
-                style={{
-                    background: `linear-gradient(to right, #06b6d4 ${(currentTime / duration) * 100}%, rgba(255,255,255,0.1) ${(currentTime / duration) * 100}%)`,
-                }}
-            />
+            {/* Playback controls */}
+            <div className="h-14 flex items-center px-6 gap-4">
+                <button
+                    onClick={togglePlay}
+                    className="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                    style={{
+                        background: isPlaying
+                            ? 'linear-gradient(135deg, #ef4444, #f97316)'
+                            : 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+                        boxShadow: isPlaying
+                            ? '0 2px 12px rgba(239,68,68,0.3)'
+                            : '0 2px 12px rgba(6,182,212,0.3)',
+                    }}
+                >
+                    {isPlaying ? '⏸ Pause' : '▶ Play'}
+                </button>
 
-            <span className="text-sm font-mono text-cyan-400 min-w-[80px] text-right">
-                {currentTime.toFixed(2)}s / {duration}s
-            </span>
+                {/* Timeline with scene markers */}
+                <div className="flex-1 relative">
+                    <input
+                        type="range"
+                        min={0}
+                        max={totalDur}
+                        step={0.01}
+                        value={displayTime}
+                        onChange={e => {
+                            const t = parseFloat(e.target.value);
+                            isMultiScene ? setGlobalTime(t) : setTime(t);
+                        }}
+                        className="w-full h-2 rounded-full appearance-none cursor-pointer relative z-10"
+                        style={{ background: buildTimelineGradient() }}
+                    />
+
+                    {/* Scene boundary markers */}
+                    {isMultiScene && sceneBoundaries.map((b, i) => {
+                        if (i === 0) return null; // No marker at start
+                        const pct = (b.start / totalDur) * 100;
+                        return (
+                            <div key={i}
+                                className="absolute top-0 bottom-0 w-[2px] pointer-events-none z-20"
+                                style={{
+                                    left: `${pct}%`,
+                                    background: 'rgba(255,255,255,0.25)',
+                                }}
+                            />
+                        );
+                    })}
+                </div>
+
+                {/* Time display */}
+                <div className="text-right min-w-[130px]">
+                    <span className="text-sm font-mono text-cyan-400">
+                        {displayTime.toFixed(2)}s / {totalDur.toFixed(1)}s
+                    </span>
+                    {isMultiScene && (
+                        <div className="text-[9px] font-mono text-neutral-500 mt-0.5">
+                            Scene {activeSceneIndex + 1}/{scenes.length}
+                            {activeTransition && (
+                                <span className="ml-1 text-violet-400">⟷ {activeTransition.type}</span>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
 
 // ═══════════════════════════════════════════════════════════
-// Scene Graph Right Sidebar — Tabs: Nodes | AI Chat | Script
+// Scene Graph Right Sidebar — Tabs: Auto | Nodes | AI Chat | Script
 // ═══════════════════════════════════════════════════════════
 const SceneGraphSidebar: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'nodes' | 'chat' | 'script'>('chat');
+    const [activeTab, setActiveTab] = useState<'auto' | 'nodes' | 'chat' | 'script'>('auto');
 
     return (
         <div className="w-80 border-l border-white/10 flex flex-col" style={{ backgroundColor: 'var(--surface-base)' }}>
             {/* Tab Buttons */}
             <div className="flex border-b border-white/5 shrink-0">
                 <button
+                    onClick={() => setActiveTab('auto')}
+                    className={`flex-1 flex items-center justify-center gap-1 px-1.5 py-2.5 text-[8px] font-bold uppercase tracking-wider transition-all ${
+                        activeTab === 'auto'
+                            ? 'text-amber-400 border-b-2 border-amber-400 bg-amber-500/5'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                    }`}
+                >
+                    <Wand2 className="w-3 h-3" />
+                    Auto
+                </button>
+                <button
                     onClick={() => setActiveTab('nodes')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
+                    className={`flex-1 flex items-center justify-center gap-1 px-1.5 py-2.5 text-[8px] font-bold uppercase tracking-wider transition-all ${
                         activeTab === 'nodes'
                             ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/5'
                             : 'text-neutral-500 hover:text-neutral-300'
@@ -355,18 +444,18 @@ const SceneGraphSidebar: React.FC = () => {
                 </button>
                 <button
                     onClick={() => setActiveTab('chat')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
+                    className={`flex-1 flex items-center justify-center gap-1 px-1.5 py-2.5 text-[8px] font-bold uppercase tracking-wider transition-all ${
                         activeTab === 'chat'
                             ? 'text-violet-400 border-b-2 border-violet-400 bg-violet-500/5'
                             : 'text-neutral-500 hover:text-neutral-300'
                     }`}
                 >
                     <MessageSquare className="w-3 h-3" />
-                    AI Chat
+                    Chat
                 </button>
                 <button
                     onClick={() => setActiveTab('script')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
+                    className={`flex-1 flex items-center justify-center gap-1 px-1.5 py-2.5 text-[8px] font-bold uppercase tracking-wider transition-all ${
                         activeTab === 'script'
                             ? 'text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5'
                             : 'text-neutral-500 hover:text-neutral-300'
@@ -379,6 +468,7 @@ const SceneGraphSidebar: React.FC = () => {
 
             {/* Tab Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
+                {activeTab === 'auto' && <AutoVideoPanel />}
                 {activeTab === 'nodes' && <SceneNodeList />}
                 {activeTab === 'chat' && <AIChatPanel />}
                 {activeTab === 'script' && <ScriptImport />}

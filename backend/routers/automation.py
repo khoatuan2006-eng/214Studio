@@ -8,6 +8,7 @@ Endpoints:
 
 import asyncio
 import logging
+import os
 import re
 from typing import Optional
 
@@ -48,6 +49,7 @@ class ScriptToSceneRequest(BaseModel):
     """Request to convert a script into a SceneGraph."""
     lines: list[ScriptLine]
     character_map: dict[str, str]  # script character name → asset registry char_id
+    background_id: Optional[str] = None
     voice_map: dict[str, str] = {}  # script character name → TTS voice code
     pause_ms: int = 500
     generate_tts: bool = True
@@ -91,6 +93,7 @@ EMOTION_FACE_MAP = {
 ACTION_POSE_MAP = {
     # English
     "stand": "站立", "idle": "站立", "standing": "站立",
+    "walk": "走路", "walking": "走路",
     "wave": "打招呼", "greet": "打招呼", "hello": "打招呼",
     "sit": "坐着", "sitting": "坐着",
     "run": "逃跑", "running": "逃跑", "flee": "逃跑",
@@ -263,6 +266,7 @@ def build_scene_from_script(
     character_map: dict[str, str],
     tts_lines: list[dict] | None = None,
     registry: AssetRegistry | None = None,
+    background_id: str | None = None,
 ) -> SceneGraph:
     """
     Build a cinematic SceneGraph from script lines.
@@ -280,11 +284,209 @@ def build_scene_from_script(
     if not registry:
         raise ValueError("AssetRegistry required")
 
-    # ── Step 1: Add characters ──
+    from backend.core.scene_graph.node import SceneNode
+    from backend.core.scene_graph.specialized_nodes import BackgroundLayerNode, CameraNode, TextNode
+    import re
+
+    # ── Add Main Camera ──
+    camera_node = CameraNode(id="camera_main", name="Main Camera", z_index=0)
+    camera_node.set_position(9.6, 5.4)
+    camera_node.set_scale(1.0)
+    graph.add_node(camera_node)
+    # ── Step 0: Add Background (Supports FLA Extracted Layers) ──
+    if background_id:
+        stages_dir = os.path.join(registry.storage_dir, "stages")
+        bg_files = []
+        if os.path.exists(stages_dir):
+            bg_files = [f for f in os.listdir(stages_dir) if f.startswith(background_id) and f.endswith(".png")]
+        
+        def get_element_idx(fname):
+            m = re.search(r'element_(\d+)', fname)
+            return int(m.group(1)) if m else 0
+        
+        # ── Strategy: Use sub-crop files (_element_X_1.png) which have CORRECT per-layer
+        #    transparency. The base _element_X.png files are fully opaque canvas composites
+        #    (100% opaque) created by Adobe Animate's exportPNG, which flattens ALL visible
+        #    layers. Sub-crops have proper alpha (e.g. element_2_1.png is only 5% opaque,
+        #    containing just one small prop with transparent surroundings).
+        #
+        #    For each unique element index, pick the first animation frame (_1.png) as
+        #    the static layer to display.
+        
+        # Collect sub-crop files: _element_X_1.png (first animation frame per element)
+        sub_crop_files = [
+            f for f in bg_files
+            if "_element_" in f and re.search(r'_element_\d+_1\.png$', f)
+        ]
+        
+        # Also gather base element files as fallback
+        base_element_files = [
+            f for f in bg_files
+            if "_element_" in f and not re.search(r'_element_\d+_\d+\.png$', f)
+        ]
+        
+        # Decide which set to use:
+        # If sub-crops exist, use them (they have correct transparency)
+        # Otherwise fall back to base elements
+        if sub_crop_files:
+            element_files = sub_crop_files
+            logger.info(f"Using sub-crop layer files (with transparency) for {background_id}")
+        elif base_element_files:
+            element_files = base_element_files
+            logger.info(f"Using base element files (may be opaque) for {background_id}")
+        else:
+            element_files = []
+        
+        if element_files:
+            # Sort by element index (1 = back, 10 = front)
+            element_files.sort(key=get_element_idx)
+            num_layers = len(element_files)
+            
+            # Smart Z-Index Distribution for 2.5D:
+            # Back layers < 0 (Sky, Wall)
+            # Fore layers > 10, 20 (Props, Trees) so characters (z=10,20) can stand behind them!
+            start_z = -50
+            z_step = 15
+            
+            for i, fname in enumerate(element_files):
+                idx = get_element_idx(fname)
+                layer_z = start_z + (i * z_step)
+                bg_node = BackgroundLayerNode(
+                    id=f"bg-{background_id}-{idx}",
+                    name=f"Layer {idx}",
+                    asset_path=f"/static/stages/{fname}",
+                    parallax_speed=max(0.05, 1.0 - (num_layers - i)*0.1),
+                    z_index=layer_z
+                )
+                bg_node.set_position(9.6, 5.4) 
+                bg_node.set_scale(1.0)
+                graph.add_node(bg_node)
+            logger.info(f"Added FLA Background {background_id}: {num_layers} layers with Z-indexes")
+        else:
+            # Fallback to single static background
+            bg_url = f"/static/stages/{background_id}.png"
+            if bg_files:
+                bg_url = f"/static/stages/{bg_files[0]}"
+                
+            bg_node = BackgroundLayerNode(
+                id=f"bg-{background_id}",
+                name=background_id,
+                asset_path=bg_url,
+                parallax_speed=0.0,
+                z_index=-100
+            )
+            bg_node.set_position(9.6, 5.4) 
+            bg_node.set_scale(1.0)
+            graph.add_node(bg_node)
+            logger.info(f"Added flat background {background_id} -> {bg_url}")
+
+    # ── Step 1: Add characters (with Stage-Aware Positioning) ──
     unique_chars = list(dict.fromkeys(line.character for line in lines))
     char_nodes: dict[str, str] = {}  # character name → node_id
     char_home_x: dict[str, float] = {}  # character name → home X position
     char_infos: dict[str, object] = {}
+
+    # State tracking for continuity
+    # state: {x, y, scale, z_index}
+    char_states: dict[str, dict] = {}
+
+    # ── Load or auto-generate stage analysis for smart positioning ──
+    stage_analysis = None
+    standable_regions = []   # [{x, y, name, can_sit}] where characters can stand
+    interaction_points = []  # [{x, y, name}] interesting objects to stand NEAR (tables, counters, cars)
+    if background_id:
+        from backend.routers.stages import get_cached_analysis, save_analysis_cache, STAGES_DIR
+        stage_analysis = get_cached_analysis(background_id)
+
+        # Auto-analyze if no cache exists (one-time Vision AI call, then cached forever)
+        if not stage_analysis:
+            logger.info(f"No cached analysis for '{background_id}' — running auto-analysis...")
+            try:
+                import base64 as b64mod
+                from backend.core.agents.stage_analyzer_agent import analyze_stage_elements
+
+                all_stage_files = os.listdir(STAGES_DIR)
+                # Prefer sub-crop files (_element_X_1.png) with correct transparency
+                element_files = [
+                    f for f in all_stage_files
+                    if f.startswith(background_id) and f.endswith(".png")
+                    and "_element_" in f
+                    and re.search(r'_element_\d+_1\.png$', f)
+                ]
+                # Fallback to base elements if no sub-crops
+                if not element_files:
+                    element_files = [
+                        f for f in all_stage_files
+                        if f.startswith(background_id) and f.endswith(".png")
+                        and "_element_" in f
+                        and not re.search(r'_element_\d+_\d+\.png$', f)
+                    ]
+                if element_files:
+                    def get_idx(fname):
+                        m = re.search(r'element_(\d+)', fname)
+                        return int(m.group(1)) if m else 0
+                    element_files.sort(key=get_idx)
+
+                    layer_images = []
+                    for fname in element_files:
+                        fpath = os.path.join(STAGES_DIR, fname)
+                        with open(fpath, "rb") as f:
+                            img_b64 = b64mod.b64encode(f.read()).decode("utf-8")
+                        idx = get_idx(fname)
+                        layer_images.append({
+                            "id": f"element_{idx}",
+                            "label": f"Layer {idx}",
+                            "image_base64": img_b64,
+                            "type": "background" if idx <= 2 else "prop",
+                            "zIndex": idx,
+                        })
+
+                    import asyncio
+                    # Run async analysis in a new event loop (can't nest in FastAPI's loop)
+                    loop = asyncio.new_event_loop()
+                    try:
+                        result = loop.run_until_complete(
+                            analyze_stage_elements(layer_images)
+                        )
+                    finally:
+                        loop.close()
+                    stage_analysis = result.to_dict()
+                    stage_analysis["stage_id"] = background_id
+                    stage_analysis["num_layers"] = len(element_files)
+                    stage_analysis["layer_files"] = element_files
+                    save_analysis_cache(background_id, stage_analysis)
+                    logger.info(f"Auto-analysis complete: {stage_analysis.get('scene_description', '')}")
+            except Exception as e:
+                logger.warning(f"Auto stage analysis failed (continuing with fallback): {e}")
+
+        if stage_analysis:
+            logger.info(f"Using stage analysis for '{background_id}': "
+                        f"scene_type={stage_analysis.get('scene_type', '?')}, "
+                        f"mood={stage_analysis.get('mood', '?')}")
+            for elem in stage_analysis.get("elements", []):
+                # Convert bbox percentages to world coordinates (canvas = 19.2 x 10.8 units)
+                bbox_cx = (elem.get("bbox_x", 0) + elem.get("bbox_w", 100) / 2) / 100 * 19.2
+                bbox_cy = (elem.get("bbox_y", 0) + elem.get("bbox_h", 100) / 2) / 100 * 10.8
+
+                if elem.get("can_stand_on") or elem.get("can_sit_on"):
+                    standable_regions.append({
+                        "x": bbox_cx,
+                        "y": bbox_cy,
+                        "name": elem.get("name_en", ""),
+                        "can_sit": elem.get("can_sit_on", False),
+                    })
+                    logger.info(f"  Standable: '{elem.get('name_en')}' at ({bbox_cx:.1f}, {bbox_cy:.1f})")
+
+                # Collect interaction points: objects characters should stand NEAR
+                cat = elem.get("category", "")
+                if cat in ("furniture", "vehicle", "prop", "door", "window", "stairs"):
+                    interaction_points.append({
+                        "x": bbox_cx,
+                        "y": bbox_cy,
+                        "name": elem.get("name_en", ""),
+                        "category": cat,
+                    })
+                    logger.info(f"  Interaction: '{elem.get('name_en')}' ({cat}) at ({bbox_cx:.1f}, {bbox_cy:.1f})")
 
     num_chars = len(unique_chars)
     for i, char_name in enumerate(unique_chars):
@@ -302,16 +504,72 @@ def build_scene_from_script(
 
         char_infos[char_name] = char_info
 
-        # Home position: spread evenly
-        if num_chars == 1:
-            home_x = 9.6
-        elif num_chars == 2:
-            home_x = 5.0 + (i * 9.2)  # 5.0 and 14.2
+        # ── Smart Position: use stage analysis if available ──
+        home_x = 9.6  # Default center
+        home_y = 7.5   # Default y
+
+        if standable_regions or interaction_points:
+            # Strategy: place characters at standable positions,
+            # preferring locations NEAR interaction objects (tables, doors, cars).
+            
+            if standable_regions:
+                # Pick a standable region for this character
+                region = standable_regions[i % len(standable_regions)]
+                home_x = region["x"]
+                home_y = region["y"]
+
+                # If there are interaction points, nudge toward the nearest one
+                if interaction_points:
+                    nearest_ip = min(interaction_points, 
+                                     key=lambda ip: abs(ip["x"] - region["x"]) + abs(ip["y"] - region["y"]))
+                    # Stand halfway between the standable surface and the interaction object
+                    home_x = (region["x"] + nearest_ip["x"]) / 2
+                    # But stay at the standable surface's Y (don't float)
+                    home_y = region["y"]
+                    logger.info(f"  Nudging '{char_name}' toward '{nearest_ip['name']}' ({nearest_ip['category']})")
+
+            elif interaction_points:
+                # No standable regions found, but we have interaction points
+                # Place character slightly in front of the interaction object
+                ip = interaction_points[i % len(interaction_points)]
+                home_x = ip["x"]
+                home_y = min(ip["y"] + 2.0, 9.5)  # Stand below/in-front of object
+                logger.info(f"  Placing '{char_name}' near interaction: '{ip['name']}'")
+
+            # Spread multiple characters to avoid overlap
+            if num_chars > 1:
+                spread = 4.0  # Total spread width in world units
+                offset = (i - (num_chars - 1) / 2) * spread / max(num_chars - 1, 1)
+                home_x = max(2.0, min(17.2, home_x + offset))
+
+            # Clamp to safe zone (don't go off-screen)
+            home_x = max(2.0, min(17.2, home_x))
+            home_y = max(3.0, min(9.5, home_y))
+
+            logger.info(f"Stage-aware: '{char_name}' final position ({home_x:.1f}, {home_y:.1f})")
         else:
-            home_x = 3.0 + (i * 13.2 / max(num_chars - 1, 1))
-        home_y = 7.5
+            # Fallback: no analysis available — spread evenly
+            if num_chars == 1:
+                home_x = 9.6
+            elif num_chars == 2:
+                home_x = 5.0 + (i * 9.2)  # 5.0 and 14.2
+            else:
+                home_x = 3.0 + (i * 13.2 / max(num_chars - 1, 1))
+            home_y = 7.5
+
 
         char_home_x[char_name] = home_x
+        # Initial Facing: if x > 9.6, face left (-0.25). if x <= 9.6, face right (0.25)
+        initial_scale_x = -0.25 if home_x > 9.6 else 0.25
+
+        char_states[char_name] = {
+            "x": home_x,
+            "y": home_y,
+            "home_x": home_x,
+            "scale_x": initial_scale_x,
+            "scale_y": 0.25,
+            "z_index": i * 10
+        }
 
         from backend.core.scene_graph.tools import SceneToolExecutor
         executor = SceneToolExecutor(graph, asset_registry=registry)
@@ -327,7 +585,14 @@ def build_scene_from_script(
             import re as _re
             match = _re.search(r'id:\s*(\S+)\)', result.to_str())
             if match:
+
                 char_nodes[char_name] = match.group(1)
+                
+                # Update initial properties cleanly
+                node = graph.get_node(char_nodes[char_name])
+                if node:
+                    node.set_z_index(char_states[char_name]["z_index"])
+                    node.set_scale_xy(initial_scale_x, 0.25)
                 logger.info(f"Added character '{char_name}' at x={home_x:.1f}")
 
     # Center stage X (where speaker moves towards)
@@ -348,6 +613,8 @@ def build_scene_from_script(
         char_info = char_infos.get(line.character)
         available_poses = char_info.pose_names if char_info else []
         available_faces = char_info.face_names if char_info else []
+
+        movement = "idle"
 
         # Track line count per character
         line_idx_per_char[line.character] = line_idx_per_char.get(line.character, 0) + 1
@@ -381,50 +648,150 @@ def build_scene_from_script(
         transition_time = 0.3
         speak_start = start_time + transition_time
 
-        # ── Speaker Movement: Walk toward center ──
+
+        # ── Depth, Scale, Position Logic ──
         node = graph.get_node(node_id)
-        home_x = char_home_x.get(line.character, 9.6)
+        if isinstance(node, CharacterNode):
+            st = char_states[line.character]
+            # Set up tracks
+            for prop in ["x", "y", "scale_x", "scale_y", "z_index"]:
+                node.keyframes.setdefault(prop, [])
 
-        if isinstance(node, CharacterNode) and num_chars > 1:
-            # Speaker moves toward center
-            speak_x = home_x + (center_x - home_x) * SPEAKER_PULL
+            abs_scale = abs(st["scale_x"])
+            
+            # Apply movement logic
+            if movement == "enter_left":
+                st["x"], st["y"], st["z_index"] = 5.0, 7.5, 10
+                st["scale_x"] = abs_scale # look right
+                node.add_keyframe("x", start_time - 0.5, -4.0, "linear")
+                node.add_keyframe("x", start_time + 0.5, st["x"], "ease_out")
+            elif movement == "enter_right":
+                st["x"], st["y"], st["z_index"] = 14.2, 7.5, 10
+                st["scale_x"] = -abs_scale # look left
+                node.add_keyframe("x", start_time - 0.5, 23.0, "linear")
+                node.add_keyframe("x", start_time + 0.5, st["x"], "ease_out")
+            elif movement == "exit_left":
+                node.add_keyframe("x", end_time, -4.0, "ease_in")
+            elif movement == "exit_right":
+                node.add_keyframe("x", end_time, 23.0, "ease_in")
+            elif movement == "step_forward":
+                st["y"] = 8.5
+                st["scale_y"] = 0.3
+                st["scale_x"] = 0.3 if st["scale_x"] > 0 else -0.3
+                st["z_index"] += 50
+                node.add_keyframe("y", speak_start, st["y"], "ease_out")
+                node.add_keyframe("scale_x", speak_start, st["scale_x"], "ease_out")
+                node.add_keyframe("scale_y", speak_start, st["scale_y"], "ease_out")
+                node.add_keyframe("z_index", start_time, st["z_index"], "step")
+            elif movement == "step_back":
+                st["y"] = 7.0
+                st["scale_y"] = 0.22
+                st["scale_x"] = 0.22 if st["scale_x"] > 0 else -0.22
+                st["z_index"] -= 50
+                node.add_keyframe("y", speak_start, st["y"], "ease_out")
+                node.add_keyframe("scale_x", speak_start, st["scale_x"], "ease_out")
+                node.add_keyframe("scale_y", speak_start, st["scale_y"], "ease_out")
+                node.add_keyframe("z_index", start_time, st["z_index"], "step")
+            elif movement == "walk_to_center":
+                st["x"] = 9.6
+                st["z_index"] += 10
+                node.add_keyframe("x", speak_start, st["x"], "ease_out")
+            else:
+                if num_chars > 1:
+                    # Default Speaker Moves toward center
+                    speak_x = home_x + (center_x - home_x) * SPEAKER_PULL
+                    if last_speaker and last_speaker != line.character:
+                        prev_node_id = char_nodes.get(last_speaker)
+                        prev_home = char_home_x.get(last_speaker, 9.6)
+                        if prev_node_id:
+                            prev_node = graph.get_node(prev_node_id)
+                            if isinstance(prev_node, CharacterNode):
+                                prev_node.keyframes.setdefault("x", [])
+                                prev_node.add_keyframe("x", start_time, prev_home, "ease_out",)
+                                # Update states back
+                                l_st = char_states.get(last_speaker)
+                                if l_st:
+                                    l_st["x"] = prev_home
+                    node.add_keyframe("x", start_time, st["x"], "linear")
+                    node.add_keyframe("x", speak_start, speak_x, "ease_out")
+                    st["x"] = speak_x
 
-            # Move to speaking position (ease in)
-            node.keyframes.setdefault("x", [])
-            node.keyframes.setdefault("y", [])
+            # SMART FACING: Evaluate against other characters
+            other_x_sum = 0
+            count = 0
+            for o_name, o_st in char_states.items():
+                if o_name != line.character and o_st["y"] > 0:
+                    other_x_sum += o_st["x"]
+                    count += 1
+            if count > 0:
+                avg_other_x = other_x_sum / count
+                if st["x"] < avg_other_x and st["scale_x"] < 0:
+                    st["scale_x"] = abs(st["scale_x"])
+                    node.add_keyframe("scale_x", start_time, st["scale_x"], "step")
+                elif st["x"] > avg_other_x and st["scale_x"] > 0:
+                    st["scale_x"] = -abs(st["scale_x"])
+                    node.add_keyframe("scale_x", start_time, st["scale_x"], "step")
 
-            # If this is a different speaker than last, move previous speaker back
-            if last_speaker and last_speaker != line.character:
-                prev_node_id = char_nodes.get(last_speaker)
-                prev_home = char_home_x.get(last_speaker, 9.6)
-                if prev_node_id:
-                    prev_node = graph.get_node(prev_node_id)
-                    if isinstance(prev_node, CharacterNode):
-                        prev_node.keyframes.setdefault("x", [])
-                        prev_node.keyframes["x"].append({
-                            "time": start_time,
-                            "value": prev_home,
-                            "easing": "ease_out",
-                        })
+            # Always emit static or updated transform base keys
+            node.add_keyframe("x", end_time + 0.1, st["x"], "linear")
+            node.add_keyframe("y", end_time + 0.1, st["y"], "linear")
+            node.add_keyframe("scale_x", end_time + 0.1, st["scale_x"], "linear")
+        
+        # ── Camera Auto-Tracking ──
+        camera_node.keyframes.setdefault("x", [])
+        camera_node.keyframes.setdefault("y", [])
+        camera_node.keyframes.setdefault("scale_x", [])
+        camera_node.keyframes.setdefault("scale_y", [])
 
-            # Move speaker to stage
-            node.keyframes["x"].append({
-                "time": start_time,
-                "value": home_x,
-                "easing": "linear",
-            })
-            node.keyframes["x"].append({
-                "time": speak_start,
-                "value": speak_x,
-                "easing": "ease_out",
-            })
+        # Camera moves to track speaker softly
+        cam_x = 9.6 + (st["x"] - 9.6) * 0.4
+        cam_y = 6.4
+        cam_scale = 1.15
+        
+        # If it's a very short line or multiple chars, we could keep it center, 
+        # but tracking individual speakers looks dynamic!
+        if num_chars == 1:
+            cam_x = 9.6
+            cam_y = 5.4
+            cam_scale = 1.0
 
-            # Slight bounce at end of speaking
-            node.keyframes["x"].append({
-                "time": end_time,
-                "value": speak_x,
-                "easing": "linear",
-            })
+        prev_cam_x = camera_node.keyframes["x"][-1].value if camera_node.keyframes["x"] else 9.6
+        prev_cam_y = camera_node.keyframes["y"][-1].value if camera_node.keyframes["y"] else 5.4
+        prev_cam_scale = camera_node.keyframes["scale_x"][-1].value if camera_node.keyframes["scale_x"] else 1.0
+
+        camera_node.add_keyframe("x", start_time, prev_cam_x, "linear")
+        camera_node.add_keyframe("x", speak_start, cam_x, "easeOut")
+        camera_node.add_keyframe("y", start_time, prev_cam_y, "linear")
+        camera_node.add_keyframe("y", speak_start, cam_y, "easeOut")
+        camera_node.add_keyframe("scale_x", start_time, prev_cam_scale, "linear")
+        camera_node.add_keyframe("scale_x", speak_start, cam_scale, "easeOut")
+        camera_node.add_keyframe("scale_y", start_time, prev_cam_scale, "linear")
+        camera_node.add_keyframe("scale_y", speak_start, cam_scale, "easeOut")
+
+        # ── Subtitle: Create TextNode for this dialogue line ──
+        subtitle_text = f"{line.character}: {line.text}"
+        
+        # We can't change text content via keyframes, so we create separate
+        # TextNodes per line and toggle their opacity
+        line_sub_id = f"subtitle_line_{idx}"
+        line_sub = TextNode(
+            id=line_sub_id,
+            name=f"Sub: {line.character}",
+            content=subtitle_text,
+            font_size=0.36,
+            color="#FFFFFF",
+            text_align="center",
+            z_index=9999,
+        )
+        line_sub.set_position(9.6, 10.0)
+        line_sub.set_scale(1.0)
+        line_sub.opacity = 0.0
+        # Timing: hidden → fade in at speak_start → visible → fade out at end
+        line_sub.add_keyframe("opacity", max(0, speak_start - 0.15), 0.0, "linear")
+        line_sub.add_keyframe("opacity", speak_start, 1.0, "easeOut")
+        line_sub.add_keyframe("opacity", end_time, 1.0, "linear")
+        line_sub.add_keyframe("opacity", end_time + 0.2, 0.0, "easeIn")
+        graph.add_node(line_sub)
 
         if isinstance(node, CharacterNode):
             # Set speaking pose + face
@@ -449,6 +816,19 @@ def build_scene_from_script(
             if not isinstance(other_node, CharacterNode) or not other_info:
                 continue
 
+
+            # Smart Facing for listeners too
+            l_st = char_states.get(other_name)
+            active_spkr_st = char_states.get(line.character)
+            if l_st and active_spkr_st:
+                if l_st["x"] < active_spkr_st["x"] and l_st["scale_x"] < 0:
+                    l_st["scale_x"] = abs(l_st["scale_x"])
+                    other_node.keyframes.setdefault("scale_x", [])
+                    other_node.add_keyframe("scale_x", start_time, l_st["scale_x"], "step")
+                elif l_st["x"] > active_spkr_st["x"] and l_st["scale_x"] > 0:
+                    l_st["scale_x"] = -abs(l_st["scale_x"])
+                    other_node.keyframes.setdefault("scale_x", [])
+                    other_node.add_keyframe("scale_x", start_time, l_st["scale_x"], "step")
             other_poses = other_info.pose_names if other_info else []
             other_faces = other_info.face_names if other_info else []
 
@@ -473,11 +853,7 @@ def build_scene_from_script(
         if isinstance(node, CharacterNode):
             home_x = char_home_x.get(char_name, 9.6)
             node.keyframes.setdefault("x", [])
-            node.keyframes["x"].append({
-                "time": current_time,
-                "value": home_x,
-                "easing": "ease_out",
-            })
+            node.add_keyframe("x", current_time, home_x, "ease_out",)
             # Final idle pose
             avail_poses = char_infos[char_name].pose_names if char_name in char_infos else []
             avail_faces = char_infos[char_name].face_names if char_name in char_infos else []
@@ -485,6 +861,12 @@ def build_scene_from_script(
                 "pose": _pick_available("站立", avail_poses),
                 "face": _pick_available("微笑", avail_faces, "微笑"),
             })
+
+    # Zoom out camera at the end
+    camera_node.add_keyframe("x", current_time, 9.6, "easeOut")
+    camera_node.add_keyframe("y", current_time, 5.4, "easeOut")
+    camera_node.add_keyframe("scale_x", current_time, 1.0, "easeOut")
+    camera_node.add_keyframe("scale_y", current_time, 1.0, "easeOut")
 
     graph.duration = current_time + 1.5
 
@@ -633,6 +1015,7 @@ async def script_to_scene(req: ScriptToSceneRequest):
             character_map=req.character_map,
             tts_lines=tts_lines,
             registry=_registry,
+            background_id=req.background_id,
         )
     except Exception as e:
         logger.error(f"Scene build failed: {e}", exc_info=True)
@@ -657,11 +1040,193 @@ async def script_to_scene(req: ScriptToSceneRequest):
     )
 
 
+# ══════════════════════════════════════════════
+#  Multi-Scene Endpoint
+# ══════════════════════════════════════════════
+
+class MultiSceneScriptSection(BaseModel):
+    """A single scene section parsed from multi-scene script."""
+    background_id: str = ""
+    lines: list[ScriptLine] = []
+    transition: str = "fade"  # "cut", "fade", "dissolve"
+
+
+class MultiSceneRequest(BaseModel):
+    """Request to build a multi-scene VideoProject from script with --- separators."""
+    script_text: str  # Full script with --- scene separators
+    character_map: dict[str, str]  # character name → char_id
+    generate_tts: bool = False
+    default_background: str = ""  # fallback background for scenes without [Background:]
+
+
+class MultiSceneResponse(BaseModel):
+    success: bool
+    project: dict
+    total_scenes: int
+    total_duration: float
+    scene_boundaries: list[dict]
+    message: str = ""
+
+
+def _parse_multi_scene_script(script_text: str) -> list[dict]:
+    """Parse a multi-scene script text into scene sections.
+    
+    Format:
+        [Background: bg_id_here]
+        [Transition: fade]
+        Character: dialogue text [emotion:happy] [action:wave]
+        ---
+        [Background: another_bg_id]
+        Character: more dialogue
+    
+    Returns list of {"background_id": str, "lines": [ScriptLine], "transition": str}
+    """
+    sections = []
+    current_bg = ""
+    current_transition = "fade"
+    current_lines = []
+
+    for raw_line in script_text.strip().split("\n"):
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        # Scene separator
+        if line.startswith("---"):
+            if current_lines:
+                sections.append({
+                    "background_id": current_bg,
+                    "lines": current_lines,
+                    "transition": current_transition,
+                })
+                current_lines = []
+                current_transition = "fade"
+            continue
+
+        # Background directive
+        bg_match = re.match(r'\[(?:Background|BG|Bối cảnh)\s*:\s*(.+?)\]', line, re.IGNORECASE)
+        if bg_match:
+            current_bg = bg_match.group(1).strip()
+            continue
+
+        # Transition directive
+        trans_match = re.match(r'\[(?:Transition|Chuyển cảnh)\s*:\s*(.+?)\]', line, re.IGNORECASE)
+        if trans_match:
+            current_transition = trans_match.group(1).strip().lower()
+            continue
+
+        # Script line: "Character: text [emotion:xxx] [action:xxx]"
+        char_match = re.match(r'^([^:]+?):\s*(.+)$', line)
+        if char_match:
+            character = char_match.group(1).strip()
+            rest = char_match.group(2).strip()
+
+            emotion = ""
+            action = ""
+            # Extract [emotion:xxx]
+            em = re.search(r'\[emotion\s*:\s*(.+?)\]', rest, re.IGNORECASE)
+            if em:
+                emotion = em.group(1).strip()
+                rest = rest[:em.start()] + rest[em.end():]
+            # Extract [action:xxx]
+            ac = re.search(r'\[action\s*:\s*(.+?)\]', rest, re.IGNORECASE)
+            if ac:
+                action = ac.group(1).strip()
+                rest = rest[:ac.start()] + rest[ac.end():]
+
+            text = rest.strip()
+            if text:
+                current_lines.append(ScriptLine(
+                    character=character,
+                    text=text,
+                    emotion=emotion,
+                    action=action,
+                ))
+
+    # Don't forget the last section
+    if current_lines:
+        sections.append({
+            "background_id": current_bg,
+            "lines": current_lines,
+            "transition": current_transition,
+        })
+
+    return sections
+
+
+@router.post("/multi-scene")
+async def multi_scene(req: MultiSceneRequest):
+    """Build a multi-scene VideoProject from script with --- scene separators.
+    
+    Script format:
+        [Background: bg_id]
+        Hoa: Hello!
+        Nam: Hi there!
+        ---
+        [Background: another_bg_id]
+        [Transition: fade]
+        Hoa: This is scene 2!
+    """
+    from backend.core.scene_graph.video_project import VideoProject, SceneTransition
+
+    if not _registry:
+        raise HTTPException(500, "Asset registry not initialized")
+
+    # Parse multi-scene script
+    sections = _parse_multi_scene_script(req.script_text)
+    if not sections:
+        raise HTTPException(400, "No scenes found in script. Use --- to separate scenes.")
+
+    # Build each scene
+    scenes = []
+    transitions = []
+    for i, section in enumerate(sections):
+        bg_id = section["background_id"] or req.default_background
+        lines = section["lines"]
+
+        try:
+            graph = build_scene_from_script(
+                lines=lines,
+                character_map=req.character_map,
+                tts_lines=None,
+                registry=_registry,
+                background_id=bg_id if bg_id else None,
+            )
+            graph.name = f"Scene {i + 1}"
+            if bg_id:
+                graph.metadata = {"background_id": bg_id}
+            scenes.append(graph)
+        except Exception as e:
+            logger.error(f"Multi-scene: scene {i+1} build failed: {e}", exc_info=True)
+            raise HTTPException(500, f"Scene {i+1} build failed: {e}")
+
+        # Add transition (except after last scene)
+        if i < len(sections) - 1:
+            trans_type = section.get("transition", "fade")
+            transitions.append(SceneTransition(type=trans_type, duration=0.5))
+
+    project = VideoProject(
+        name="Multi-Scene Project",
+        scenes=scenes,
+        transitions=transitions,
+    )
+
+    return MultiSceneResponse(
+        success=True,
+        project=project.to_dict(),
+        total_scenes=project.num_scenes,
+        total_duration=project.total_duration,
+        scene_boundaries=project.get_scene_boundaries(),
+        message=f"Project created: {project.num_scenes} scenes, {project.total_duration:.1f}s total",
+    )
+
+
 class SRTToSceneRequest(BaseModel):
     """Parse SRT text and convert to scene."""
     srt_text: str
     character_map: dict[str, str]  # character name → char_id
     default_character: str = ""     # char_id for lines without character prefix
+    background_id: Optional[str] = None
     generate_tts: bool = False      # Usually SRT already has audio
 
 
@@ -700,6 +1265,7 @@ async def srt_to_scene(req: SRTToSceneRequest):
             character_map=req.character_map,
             tts_lines=tts_lines,
             registry=_registry,
+            background_id=req.background_id,
         )
     except Exception as e:
         logger.error(f"SRT scene build failed: {e}", exc_info=True)

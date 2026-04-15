@@ -125,11 +125,21 @@ function convertKeyframesFromBackend(
   if (!raw) return {};
   const result: Record<string, Keyframe[]> = {};
   for (const [prop, kfs] of Object.entries(raw)) {
-    result[prop] = (kfs as Array<Record<string, unknown>>).map((kf) => ({
-      time: (kf.time as number) ?? 0,
-      value: (kf.value as number) ?? 0,
-      easing: (kf.easing as Keyframe["easing"]) ?? "linear",
-    }));
+    result[prop] = (kfs as Array<Record<string, unknown>>).map((kf) => {
+      let easingStr = (kf.easing as string) || "linear";
+      if (easingStr === "ease_in") easingStr = "easeIn";
+      if (easingStr === "ease_out") easingStr = "easeOut";
+      if (easingStr === "ease_in_out") easingStr = "easeInOut";
+      if (easingStr === "ease_in_cubic") easingStr = "easeInCubic";
+      if (easingStr === "ease_out_cubic") easingStr = "easeOutCubic";
+      if (easingStr === "ease_in_out_cubic") easingStr = "easeInOutCubic";
+      
+      return {
+        time: (kf.time as number) ?? 0,
+        value: (kf.value as number) ?? 0,
+        easing: easingStr as Keyframe["easing"],
+      };
+    });
   }
   return result;
 }
@@ -284,6 +294,7 @@ export class SceneGraphManager {
         scale_y: node.transform.scaleY,
         rotation: node.transform.rotation,
         opacity: node.opacity,
+        z_index: node.zIndex,
       };
 
       const ns: NodeSnapshot = {
@@ -324,8 +335,15 @@ export class SceneGraphManager {
               defaults.opacity
             )
           : defaults.opacity,
-        zIndex: node.zIndex,
+        zIndex: node.keyframes.z_index?.length
+          ? Math.round(interpolateKeyframes(
+              node.keyframes.z_index,
+              time,
+              defaults.z_index
+            ))
+          : defaults.z_index,
         visible: node.visible,
+        parallaxSpeed: (node as any).parallaxSpeed,
       };
 
       // Character-specific: evaluate layer timeline
