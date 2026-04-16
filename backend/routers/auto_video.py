@@ -57,7 +57,8 @@ class AutoVideoRequest(BaseModel):
     auto_select_characters: bool = True     # Auto-map character names → assets
     auto_select_background: bool = True     # Auto-select background for each scene
     default_background: str = ""            # Fallback background if auto-select fails
-    character_map: dict[str, str] = {}      # Manual override: name → char_id
+    character_map: dict[str, str] = {}      # Manual override: script name -> asset id
+    background_map: dict[str, str] = {}     # Manual override: scene index (string) -> asset id
 
 
 class AutoVideoProgress(BaseModel):
@@ -233,6 +234,79 @@ async def _generate_tts_batch(
 
 
 # ══════════════════════════════════════════════
+#  Preflight Endpoint
+# ══════════════════════════════════════════════
+
+class AutoVideoPreflightResponse(BaseModel):
+    detected_characters: list[str]
+    detected_scenes: int
+    available_characters: list[dict]
+    available_backgrounds: list[dict]
+
+@router.post("/preflight", response_model=AutoVideoPreflightResponse)
+async def auto_video_preflight(req: AutoVideoRequest):
+    """
+    Analyzes the script and returns the detected elements + available assets in the registry,
+    allowing the frontend to render a mapping UI before generation.
+    """
+    if not _registry:
+        raise HTTPException(500, "Asset registry not initialized")
+    
+    from backend.routers.automation import _parse_multi_scene_script, ScriptLine
+
+    sections = _parse_multi_scene_script(req.script_text)
+    if not sections:
+        sections = [{"lines": [], "background_id": ""}]
+
+    # Extract all unique character names across all sections
+    all_char_names = []
+    seen_names = set()
+    for section in sections:
+        for line in section.get("lines", []):
+            if hasattr(line, "character"):
+                name = line.character
+            else:
+                name = line.get("character", "")
+                
+            if name and name not in seen_names:
+                all_char_names.append(name)
+                seen_names.add(name)
+                
+    if not all_char_names:
+        # Fallback to simple extraction if parsing failed to extract lines properly
+        all_char_names = _extract_character_names(req.script_text)
+
+    # Get available characters
+    avail_chars = []
+    for c in _registry.list_characters():
+        avail_chars.append({
+            "id": c["id"],
+            "name": c.get("name", ""),
+            "avatar": c.get("avatar_url", "")
+        })
+
+    # Get available backgrounds
+    avail_bgs = []
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    stages_dir = os.path.join(backend_dir, "storage", "stages")
+    if os.path.exists(stages_dir):
+        for fname in sorted(os.listdir(stages_dir)):
+            if fname.endswith(".png"):
+                bg_id = fname.rsplit("_element_", 1)[0] if "_element_" in fname else os.path.splitext(fname)[0]
+                if not any(b["id"] == bg_id for b in avail_bgs):
+                    avail_bgs.append({
+                        "id": bg_id,
+                        "name": bg_id.replace("_", " ")
+                    })
+
+    return JSONResponse(content={
+        "detected_characters": all_char_names,
+        "detected_scenes": len(sections),
+        "available_characters": avail_chars,
+        "available_backgrounds": avail_bgs
+    })
+
+# ══════════════════════════════════════════════
 #  Main Pipeline Endpoint
 # ══════════════════════════════════════════════
 
@@ -326,7 +400,10 @@ async def generate_auto_video(req: AutoVideoRequest):
     default_bg = req.default_background or _get_first_background()
 
     for i, section in enumerate(sections):
-        if not section["background_id"] and req.auto_select_background:
+        if str(i) in req.background_map:
+            section["background_id"] = req.background_map[str(i)]
+            log_step("backgrounds", f"Scene {i+1}: manual mapped '{req.background_map[str(i)]}'")
+        elif not section["background_id"] and req.auto_select_background:
             section["background_id"] = default_bg
             log_step("backgrounds", f"Scene {i+1}: auto-selected '{default_bg}'")
 

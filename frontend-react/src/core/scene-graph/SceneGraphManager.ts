@@ -277,6 +277,18 @@ export class SceneGraphManager {
     this.notify();
   }
 
+  updateCharacterFrameTime(nodeId: string, frameIndex: number, newTime: number): void {
+    const node = this.data.nodes[nodeId];
+    if (!node || node.nodeType !== 'character') return;
+    const charNode = node as any; // Using any to avoid type complaints if frameSequence isn't strongly inferred
+    if (charNode.frameSequence && charNode.frameSequence.length > frameIndex) {
+      charNode.frameSequence[frameIndex].time = Math.max(0, newTime); // Prevent negative time
+      // Re-sort the sequence by time to maintain timeline order
+      charNode.frameSequence.sort((a: any, b: any) => a.time - b.time);
+      this.notify();
+    }
+  }
+
   // ── Time Evaluation ──
 
   /**

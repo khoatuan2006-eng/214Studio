@@ -41,9 +41,19 @@ class CharacterDisplayObject {
     private currentPoseUrl: string = '';
     private currentFaceUrl: string = '';
 
-    constructor(name: string) {
+    constructor(name: string, nodeId: string) {
         this.container = new PIXI.Container();
         this.container.sortableChildren = true;
+        this.container.eventMode = 'static';
+        this.container.cursor = 'pointer';
+        
+        // Handle click event to select the block
+        this.container.on('pointerdown', (e) => {
+            e.stopPropagation(); // Prevent deselecting if clicked on character
+            const store = useSceneGraphStore.getState();
+            store.setSelectedBlock({ nodeId, sceneId: store.scenes[store.activeSceneIndex].id });
+            store.setSidebarTab('edit');
+        });
 
         // Name label at bottom
         this.label = new PIXI.Text({
@@ -326,6 +336,13 @@ export const SceneRenderer: React.FC = () => {
             canvasRef.current.appendChild(canvas);
 
             app.stage.sortableChildren = true;
+            app.stage.eventMode = 'static';
+            app.stage.hitArea = new PIXI.Rectangle(0, 0, CANVAS_W, CANVAS_H);
+            app.stage.on('pointerdown', (e) => {
+                if (e.target === app.stage) {
+                    useSceneGraphStore.getState().setSelectedBlock(null);
+                }
+            });
 
             // Layer 1: Placeholder background
             const bgPlaceholder = new PIXI.Graphics();
@@ -462,7 +479,7 @@ export const SceneRenderer: React.FC = () => {
 
             let charObj = chars.get(nodeId);
             if (!charObj) {
-                charObj = new CharacterDisplayObject(snap.name);
+                charObj = new CharacterDisplayObject(snap.name, nodeId);
                 chars.set(nodeId, charObj);
                 container.addChild(charObj.container);
             }

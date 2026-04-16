@@ -14,6 +14,9 @@ import { ScriptImport } from './ScriptImport';
 import { ExportDialog } from './ExportDialog';
 import { AutoVideoPanel } from './AutoVideoPanel';
 import { SceneTabs } from '@/components/SceneTabs';
+import { SceneGraphTimeline } from './SceneGraphTimeline';
+import SceneGraphPropertiesPanel from './SceneGraphPropertiesPanel';
+import { SceneGraphTransformer } from './SceneGraphTransformer';
 
 // ═══════════════════════════════════════════════════════════
 // Stage Canvas — renders layers onto a 1920×1080 virtual viewport
@@ -151,6 +154,7 @@ const SceneGraphCanvas: React.FC = () => {
                     left: 0,
                 }}>
                     <SceneRenderer />
+                    <SceneGraphTransformer scale={scale} />
                 </div>
 
                 {/* HUD Overlay */}
@@ -175,6 +179,11 @@ const SceneNodeList: React.FC = () => {
     const manager = useSceneGraphStore(s => s.manager);
     const snapshot = useSceneGraphStore(s => s.snapshot);
     const removeFromScene = useSceneGraphStore(s => s.removeFromScene);
+    const scenes = useSceneGraphStore(s => s.scenes);
+    const activeSceneIndex = useSceneGraphStore(s => s.activeSceneIndex);
+    const setSelectedBlock = useSceneGraphStore(s => s.setSelectedBlock);
+    const setSidebarTab = useSceneGraphStore(s => s.setSidebarTab);
+    const activeSceneId = scenes[activeSceneIndex]?.id || 'unknown';
 
     return (
         <div className="flex-1 flex flex-col min-h-0">
@@ -189,21 +198,31 @@ const SceneNodeList: React.FC = () => {
                         const snap = snapshot[id];
                         if (!node) return null;
                         return (
-                            <div key={id} className="text-[10px] rounded-lg p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
-                                <div className="flex items-center justify-between">
+                            <div 
+                                key={id} 
+                                onClick={() => {
+                                    setSelectedBlock({ nodeId: id, sceneId: activeSceneId });
+                                    setSidebarTab('edit');
+                                }}
+                                className="text-[10px] rounded-lg p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group cursor-pointer"
+                            >
+                                <div className="flex items-center justify-between pointer-events-none">
                                     <span className="font-bold text-white truncate flex-1">{node.name}</span>
                                     <span className="text-cyan-500/60 font-mono ml-2 text-[8px]">{node.nodeType}</span>
                                 </div>
-                                <div className="text-neutral-500 font-mono mt-1">
+                                <div className="text-neutral-500 font-mono mt-1 pointer-events-none">
                                     pos({snap?.x?.toFixed(1)}, {snap?.y?.toFixed(1)}) · α={snap?.opacity?.toFixed(2)}
                                 </div>
                                 {node.nodeType === 'character' && (
-                                    <div className="text-neutral-600 font-mono mt-0.5">
+                                    <div className="text-neutral-600 font-mono mt-0.5 pointer-events-none">
                                         pose: {(node as any).activeLayers?.pose} · face: {(node as any).activeLayers?.face}
                                     </div>
                                 )}
                                 <button
-                                    onClick={() => removeFromScene(id)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeFromScene(id);
+                                    }}
                                     className="text-[9px] text-red-500/50 hover:text-red-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                     Remove
@@ -414,7 +433,8 @@ const ScenePlaybackBar: React.FC = () => {
 // Scene Graph Right Sidebar — Tabs: Auto | Nodes | AI Chat | Script
 // ═══════════════════════════════════════════════════════════
 const SceneGraphSidebar: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'auto' | 'nodes' | 'chat' | 'script'>('auto');
+    const activeTab = useSceneGraphStore(s => s.sidebarTab);
+    const setActiveTab = useSceneGraphStore(s => s.setSidebarTab);
 
     return (
         <div className="w-80 border-l border-white/10 flex flex-col" style={{ backgroundColor: 'var(--surface-base)' }}>
@@ -464,6 +484,17 @@ const SceneGraphSidebar: React.FC = () => {
                     <FileText className="w-3 h-3" />
                     Script
                 </button>
+                <button
+                    onClick={() => setActiveTab('edit')}
+                    className={`flex-1 flex items-center justify-center gap-1 px-1.5 py-2.5 text-[8px] font-bold uppercase tracking-wider transition-all ${
+                        activeTab === 'edit'
+                            ? 'text-pink-400 border-b-2 border-pink-400 bg-pink-500/5'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                    }`}
+                >
+                    <Settings className="w-3 h-3" />
+                    Edit
+                </button>
             </div>
 
             {/* Tab Content */}
@@ -472,6 +503,7 @@ const SceneGraphSidebar: React.FC = () => {
                 {activeTab === 'nodes' && <SceneNodeList />}
                 {activeTab === 'chat' && <AIChatPanel />}
                 {activeTab === 'script' && <ScriptImport />}
+                {activeTab === 'edit' && <SceneGraphPropertiesPanel />}
             </div>
         </div>
     );
@@ -613,7 +645,7 @@ const StudioMode: React.FC = () => {
             {/* Bottom Timeline & Playback */}
             {mode === 'legacy'
                 ? <BottomTimeline />
-                : <ScenePlaybackBar />
+                : <SceneGraphTimeline />
             }
 
             {/* Export Dialog */}

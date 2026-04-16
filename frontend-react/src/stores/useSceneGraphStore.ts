@@ -114,6 +114,12 @@ interface SceneGraphStore {
     // Scene nodes in active scene (quick access)
     sceneNodeIds: string[];
 
+    // ── UI selections ──
+    selectedBlock: { nodeId: string; frameIndex?: number; sceneId: string } | null;
+    sidebarTab: 'auto' | 'nodes' | 'chat' | 'script' | 'edit';
+    isAutoKeyframe: boolean;
+    toggleAutoKeyframe: () => void;
+
     // ── Actions — Multi-Scene ──
     addScene: (name?: string, sceneData?: any) => number; // returns scene index
     removeScene: (index: number) => void;
@@ -145,6 +151,13 @@ interface SceneGraphStore {
 
     // ── Actions — Keyframes ──
     addKeyframe: (nodeId: string, property: string, kf: Keyframe) => void;
+    removeKeyframe: (nodeId: string, property: string, time: number) => void;
+
+    // ── Actions — Character Frame Sequence ──
+    addCharacterFrame: (nodeId: string, sceneId: string, time: number, layers?: Record<string, string>) => void;
+    removeCharacterFrame: (nodeId: string, sceneId: string, frameIndex: number) => void;
+    updateCharacterFrameLayers: (nodeId: string, sceneId: string, frameIndex: number, layers: Record<string, string>) => void;
+    duplicateCharacterFrame: (nodeId: string, sceneId: string, frameIndex: number) => void;
 
     // ── Actions — Playback ──
     setTime: (time: number) => void;
@@ -153,6 +166,10 @@ interface SceneGraphStore {
     pause: () => void;
     togglePlay: () => void;
     tick: (dt: number) => void;
+
+    // ── Actions — UI ──
+    setSelectedBlock: (block: { nodeId: string; frameIndex?: number; sceneId: string } | null) => void;
+    setSidebarTab: (tab: 'auto' | 'nodes' | 'chat' | 'script' | 'edit') => void;
 
     // ── Actions — Evaluate ──
     evaluate: () => void;
@@ -247,6 +264,11 @@ export const useSceneGraphStore = create<SceneGraphStore>((set, get) => ({
     sceneBoundaries: [{ sceneIndex: 0, start: 0, end: 10, name: 'Scene 1' }],
     globalDuration: 10,
     activeTransition: null,
+
+    // UI State
+    selectedBlock: null,
+    sidebarTab: 'auto',
+    isAutoKeyframe: false,
 
     // Active scene shortcuts
     manager: initialScene.manager,
@@ -700,6 +722,93 @@ export const useSceneGraphStore = create<SceneGraphStore>((set, get) => ({
         manager.addKeyframe(nodeId, property, kf);
         get().evaluate();
     },
+
+    removeKeyframe: (nodeId, property, time) => {
+        const { manager } = get();
+        manager.removeKeyframeAt(nodeId, property, time);
+        get().evaluate();
+    },
+
+    // ── Character Frame Sequence ──
+
+    addCharacterFrame: (nodeId, sceneId, time, layers) => {
+        const { scenes } = get();
+        const scene = scenes.find(s => s.id === sceneId);
+        if (!scene) return;
+        const node = scene.manager.getNode(nodeId) as any;
+        if (!node || node.nodeType !== 'character') return;
+
+        const seq = node.frameSequence || [];
+        // Copy layers from nearest existing frame, or use defaults
+        let baseLayers: Record<string, string> = layers || {};
+        if (!layers && seq.length > 0) {
+            // Find nearest frame before this time
+            const before = [...seq].filter((f: any) => f.time <= time).sort((a: any, b: any) => b.time - a.time);
+            if (before.length > 0) {
+                baseLayers = { ...(before[0] as any).layers };
+            } else {
+                baseLayers = { ...(seq[0] as any).layers };
+            }
+        }
+
+        seq.push({ time, layers: baseLayers });
+        seq.sort((a: any, b: any) => a.time - b.time);
+        scene.manager.updateNode(nodeId, { frameSequence: [...seq] });
+        get().evaluate();
+    },
+
+    removeCharacterFrame: (nodeId, sceneId, frameIndex) => {
+        const { scenes } = get();
+        const scene = scenes.find(s => s.id === sceneId);
+        if (!scene) return;
+        const node = scene.manager.getNode(nodeId) as any;
+        if (!node || node.nodeType !== 'character') return;
+
+        const seq = [...(node.frameSequence || [])];
+        if (frameIndex < 0 || frameIndex >= seq.length) return;
+        // Don't allow deleting the last remaining frame
+        if (seq.length <= 1) return;
+        seq.splice(frameIndex, 1);
+        scene.manager.updateNode(nodeId, { frameSequence: seq });
+        get().evaluate();
+    },
+
+    updateCharacterFrameLayers: (nodeId, sceneId, frameIndex, layers) => {
+        const { scenes } = get();
+        const scene = scenes.find(s => s.id === sceneId);
+        if (!scene) return;
+        const node = scene.manager.getNode(nodeId) as any;
+        if (!node || node.nodeType !== 'character') return;
+
+        const seq = [...(node.frameSequence || [])];
+        if (frameIndex < 0 || frameIndex >= seq.length) return;
+        seq[frameIndex] = { ...seq[frameIndex], layers: { ...seq[frameIndex].layers, ...layers } };
+        scene.manager.updateNode(nodeId, { frameSequence: seq });
+        get().evaluate();
+    },
+
+    duplicateCharacterFrame: (nodeId, sceneId, frameIndex) => {
+        const { scenes } = get();
+        const scene = scenes.find(s => s.id === sceneId);
+        if (!scene) return;
+        const node = scene.manager.getNode(nodeId) as any;
+        if (!node || node.nodeType !== 'character') return;
+
+        const seq = [...(node.frameSequence || [])];
+        if (frameIndex < 0 || frameIndex >= seq.length) return;
+        const source = seq[frameIndex];
+        // Place duplicate 0.5s after the source
+        const newTime = source.time + 0.5;
+        seq.push({ time: newTime, layers: { ...source.layers } });
+        seq.sort((a: any, b: any) => a.time - b.time);
+        scene.manager.updateNode(nodeId, { frameSequence: seq });
+        get().evaluate();
+    },
+
+    // ── Actions — UI ──
+    setSelectedBlock: (block) => set({ selectedBlock: block }),
+    setSidebarTab: (tab) => set({ sidebarTab: tab }),
+    toggleAutoKeyframe: () => set((state) => ({ isAutoKeyframe: !state.isAutoKeyframe })),
 
     // ══════════════════════════════════════════════
     //  Playback (Multi-Scene Aware)
