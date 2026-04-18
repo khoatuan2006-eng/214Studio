@@ -362,7 +362,7 @@ class PropNode(SceneNode):
 
 @dataclass
 class TextNode(SceneNode):
-    """Text overlay — dialogue, narration, subtitles.
+    """Text overlay — dialogue, narration, subtitles, and speech bubbles.
 
     Attributes:
         content: The text content.
@@ -370,6 +370,15 @@ class TextNode(SceneNode):
         font_size: Font size in world units.
         color: Text color (hex string).
         text_align: Alignment ("left", "center", "right").
+        bubble_style: Speech bubble style for comic/manga rendering.
+            "none" = plain subtitle overlay (default, backward compat)
+            "speech" = rounded speech bubble with tail
+            "shout" = spiky/jagged bubble for yelling
+            "thought" = cloud-shaped thought bubble
+            "whisper" = dashed-outline quiet bubble
+        bubble_target_id: ID of the CharacterNode this bubble is attached to.
+            When set, the bubble follows the character's position.
+        speaker_name: Name of the speaking character (displayed above text in bubble).
     """
 
     content: str = ""
@@ -377,6 +386,9 @@ class TextNode(SceneNode):
     font_size: float = 0.5
     color: str = "#FFFFFF"
     text_align: str = "center"
+    bubble_style: str = "none"       # "none" | "speech" | "shout" | "thought" | "whisper"
+    bubble_target_id: str = ""       # CharacterNode ID to attach to
+    speaker_name: str = ""           # Character name for bubble header
 
     def __post_init__(self):
         self.node_type = "text"
@@ -387,7 +399,12 @@ class TextNode(SceneNode):
         preview = self.content[:50]
         if len(self.content) > 50:
             preview += "..."
-        return base + f"\n  Content: \"{preview}\""
+        parts = [base, f'  Content: "{preview}"']
+        if self.bubble_style != "none":
+            parts.append(f"  Bubble: {self.bubble_style} → {self.bubble_target_id}")
+        if self.speaker_name:
+            parts.append(f"  Speaker: {self.speaker_name}")
+        return "\n".join(parts)
 
     def to_dict(self) -> dict:
         result = super().to_dict()
@@ -397,6 +414,9 @@ class TextNode(SceneNode):
             "font_size": self.font_size,
             "color": self.color,
             "text_align": self.text_align,
+            "bubble_style": self.bubble_style,
+            "bubble_target_id": self.bubble_target_id,
+            "speaker_name": self.speaker_name,
         })
         return result
 
@@ -410,6 +430,9 @@ class TextNode(SceneNode):
             font_size=data.get("font_size", 0.5),
             color=data.get("color", "#FFFFFF"),
             text_align=data.get("text_align", "center"),
+            bubble_style=data.get("bubble_style", "none"),
+            bubble_target_id=data.get("bubble_target_id", ""),
+            speaker_name=data.get("speaker_name", ""),
             transform=Transform.from_dict(data.get("transform", {})),
             opacity=data.get("opacity", 1.0),
             z_index=data.get("z_index", 0),

@@ -24,6 +24,7 @@ import { useSceneGraphStore } from '@/stores/useSceneGraphStore';
 import type { CharacterFull } from '@/stores/useSceneGraphStore';
 import type { NodeSnapshot } from '@/core/scene-graph/types';
 import { TransitionRenderer } from '@/core/renderer/TransitionRenderer';
+import { VFXManager } from '@/core/renderer/managers/VFXManager';
 import { API_BASE_URL } from '@/config/api';
 
 const CANVAS_W = 1920;
@@ -177,12 +178,15 @@ class BackgroundDisplayObject {
                 this.container.removeChild(this.sprite);
             }
             this.sprite = new PIXI.Sprite(texture);
-            this.sprite.anchor.set(0, 0);
+            this.sprite.anchor.set(0.5, 0.5);
+            this.sprite.position.set(CANVAS_W / 2, CANVAS_H / 2);
             
             const scaleX = CANVAS_W / texture.width;
             const scaleY = CANVAS_H / texture.height;
             const coverScale = Math.max(scaleX, scaleY);
-            this.sprite.scale.set(coverScale, coverScale);
+            
+            // To prevent black bars when zooming out, give backgrounds an extra 10% padding
+            this.sprite.scale.set(coverScale * 1.1, coverScale * 1.1);
             
             this.container.addChild(this.sprite);
         } catch (err) {
@@ -195,8 +199,9 @@ class BackgroundDisplayObject {
         this.container.visible = snap.visible;
         this.container.zIndex = snap.zIndex;
 
-        if (cameraSnap && snap.parallaxSpeed !== undefined && snap.parallaxSpeed > 0) {
-            const p = snap.parallaxSpeed;
+        if (cameraSnap) {
+            // Use parallaxSpeed as a modifier (default 1 = fully coupled to camera)
+            const p = snap.parallaxSpeed !== undefined ? snap.parallaxSpeed : 1;
             const cX = cameraSnap.x * ppu;
             const cY = cameraSnap.y * ppu;
             const cS = cameraSnap.scaleX || 1;
@@ -226,65 +231,310 @@ class BackgroundDisplayObject {
 }
 
 // ══════════════════════════════════════════════
-//  Subtitle Display Object — cinematic text overlay
-//  Positioned at bottom of canvas. NOT affected by camera.
+//  Speech Bubble Display Object — manga/comic-style dialogue bubbles
+//  Replaces SubtitleDisplayObject for comic art style.
+//  Supports: speech (round), shout (spiky), thought (cloud), whisper (dashed)
 // ══════════════════════════════════════════════
-class SubtitleDisplayObject {
+
+type BubbleStyle = 'none' | 'speech' | 'shout' | 'thought' | 'whisper';
+
+class SpeechBubbleDisplayObject {
     container: PIXI.Container;
     private bgGraphics: PIXI.Graphics;
     private textObj: PIXI.Text;
+    private speakerLabel: PIXI.Text;
     private currentContent: string = '';
+    private currentStyle: BubbleStyle = 'none';
+    private currentSpeaker: string = '';
 
     constructor() {
         this.container = new PIXI.Container();
-        
+        this.container.sortableChildren = true;
+
         this.bgGraphics = new PIXI.Graphics();
+        this.bgGraphics.zIndex = 0;
         this.container.addChild(this.bgGraphics);
-        
-        this.textObj = new PIXI.Text({
+
+        // Speaker name label (bold, above the text)
+        this.speakerLabel = new PIXI.Text({
             text: '',
             style: {
-                fontSize: 36,
-                fontFamily: '"Noto Sans SC", "Inter", "Arial", sans-serif',
-                fontWeight: '600',
-                fill: 0xffffff,
-                stroke: { color: 0x000000, width: 5 },
-                wordWrap: true,
-                wordWrapWidth: CANVAS_W * 0.85,
+                fontSize: 18,
+                fontFamily: '"Comic Sans MS", "Noto Sans SC", "Inter", sans-serif',
+                fontWeight: '800',
+                fill: 0x333333,
                 align: 'center',
             }
         });
-        this.textObj.anchor.set(0.5, 1);
+        this.speakerLabel.anchor.set(0.5, 1);
+        this.speakerLabel.zIndex = 2;
+        this.container.addChild(this.speakerLabel);
+
+        // Main dialogue text
+        this.textObj = new PIXI.Text({
+            text: '',
+            style: {
+                fontSize: 22,
+                fontFamily: '"Comic Sans MS", "Noto Sans SC", "Inter", sans-serif',
+                fontWeight: '600',
+                fill: 0x111111,
+                wordWrap: true,
+                wordWrapWidth: 300,
+                align: 'center',
+                lineHeight: 28,
+            }
+        });
+        this.textObj.anchor.set(0.5, 0.5);
+        this.textObj.zIndex = 2;
         this.container.addChild(this.textObj);
     }
 
-    update(snap: NodeSnapshot, content: string): void {
+    /**
+     * Update bubble content and position.
+     * @param snap - NodeSnapshot of this text node
+     * @param content - Dialogue text
+     * @param bubbleStyle - Bubble visual style
+     * @param speakerName - Character name
+     * @param targetSnap - Snapshot of the target character (for position tracking)
+     * @param ppu - Pixels per unit
+     */
+    update(
+        snap: NodeSnapshot,
+        content: string,
+        bubbleStyle: BubbleStyle,
+        speakerName: string,
+        targetSnap: NodeSnapshot | null,
+        ppu: number,
+    ): void {
         this.container.alpha = snap.opacity;
         this.container.visible = snap.visible && content.length > 0;
         this.container.zIndex = snap.zIndex;
 
-        if (content !== this.currentContent) {
-            this.currentContent = content;
-            this.textObj.text = content;
-
-            // Position: bottom center of canvas
-            this.textObj.position.set(CANVAS_W / 2, CANVAS_H - 40);
-
-            // Draw semi-transparent background bar
-            this.bgGraphics.clear();
-            if (content.length > 0) {
-                const textBounds = this.textObj.getBounds();
-                const padX = 30;
-                const padY = 12;
-                const barW = Math.min(textBounds.width + padX * 2, CANVAS_W);
-                const barH = textBounds.height + padY * 2;
-                const barX = (CANVAS_W - barW) / 2;
-                const barY = CANVAS_H - 40 - textBounds.height - padY;
-
-                this.bgGraphics.roundRect(barX, barY, barW, barH, 8);
-                this.bgGraphics.fill({ color: 0x000000, alpha: 0.6 });
-            }
+        // Position: follow target character, or use own position
+        let posX: number;
+        let posY: number;
+        if (targetSnap && bubbleStyle !== 'none') {
+            // Position above the character's head
+            posX = targetSnap.x * ppu;
+            posY = Math.max(80, targetSnap.y * ppu - 320);
+        } else if (bubbleStyle !== 'none') {
+            // Fallback: use the node's own position
+            posX = snap.x * ppu;
+            posY = snap.y * ppu;
+        } else {
+            // Legacy subtitle mode: bottom center
+            posX = CANVAS_W / 2;
+            posY = CANVAS_H - 60;
         }
+        this.container.position.set(posX, posY);
+
+        const needsRedraw = content !== this.currentContent
+            || bubbleStyle !== this.currentStyle
+            || speakerName !== this.currentSpeaker;
+
+        if (!needsRedraw) return;
+
+        this.currentContent = content;
+        this.currentStyle = bubbleStyle;
+        this.currentSpeaker = speakerName;
+
+        // Update text
+        this.textObj.text = content;
+
+        // Update speaker label
+        if (speakerName && bubbleStyle !== 'none') {
+            this.speakerLabel.text = speakerName;
+            this.speakerLabel.visible = true;
+        } else {
+            this.speakerLabel.visible = false;
+        }
+
+        // Measure text for bubble sizing
+        const textBounds = this.textObj.getBounds();
+        const padX = 24;
+        const padY = 16;
+        const speakerH = speakerName && bubbleStyle !== 'none' ? 24 : 0;
+        const bubbleW = Math.min(Math.max(textBounds.width + padX * 2, 120), 380);
+        const bubbleH = textBounds.height + padY * 2 + speakerH;
+
+        // Position text and speaker within bubble
+        this.textObj.position.set(0, speakerH / 2);
+        if (speakerName && bubbleStyle !== 'none') {
+            this.speakerLabel.position.set(0, -textBounds.height / 2 - padY + 4);
+        }
+
+        // Draw bubble background
+        this.bgGraphics.clear();
+
+        if (bubbleStyle === 'none') {
+            // Legacy subtitle bar (bottom of screen)
+            this._drawSubtitleBar(bubbleW, bubbleH);
+        } else if (bubbleStyle === 'speech') {
+            this._drawSpeechBubble(bubbleW, bubbleH);
+        } else if (bubbleStyle === 'shout') {
+            this._drawShoutBubble(bubbleW, bubbleH);
+        } else if (bubbleStyle === 'thought') {
+            this._drawThoughtBubble(bubbleW, bubbleH);
+        } else if (bubbleStyle === 'whisper') {
+            this._drawWhisperBubble(bubbleW, bubbleH);
+        }
+    }
+
+    /** Classic subtitle: semi-transparent bar at bottom */
+    private _drawSubtitleBar(w: number, h: number): void {
+        const g = this.bgGraphics;
+        g.roundRect(-w / 2, -h / 2, w, h, 8);
+        g.fill({ color: 0x000000, alpha: 0.65 });
+        // White text for subtitle mode
+        this.textObj.style.fill = 0xffffff;
+        (this.textObj.style as any).stroke = { color: 0x000000, width: 3 };
+    }
+
+    /** Rounded speech bubble with a triangular tail pointing down */
+    private _drawSpeechBubble(w: number, h: number): void {
+        const g = this.bgGraphics;
+        const r = 16; // corner radius
+
+        // Main bubble body
+        g.roundRect(-w / 2, -h / 2, w, h, r);
+        g.fill({ color: 0xffffff, alpha: 0.95 });
+        g.roundRect(-w / 2, -h / 2, w, h, r);
+        g.stroke({ color: 0x333333, width: 3 });
+
+        // Tail (triangle pointing down toward character)
+        g.moveTo(-8, h / 2 - 2);
+        g.lineTo(0, h / 2 + 22);
+        g.lineTo(8, h / 2 - 2);
+        g.fill({ color: 0xffffff, alpha: 0.95 });
+
+        // Tail outline
+        g.moveTo(-10, h / 2);
+        g.lineTo(0, h / 2 + 24);
+        g.lineTo(10, h / 2);
+        g.stroke({ color: 0x333333, width: 3 });
+
+        // Black text
+        this.textObj.style.fill = 0x111111;
+        (this.textObj.style as any).stroke = undefined;
+    }
+
+    /** Spiky/jagged bubble for shouting — angular zigzag border */
+    private _drawShoutBubble(w: number, h: number): void {
+        const g = this.bgGraphics;
+        const hw = w / 2;
+        const hh = h / 2;
+        const spikes = 12;
+        const outerScale = 1.25;
+
+        // Build spiky polygon
+        const points: number[] = [];
+        for (let i = 0; i < spikes; i++) {
+            const angle = (i / spikes) * Math.PI * 2 - Math.PI / 2;
+            const nextAngle = ((i + 0.5) / spikes) * Math.PI * 2 - Math.PI / 2;
+            // Outer spike
+            points.push(
+                Math.cos(angle) * hw * outerScale,
+                Math.sin(angle) * hh * outerScale
+            );
+            // Inner valley
+            points.push(
+                Math.cos(nextAngle) * hw * 0.85,
+                Math.sin(nextAngle) * hh * 0.85
+            );
+        }
+
+        g.poly(points);
+        g.fill({ color: 0xffffff, alpha: 0.95 });
+        g.poly(points);
+        g.stroke({ color: 0xcc2200, width: 3.5 });
+
+        // Tail
+        g.moveTo(-6, hh * outerScale - 4);
+        g.lineTo(0, hh * outerScale + 18);
+        g.lineTo(6, hh * outerScale - 4);
+        g.fill({ color: 0xffffff, alpha: 0.95 });
+
+        // Bold dark text for shout
+        this.textObj.style.fill = 0x880000;
+        this.textObj.style.fontWeight = '900';
+        (this.textObj.style as any).stroke = undefined;
+    }
+
+    /** Cloud-shaped thought bubble with small circles trailing down */
+    private _drawThoughtBubble(w: number, h: number): void {
+        const g = this.bgGraphics;
+
+        // Main cloud body (rounded rect with extra-round corners)
+        g.roundRect(-w / 2, -h / 2, w, h, 24);
+        g.fill({ color: 0xf0f0f0, alpha: 0.92 });
+        g.roundRect(-w / 2, -h / 2, w, h, 24);
+        g.stroke({ color: 0x888888, width: 2 });
+
+        // Trailing thought circles (bottom)
+        const circles = [
+            { x: -4, y: h / 2 + 12, r: 8 },
+            { x: -2, y: h / 2 + 26, r: 5 },
+            { x: 0, y: h / 2 + 36, r: 3 },
+        ];
+        for (const c of circles) {
+            g.circle(c.x, c.y, c.r);
+            g.fill({ color: 0xf0f0f0, alpha: 0.92 });
+            g.circle(c.x, c.y, c.r);
+            g.stroke({ color: 0x888888, width: 2 });
+        }
+
+        // Italic gray text for thought
+        this.textObj.style.fill = 0x555555;
+        this.textObj.style.fontStyle = 'italic';
+        (this.textObj.style as any).stroke = undefined;
+    }
+
+    /** Dashed-outline bubble for whispering */
+    private _drawWhisperBubble(w: number, h: number): void {
+        const g = this.bgGraphics;
+
+        // Soft background
+        g.roundRect(-w / 2, -h / 2, w, h, 14);
+        g.fill({ color: 0xfafafa, alpha: 0.8 });
+
+        // Dashed border (simulated with short line segments)
+        const hw = w / 2;
+        const hh = h / 2;
+        const dashLen = 8;
+        const gapLen = 6;
+
+        // Top edge
+        for (let x = -hw; x < hw; x += dashLen + gapLen) {
+            g.moveTo(x, -hh);
+            g.lineTo(Math.min(x + dashLen, hw), -hh);
+        }
+        // Bottom edge
+        for (let x = -hw; x < hw; x += dashLen + gapLen) {
+            g.moveTo(x, hh);
+            g.lineTo(Math.min(x + dashLen, hw), hh);
+        }
+        // Left edge
+        for (let y = -hh; y < hh; y += dashLen + gapLen) {
+            g.moveTo(-hw, y);
+            g.lineTo(-hw, Math.min(y + dashLen, hh));
+        }
+        // Right edge
+        for (let y = -hh; y < hh; y += dashLen + gapLen) {
+            g.moveTo(hw, y);
+            g.lineTo(hw, Math.min(y + dashLen, hh));
+        }
+        g.stroke({ color: 0x999999, width: 2 });
+
+        // Small tail
+        g.moveTo(-5, hh);
+        g.lineTo(0, hh + 14);
+        g.lineTo(5, hh);
+        g.stroke({ color: 0x999999, width: 1.5 });
+
+        // Light gray text for whisper
+        this.textObj.style.fill = 0x666666;
+        this.textObj.style.fontSize = 20;
+        (this.textObj.style as any).stroke = undefined;
     }
 
     destroy(): void {
@@ -305,7 +555,10 @@ export const SceneRenderer: React.FC = () => {
     const transitionRef = useRef<TransitionRenderer | null>(null);
     const charsRef = useRef(new Map<string, CharacterDisplayObject>());
     const bgsRef = useRef(new Map<string, BackgroundDisplayObject>());
-    const subsRef = useRef(new Map<string, SubtitleDisplayObject>());
+    const subsRef = useRef(new Map<string, SpeechBubbleDisplayObject>());
+    const vfxRef = useRef<VFXManager | null>(null);
+    const activeSceneIdRef = useRef<string | null>(null);
+    const vfxTriggeredRef = useRef<boolean>(false);
 
     const snapshot = useSceneGraphStore(s => s.snapshot);
     const manager = useSceneGraphStore(s => s.manager);
@@ -373,6 +626,17 @@ export const SceneRenderer: React.FC = () => {
 
             // Layer 5: Transition overlay (fade-to-black between scenes)
             transitionRef.current = new TransitionRenderer(app.stage);
+            
+            // Layer 6: VFX Manager
+            vfxRef.current = new VFXManager(app, container);
+            
+            // Ticker loop for VFX
+            app.ticker.add((ticker) => {
+                if (vfxRef.current) {
+                    vfxRef.current.update(ticker.deltaMS / 1000);
+                }
+            });
+
         }).catch(err => {
             console.warn('[SceneRenderer] PIXI init failed:', err);
         });
@@ -385,6 +649,10 @@ export const SceneRenderer: React.FC = () => {
             bgsRef.current.clear();
             subsRef.current.forEach(s => s.destroy());
             subsRef.current.clear();
+            if (vfxRef.current) {
+                vfxRef.current.destroy();
+                vfxRef.current = null;
+            }
             if (transitionRef.current) {
                 transitionRef.current.destroy();
                 transitionRef.current = null;
@@ -423,6 +691,28 @@ export const SceneRenderer: React.FC = () => {
                 break;
             }
         }
+        
+        const playbackState = useSceneGraphStore.getState();
+        const isPlaying = playbackState.isPlaying;
+        const currentTime = playbackState.currentTime;
+
+        if (manager.graph.id !== activeSceneIdRef.current) {
+            activeSceneIdRef.current = manager.graph.id;
+            vfxTriggeredRef.current = false;
+        }
+
+        if (isPlaying && currentTime >= 0 && currentTime < 0.2 && !vfxTriggeredRef.current) {
+            vfxTriggeredRef.current = true;
+            const meta = manager.graph.metadata || {};
+            if (vfxRef.current) {
+                if (meta.camera_shake) { vfxRef.current.triggerCameraShake(0.6, 25); }
+                if (meta.flash_screen) { vfxRef.current.triggerFlashScreen(0.3); }
+                if (meta.explosions) { vfxRef.current.triggerExplosion(9.6 * ppu, 7.5 * ppu); }
+            }
+        } else if (!isPlaying && currentTime < 0.1) {
+            // Reset trigger when seeking to start while paused
+            vfxTriggeredRef.current = false;
+        }
 
         // ═══════════════════════════════════════
         //  PASS 2: Render all nodes
@@ -455,21 +745,31 @@ export const SceneRenderer: React.FC = () => {
                 continue;
             }
 
-            // ── Subtitle / Text nodes ──
+            // ── Text / Speech Bubble nodes ──
             if (snap.nodeType === 'text') {
                 activeSubIds.add(nodeId);
                 if (!subtitleContainer) continue;
 
                 let subObj = subs.get(nodeId);
                 if (!subObj) {
-                    subObj = new SubtitleDisplayObject();
+                    subObj = new SpeechBubbleDisplayObject();
                     subs.set(nodeId, subObj);
                     subtitleContainer.addChild(subObj.container);
                 }
 
                 const node = manager.getNode(nodeId);
                 const content = (node as any)?.content as string || '';
-                subObj.update(snap, content);
+                const bubbleStyle: BubbleStyle = (node as any)?.bubbleStyle || (node as any)?.bubble_style || 'none';
+                const speakerName: string = (node as any)?.speakerName || (node as any)?.speaker_name || '';
+                const bubbleTargetId: string = (node as any)?.bubbleTargetId || (node as any)?.bubble_target_id || '';
+
+                // Find the target character's snapshot for position tracking
+                let targetSnap: NodeSnapshot | null = null;
+                if (bubbleTargetId && snapshot[bubbleTargetId]) {
+                    targetSnap = snapshot[bubbleTargetId];
+                }
+
+                subObj.update(snap, content, bubbleStyle, speakerName, targetSnap, ppu);
                 continue;
             }
 
@@ -553,8 +853,18 @@ export const SceneRenderer: React.FC = () => {
 
     }, [snapshot, manager, activeTransition]);
 
-    // ── Playback animation loop ──
+    // ── Playback animation loop & Synchronization with UI PlaybackManager ──
     useEffect(() => {
+        const syncPlayback = (e: any) => {
+            const time = e.detail?.time;
+            if (typeof time === 'number') {
+                useSceneGraphStore.getState().setTime(time);
+            }
+        };
+
+        window.addEventListener('playback-update', syncPlayback);
+        window.addEventListener('playback-seek', syncPlayback);
+
         let rafId: number;
         let lastTime = performance.now();
 
@@ -566,7 +876,12 @@ export const SceneRenderer: React.FC = () => {
         };
 
         rafId = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(rafId);
+        
+        return () => {
+            window.removeEventListener('playback-update', syncPlayback);
+            window.removeEventListener('playback-seek', syncPlayback);
+            cancelAnimationFrame(rafId);
+        };
     }, []);
 
     return (
