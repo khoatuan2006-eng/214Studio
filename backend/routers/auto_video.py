@@ -51,17 +51,19 @@ def set_registry(registry: AssetRegistry):
 class AutoVideoRequest(BaseModel):
     """One-click video generation request."""
     script_text: str                         # Multi-scene script (--- separators)
+    project_id: str = "default_scratch"      # Project ID for isolated agent memory
     voice: str = "BV074"                    # TTS voice code
     generate_tts: bool = True               # Whether to generate TTS audio
     pause_ms: int = 500                     # Pause between TTS lines (ms)
     auto_select_characters: bool = True     # Auto-map character names → assets
     auto_select_background: bool = True     # Auto-select background for each scene
     default_background: str = ""            # Fallback background if auto-select fails
+    use_ai_storyboard: bool = True          # Use MangaGen-style AI Storyboarding
     character_map: dict[str, str] = {}      # Manual override: script name -> asset id
     background_map: dict[str, str] = {}     # Manual override: scene index (string) -> asset id
 
 
-class AutoVideoProgress(BaseModel):
+class AutoVideoProgress(BaseModel):#
     """Progress update for streaming responses."""
     step: str
     message: str
@@ -160,6 +162,29 @@ def _auto_map_characters(
     return char_map
 
 
+def _sanitize_character_name(raw: str) -> str:
+    """Strip parenthetical stage directions and scene markers from a character name.
+    
+    Examples:
+        "Nam (buồn bã, thở dài)" -> "Nam"
+        "Hoa (tiến tới, vui vẻ)" -> "Hoa"
+        "Cảnh 1" -> ""  (scene markers are not characters)
+    """
+    if not raw:
+        return ""
+    # Strip anything in parentheses
+    name = re.sub(r'\s*\(.*?\)', '', raw).strip()
+    # Strip anything in square brackets
+    name = re.sub(r'\s*\[.*?\]', '', name).strip()
+    # Reject scene/chapter markers: "Cảnh 1", "Scene 1", "Chương 2", etc.
+    if re.match(r'^(cảnh|scene|chương|chapter|phần|part|đoạn|tập|episode)\s+\d+', name, re.IGNORECASE):
+        return ""
+    # Reject pure number or very short meaningless strings
+    if re.match(r'^\d+$', name) or len(name) < 1:
+        return ""
+    return name
+
+
 def _extract_character_names(script_text: str) -> list[str]:
     """Extract unique character names from script text."""
     names = []
@@ -169,10 +194,10 @@ def _extract_character_names(script_text: str) -> list[str]:
         if not line or line.startswith("[") or line.startswith("---"):
             continue
         # Match "Character: dialogue"
-        match = re.match(r'^([^:：]{1,20})[:\s：]\s*.+$', line)
+        match = re.match(r'^([^:：]{1,30})[:\s：]\s*.+$', line)
         if match:
-            name = match.group(1).strip()
-            if name not in seen and not re.match(r'^\d', name):
+            name = _sanitize_character_name(match.group(1))
+            if name and name not in seen:
                 names.append(name)
                 seen.add(name)
     return names
@@ -242,6 +267,7 @@ class AutoVideoPreflightResponse(BaseModel):
     detected_scenes: int
     available_characters: list[dict]
     available_backgrounds: list[dict]
+    suggested_mapping: dict[str, str] = {}
 
 @router.post("/preflight", response_model=AutoVideoPreflightResponse)
 async def auto_video_preflight(req: AutoVideoRequest):
@@ -252,11 +278,41 @@ async def auto_video_preflight(req: AutoVideoRequest):
     if not _registry:
         raise HTTPException(500, "Asset registry not initialized")
     
-    from backend.routers.automation import _parse_multi_scene_script, ScriptLine
-
-    sections = _parse_multi_scene_script(req.script_text)
-    if not sections:
-        sections = [{"lines": [], "background_id": ""}]
+    try:
+        from backend.core.agents.storyboard_agent import StoryboardAgent
+        from backend.core.agents.casting_agent import CastingAgent
+    except ImportError as _imp_err:
+        logger.error(f"[Preflight] Failed to import AI agents: {_imp_err}")
+        raise HTTPException(500, f"AI agent import failed: {_imp_err}")
+    
+    # Use AI Storyboard pattern (Gemini) strictly to avoid regex string-cutting
+    avail_bgs = []
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    stages_dir = os.path.join(backend_dir, "storage", "stages")
+    if os.path.exists(stages_dir):
+        for fname in sorted(os.listdir(stages_dir)):
+            if fname.endswith(".png"):
+                bg_id = fname.rsplit("_element_", 1)[0] if "_element_" in fname else os.path.splitext(fname)[0]
+                if not any(b["id"] == bg_id for b in avail_bgs):
+                    avail_bgs.append({"id": bg_id, "name": bg_id.replace("_", " ")})
+    
+    # 1. AI Parsing
+    sections = []
+    ai_sequences = StoryboardAgent.create_storyboard(req.script_text, avail_bgs)
+    if ai_sequences:
+        for seq in ai_sequences:
+            parsed_lines = []
+            for L in seq.get("lines", []):
+                if "character" in L and L["character"]:
+                    parsed_lines.append(L)
+            sections.append({
+                "background_id": seq.get("background_id", ""),
+                "lines": parsed_lines
+            })
+    else:
+        # Emergency fallback only if API is completely dead
+        from backend.routers.automation import _parse_multi_scene_script
+        sections = _parse_multi_scene_script(req.script_text) or [{"lines": [], "background_id": ""}]
 
     # Extract all unique character names across all sections
     all_char_names = []
@@ -264,18 +320,15 @@ async def auto_video_preflight(req: AutoVideoRequest):
     for section in sections:
         for line in section.get("lines", []):
             if hasattr(line, "character"):
-                name = line.character
+                raw_name = line.character
             else:
-                name = line.get("character", "")
-                
+                raw_name = line.get("character", "")
+            
+            name = _sanitize_character_name(raw_name)
             if name and name not in seen_names:
                 all_char_names.append(name)
                 seen_names.add(name)
                 
-    if not all_char_names:
-        # Fallback to simple extraction if parsing failed to extract lines properly
-        all_char_names = _extract_character_names(req.script_text)
-
     # Get available characters
     avail_chars = []
     for c in _registry.list_characters():
@@ -285,25 +338,15 @@ async def auto_video_preflight(req: AutoVideoRequest):
             "avatar": c.get("avatar_url", "")
         })
 
-    # Get available backgrounds
-    avail_bgs = []
-    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    stages_dir = os.path.join(backend_dir, "storage", "stages")
-    if os.path.exists(stages_dir):
-        for fname in sorted(os.listdir(stages_dir)):
-            if fname.endswith(".png"):
-                bg_id = fname.rsplit("_element_", 1)[0] if "_element_" in fname else os.path.splitext(fname)[0]
-                if not any(b["id"] == bg_id for b in avail_bgs):
-                    avail_bgs.append({
-                        "id": bg_id,
-                        "name": bg_id.replace("_", " ")
-                    })
+    # 2. AI Casting Director Call
+    suggested_mapping = CastingAgent.auto_cast(all_char_names, avail_chars)
 
     return JSONResponse(content={
         "detected_characters": all_char_names,
         "detected_scenes": len(sections),
         "available_characters": avail_chars,
-        "available_backgrounds": avail_bgs
+        "available_backgrounds": avail_bgs,
+        "suggested_mapping": suggested_mapping
     })
 
 # ══════════════════════════════════════════════
@@ -349,24 +392,75 @@ async def generate_auto_video(req: AutoVideoRequest):
     # ── Step 1: Parse Script ──
     log_step("parse", "Parsing multi-scene script...")
 
-    sections = _parse_multi_scene_script(req.script_text)
+    sections = []
+    
+    if req.use_ai_storyboard:
+        log_step("parse", "Using AI Storyboard pattern (MangaGen style)...")
+        from backend.core.agents.storyboard_agent import StoryboardAgent
+        
+        # Get available backgrounds for AI
+        avail_bgs = []
+        backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        stages_dir = os.path.join(backend_dir, "storage", "stages")
+        if os.path.exists(stages_dir):
+            for fname in sorted(os.listdir(stages_dir)):
+                if fname.endswith(".png"):
+                    bg_id = fname.rsplit("_element_", 1)[0] if "_element_" in fname else os.path.splitext(fname)[0]
+                    if not any(b["id"] == bg_id for b in avail_bgs):
+                        avail_bgs.append({
+                            "id": bg_id,
+                            "name": bg_id.replace("_", " ")
+                        })
+                        
+        ai_sequences = StoryboardAgent.create_storyboard(req.script_text, avail_bgs)
+        if ai_sequences:
+            for seq in ai_sequences:
+                parsed_lines = []
+                for L in seq.get("lines", []):
+                    if "character" not in L or "text" not in L:
+                        continue
+                    # Sanitize name: strip stage directions from AI output
+                    char_name = _sanitize_character_name(L["character"])
+                    if not char_name:
+                        continue  # Skip scene markers / bad lines
+                    parsed_lines.append(ScriptLine(
+                        character=char_name,
+                        text=L["text"],
+                        emotion=L.get("emotion", ""),
+                        action=L.get("action", ""),
+                    ))
+                sections.append({
+                    "background_id": seq.get("background_id", ""),
+                    "lines": parsed_lines,
+                    "transition": "cut",
+                    "description": seq.get("description", "")
+                })
+        else:
+            log_step("parse", "AI Storyboard failed, falling back to manual parse.")
+
+    # Fallback to old splitting logic if AI storyboarding wasn't requested or if it failed
     if not sections:
-        # Fallback: treat entire text as single scene
-        log_step("parse", "No --- separators found, treating as single scene")
-        all_lines = []
-        for line in req.script_text.strip().split("\n"):
-            line = line.strip()
-            if not line or line.startswith("["):
-                continue
-            match = re.match(r'^([^:：]+?)[:\s：]\s*(.+)$', line)
-            if match:
-                all_lines.append(ScriptLine(
-                    character=match.group(1).strip(),
-                    text=match.group(2).strip(),
-                ))
-        if not all_lines:
-            raise HTTPException(400, "No dialogue lines found in script")
-        sections = [{"background_id": "", "lines": all_lines, "transition": "fade"}]
+        sections = _parse_multi_scene_script(req.script_text)
+        if not sections:
+            # Fallback: treat entire text as single scene
+            log_step("parse", "No --- separators found, treating as single scene")
+            all_lines = []
+            for line in req.script_text.strip().split("\n"):
+                line = line.strip()
+                if not line or line.startswith("["):
+                    continue
+                match = re.match(r'^([^:：]+?)[:\s：]\s*(.+)$', line)
+                if match:
+                    char_name = _sanitize_character_name(match.group(1))
+                    if not char_name:
+                        continue
+                    all_lines.append(ScriptLine(
+                        character=char_name,
+                        text=match.group(2).strip(),
+                    ))
+            if not all_lines:
+                raise HTTPException(400, "No dialogue lines found in script")
+            sections = [{"background_id": "", "lines": all_lines, "transition": "fade"}]
 
     total_lines = sum(len(s["lines"]) for s in sections)
     log_step("parse", f"Found {len(sections)} scene(s), {total_lines} dialogue lines")
@@ -379,17 +473,42 @@ async def generate_auto_video(req: AutoVideoRequest):
     seen_names = set()
     for section in sections:
         for line in section["lines"]:
-            name = line.character if isinstance(line, ScriptLine) else line["character"]
-            if name not in seen_names:
+            raw_name = line.character if isinstance(line, ScriptLine) else line["character"]
+            name = _sanitize_character_name(raw_name)
+            if name and name not in seen_names:
                 all_char_names.append(name)
                 seen_names.add(name)
 
-    if req.auto_select_characters:
-        char_map = _auto_map_characters(all_char_names, _registry, req.character_map)
-    else:
-        char_map = req.character_map
+    char_map = req.character_map.copy() if req.character_map else {}
+    
+    # The first LLM run during preflight might produce slightly different character strings
+    # than the second LLM run during generate. E.g "Nam" vs "nam". We fallback mapping.
+    
+    missing_chars = [name for name in all_char_names if name not in char_map]
+    
+    if req.auto_select_characters and missing_chars:
+        # Old fuzzy round-robin fallback
+        ai_map = _auto_map_characters(missing_chars, _registry, char_map)
+        char_map.update(ai_map)
+    elif missing_chars:
+        # AI Smart fallback
+        try:
+            from backend.core.agents.casting_agent import CastingAgent
+            avail_chars = [{"id": c["id"], "name": c.get("name", "")} for c in _registry.list_characters()]
+            ai_map = CastingAgent.auto_cast(missing_chars, avail_chars)
+            char_map.update(ai_map)
+        except Exception as e:
+            logger.warning(f"Failed to auto-cast missing characters: {e}")
 
-    if not char_map:
+    # Final string match fallback if even AI missed
+    for name in all_char_names:
+        if name not in char_map:
+            for k, v in char_map.items():
+                if k.lower() in name.lower() or name.lower() in k.lower():
+                    char_map[name] = v
+                    break
+
+    if not char_map and all_char_names:
         raise HTTPException(400, f"No characters could be matched. Available: {[c['id'] for c in _registry.list_characters()]}")
 
     log_step("characters", f"Mapped {len(char_map)} characters: {char_map}")
@@ -446,6 +565,20 @@ async def generate_auto_video(req: AutoVideoRequest):
 
     scenes: list[SceneGraph] = []
     transitions: list[SceneTransition] = []
+    
+    # Ankh.md Inspired: Persistent Project Memory
+    world_memory: dict[str, dict] = {}
+    import json
+    memory_dir = os.path.join("scratch", ".agent", req.project_id)
+    os.makedirs(memory_dir, exist_ok=True)
+    memory_file = os.path.join(memory_dir, "memory.json")
+    if os.path.exists(memory_file):
+        try:
+            with open(memory_file, "r", encoding="utf-8") as f:
+                world_memory = json.load(f)
+            logger.info(f"Loaded persistent memory for project '{req.project_id}'")
+        except Exception as e:
+            logger.warning(f"Failed to load memory: {e}")
 
     for i, section in enumerate(sections):
         bg_id = section["background_id"] or None
@@ -453,13 +586,30 @@ async def generate_auto_video(req: AutoVideoRequest):
         tts_lines = tts_results_per_scene[i] if i < len(tts_results_per_scene) else None
 
         try:
-            graph = build_scene_from_script(
+            graph = await build_scene_from_script(
                 lines=lines,
                 character_map=char_map,
                 tts_lines=tts_lines,
                 registry=_registry,
                 background_id=bg_id,
+                world_memory=world_memory,
             )
+            
+            # Update world memory using final keyframes
+            for node in graph.nodes.values():
+                if isinstance(node, CharacterNode):
+                    final_x = node.keyframes["x"][-1].value if node.keyframes.get("x") else 9.6
+                    final_y = node.keyframes["y"][-1].value if node.keyframes.get("y") else 7.5
+                    final_z = node.keyframes["z_index"][-1].value if node.keyframes.get("z_index") else 10
+                    world_memory[node.name] = {"x": final_x, "y": final_y, "z_index": final_z}
+                    
+            # Save the updated memory for Ankh-style persistence
+            try:
+                with open(memory_file, "w", encoding="utf-8") as f:
+                    json.dump(world_memory, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                logger.warning(f"Failed to save persistent memory: {e}")
+                    
             graph.name = f"Scene {i + 1}"
             if bg_id:
                 graph.metadata = {"background_id": bg_id}
@@ -541,36 +691,4 @@ async def auto_video_status():
         "tts_available": True,  # Volcengine TTS is always available
         "message": f"Ready: {char_count} characters, {bg_count} backgrounds" if has_registry else "Registry not initialized",
     }
-    
-    # Optional Layer Tweaks for Z-index Context
-    for char_id_script, layout in spatial_layout.items():
-        for node in graph.nodes.values():
-            if getattr(node, "node_type", "") == "character" and node.name == char_id_script:
-                target_x = layout.get("default_x", 9.6)
-                target_z = layout.get("default_z_index", 0)
-                node.set_position(target_x, node.transform.y)
-                node.z_index = target_z
 
-    log_step("done", "Hoàn tất VideoProject.", last_time)
-
-    project_data = {
-        "scenes": [
-            {
-                "name": "Scene 1",
-                "duration": graph.duration,
-                "metadata": {"background_id": background_id},
-                **graph.to_dict()
-            }
-        ],
-        "transitions": []
-    }
-
-    return AutoVideoResponse(
-        success=True,
-        project=project_data,
-        message="OK",
-        total_scenes=1,
-        total_duration=graph.duration,
-        total_characters=len([n for n in graph.nodes.values() if getattr(n, "node_type", "") == "character"]),
-        pipeline_steps=steps
-    )

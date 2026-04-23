@@ -100,16 +100,20 @@ Available Characters:
 Be concise. When you are done invoking tools to satisfy the user's prompt, provide a short friendly textual response indicating what you did.
 """
 
-    def start_session(self, available_characters_desc: str):
-        """Initializes a new chat session with the AI."""
+    def start_session(self, available_characters_desc: str, attempt: int = 0):
+        """Initializes a new chat session with the AI, rotating models based on attempt."""
         if not self.client:
             raise ValueError("API key not configured.")
             
         system_instruction = self._get_system_instruction(available_characters_desc)
         self._last_characters_desc = available_characters_desc
         
+        # Rotate models dynamically from user's API Key supported list
+        target_model = self.config.get_rotated_model(attempt)
+        logger.info(f"[SceneDirector] Session starting with model: {target_model} (attempt {attempt})")
+        
         self.chat_session = self.client.chats.create(
-            model=self.config.model,
+            model=target_model,
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 tools=self.gemini_tools,
@@ -136,30 +140,41 @@ Be concise. When you are done invoking tools to satisfy the user's prompt, provi
         
         # Send initial message with rate-limit retry across all keys
         last_error = None
-        for attempt in range(self.config.total_keys + 1):
+        max_attempts = max(1, self.config.total_keys) * 4
+        for attempt in range(max_attempts):
             try:
                 response = self.chat_session.send_message(user_message)
                 last_error = None
                 break  # Success
             except Exception as e:
-                error_str = str(e)
+                error_str = str(e).lower()
                 last_error = e
-                if ("429" in error_str or "RESOURCE_EXHAUSTED" in error_str) and attempt < self.config.total_keys:
+                if any(k in error_str for k in ["429", "quota", "resource_exhausted", "503", "unavailable", "ssl", "eof", "connection", "timeout", "protocol"]):
+                    import re, time
+                    delay = 35.0 if ("429" in error_str or "quota" in error_str or "resource_exhausted" in error_str) else 5.0
+                    m = re.search(r'retry in (\d+\.?\d*)s', error_str, re.IGNORECASE)
+                    if m:
+                        delay = float(m.group(1)) + 1.0
+
                     if self.config.rotate_key():
-                        logger.warning(f"[SceneDirector] Key {attempt+1} rate-limited, rotating to {self.config.current_key_label}...")
+                        logger.warning(f"[SceneDirector] Key rate-limited/network error, rotating to {self.config.current_key_label}...")
                         self.client = genai.Client(api_key=self.config.api_key)
-                        self.start_session(self._last_characters_desc or "")
-                        time.sleep(1)  # Brief pause before retry
+                        self.start_session(self._last_characters_desc or "", attempt=attempt)
+                        time.sleep(1)
                         continue
                     else:
-                        break
+                        logger.warning(f"[SceneDirector] All keys exhausted or network error. Sleeping {delay:.1f}s before retrying...")
+                        time.sleep(delay)
+                        # Re-init session in case it got stale
+                        self.client = genai.Client(api_key=self.config.api_key)
+                        self.start_session(self._last_characters_desc or "", attempt=attempt)
+                        continue
                 else:
                     raise
         
         if last_error is not None:
             raise RuntimeError(
-                f"All {self.config.total_keys} API keys exhausted (rate limited). "
-                f"Please wait ~60s or add more API keys."
+                f"Failed after {max_attempts} attempts due to rate limits or network errors."
             )
         
         # Max 15 iterations of tool calling loop to prevent infinite loops

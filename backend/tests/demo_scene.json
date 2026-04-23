@@ -1,5 +1,5 @@
 {
-  "id": "scene-2b66b6c9",
+  "id": "scene-87dd6d5e",
   "name": "Forest Encounter",
   "canvas_width": 1920,
   "canvas_height": 1080,
@@ -7,16 +7,16 @@
   "fps": 30,
   "duration": 6.0,
   "root_order": [
-    "background_layer-9365f1f7",
-    "background_layer-1939fd59",
-    "background_layer-2292e045",
-    "background_layer-1f6ba296",
-    "character-85408548",
-    "character-2f8bb1ed"
+    "background_layer-dc34339f",
+    "background_layer-6e6ed0a3",
+    "background_layer-6a964c84",
+    "background_layer-7251b3d1",
+    "character-4f2aaf59",
+    "character-b8de37ab"
   ],
   "nodes": {
-    "background_layer-9365f1f7": {
-      "id": "background_layer-9365f1f7",
+    "background_layer-dc34339f": {
+      "id": "background_layer-dc34339f",
       "name": "Sky",
       "node_type": "background_layer",
       "transform": {
@@ -37,8 +37,8 @@
       "parallax_speed": 0.1,
       "blur": 0.0
     },
-    "background_layer-1939fd59": {
-      "id": "background_layer-1939fd59",
+    "background_layer-6e6ed0a3": {
+      "id": "background_layer-6e6ed0a3",
       "name": "Mountains",
       "node_type": "background_layer",
       "transform": {
@@ -59,8 +59,8 @@
       "parallax_speed": 0.3,
       "blur": 0.0
     },
-    "background_layer-2292e045": {
-      "id": "background_layer-2292e045",
+    "background_layer-6a964c84": {
+      "id": "background_layer-6a964c84",
       "name": "Trees",
       "node_type": "background_layer",
       "transform": {
@@ -81,8 +81,8 @@
       "parallax_speed": 0.7,
       "blur": 0.0
     },
-    "background_layer-1f6ba296": {
-      "id": "background_layer-1f6ba296",
+    "background_layer-7251b3d1": {
+      "id": "background_layer-7251b3d1",
       "name": "Ground",
       "node_type": "background_layer",
       "transform": {
@@ -103,8 +103,8 @@
       "parallax_speed": 1.0,
       "blur": 0.0
     },
-    "character-85408548": {
-      "id": "character-85408548",
+    "character-4f2aaf59": {
+      "id": "character-4f2aaf59",
       "name": "Hero",
       "node_type": "character",
       "transform": {
@@ -169,8 +169,8 @@
         }
       ]
     },
-    "character-2f8bb1ed": {
-      "id": "character-2f8bb1ed",
+    "character-b8de37ab": {
+      "id": "character-b8de37ab",
       "name": "Villain",
       "node_type": "character",
       "transform": {

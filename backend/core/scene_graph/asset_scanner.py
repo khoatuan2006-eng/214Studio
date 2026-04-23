@@ -135,12 +135,12 @@ class CharacterInfo:
         """AI-readable description."""
         lines = [
             f"Character: {self.name} (id: {self.id})",
-            f"  Poses ({len(self.poses)}): {', '.join(self.pose_names[:10])}{'...' if len(self.poses) > 10 else ''}",
-            f"  Faces ({len(self.faces)}): {', '.join(self.face_names[:10])}{'...' if len(self.faces) > 10 else ''}",
+            f"  Poses ({len(self.poses)}): {', '.join(self.pose_names)}",
+            f"  Faces ({len(self.faces)}): {', '.join(self.face_names)}",
         ]
         if self.faces_dot_eye:
             names = sorted(self.faces_dot_eye.keys())
-            lines.append(f"  Dot-eye ({len(self.faces_dot_eye)}): {', '.join(names[:10])}")
+            lines.append(f"  Dot-eye ({len(self.faces_dot_eye)}): {', '.join(names)}")
         return "\n".join(lines)
 
 

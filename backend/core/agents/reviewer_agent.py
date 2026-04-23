@@ -90,15 +90,18 @@ You are reviewing an anime scene that was automatically generated. You have:
 - **Too few frames** (static scene with no animation)
 - **Frame timing too uniform** (all same duration = robotic)
 
-## Position Reference (1920x1080 canvas)
-- Center: (960, 540)
-- Standing characters feet: y ≈ 700-850
-- Characters should have x between 100-1820
+## Position Reference (Web Space: 19.2 x 10.8 units)
+- X axis: 0.0 (left edge) to 19.2 (right edge). Center is 9.6.
+- Y axis: 0.0 (top edge) to 10.8 (bottom edge). Center is 5.4.
+- Standing characters feet: y ≈ 7.0 to 9.5
+- Character default block scale is usually 1.0 or 1.5.
 
-## Correctable Fields
-- posX, posY, scale, opacity, zIndex (node properties)
-- sequence[N].layers.GROUP_NAME = "new_asset_name" (change a frame's layer selection)
-- sequence[N].duration = new_value (change frame timing)
+## Swarm Rules & Correctable Controls (Semantic Actions)
+Never return absolute coordinate numbers. You must decide WHO needs to move, and output a relative action with an intensity from 1 to 10 (1 = tiny tweak, 5 = medium change, 10 = massive jump).
+Available actions:
+- "nudge_left", "nudge_right", "nudge_up", "nudge_down" (adjust position)
+- "scale_up", "scale_down" (adjust size)
+- "bring_to_front", "send_to_back" (adjust zIndex)
 
 ## Response Format
 Return ONLY valid JSON (no markdown):
@@ -109,10 +112,9 @@ Return ONLY valid JSON (no markdown):
   "corrections": [
     {
       "node_id": "the node's id",
-      "field": "posX",
-      "old_value": 100,
-      "new_value": 400,
-      "reason": "Character was too close to the left edge"
+      "action": "nudge_left",
+      "intensity": 5,
+      "reason": "Character was too close to the center, blocking the other actor"
     }
   ]
 }
@@ -311,10 +313,15 @@ def _build_node_id_reference(nodes: list[dict]) -> str:
     lines = []
     for node in nodes:
         node_id = node.get("id", "")
-        node_type = node.get("type", "")
+        # SceneGraph V2 uses nodeType, Legacy uses type
+        node_type = node.get("nodeType") or node.get("type", "")
+        
+        # Legacy node data
         data = node.get("data", {})
-        label = data.get("label", "")
-        name = data.get("characterName", "") or label
+        # V2 properties
+        transform = node.get("transform", {})
+        
+        name = node.get("name") or data.get("characterName") or data.get("label", "")
 
         if node_type == "scene":
             continue
@@ -322,8 +329,13 @@ def _build_node_id_reference(nodes: list[dict]) -> str:
         line = f"  {node_id} ({node_type}): {name}"
 
         if node_type == "character":
-            line += f" pos=({data.get('posX', 0)}, {data.get('posY', 0)})"
-            line += f" scale={data.get('scale', 1)} z={data.get('zIndex', 10)}"
+            posX = transform.get("x") if "x" in transform else data.get("posX", 0)
+            posY = transform.get("y") if "y" in transform else data.get("posY", 0)
+            scale = transform.get("scaleX") if "scaleX" in transform else data.get("scale", 1)
+            zIndex = transform.get("zIndex") if "zIndex" in transform else data.get("zIndex", 10)
+            
+            line += f" pos=({posX:.1f}, {posY:.1f})"
+            line += f" scale={scale:.1f} z={zIndex}"
 
             # Show frame selections
             seq = data.get("sequence", [])

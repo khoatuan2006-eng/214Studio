@@ -104,7 +104,7 @@ interface SceneGraphStore {
     isPlaying: boolean;
 
     // AI Chat state
-    chatHistory: { role: 'user'|'ai'; text: string; sceneData?: any }[];
+    chatHistory: { role: 'user' | 'ai'; text: string; sceneData?: any }[];
     isAILoading: boolean;
 
     // Character registry (from backend)
@@ -119,6 +119,10 @@ interface SceneGraphStore {
     sidebarTab: 'auto' | 'nodes' | 'chat' | 'script' | 'edit';
     isAutoKeyframe: boolean;
     toggleAutoKeyframe: () => void;
+
+    // ── Human Supremacy: Lock & Solo ──
+    lockedNodes: Set<string>;
+    soloedNodeId: string | null;
 
     // ── Actions — Multi-Scene ──
     addScene: (name?: string, sceneData?: any) => number; // returns scene index
@@ -170,6 +174,16 @@ interface SceneGraphStore {
     // ── Actions — UI ──
     setSelectedBlock: (block: { nodeId: string; frameIndex?: number; sceneId: string } | null) => void;
     setSidebarTab: (tab: 'auto' | 'nodes' | 'chat' | 'script' | 'edit') => void;
+
+    // ── Actions — Human Supremacy ──
+    toggleNodeVisibility: (nodeId: string) => void;
+    toggleNodeLock: (nodeId: string) => void;
+    setNodeZIndex: (nodeId: string, newZ: number) => void;
+    reorderNodesZ: (orderedNodeIds: string[]) => void;
+    soloNode: (nodeId: string | null) => void;
+    cyclePose: (nodeId: string, direction: 1 | -1) => void;
+    cycleFace: (nodeId: string, direction: 1 | -1) => void;
+    flipCharacter: (nodeId: string) => void;
 
     // ── Actions — Evaluate ──
     evaluate: () => void;
@@ -269,6 +283,8 @@ export const useSceneGraphStore = create<SceneGraphStore>((set, get) => ({
     selectedBlock: null,
     sidebarTab: 'auto',
     isAutoKeyframe: false,
+    lockedNodes: new Set<string>(),
+    soloedNodeId: null,
 
     // Active scene shortcuts
     manager: initialScene.manager,
@@ -567,7 +583,7 @@ export const useSceneGraphStore = create<SceneGraphStore>((set, get) => ({
             if (data.success && data.scene) {
                 // Apply the new scene data
                 get().applySceneData(data.scene);
-                
+
                 set((s) => ({
                     chatHistory: [
                         ...s.chatHistory,
@@ -809,6 +825,119 @@ export const useSceneGraphStore = create<SceneGraphStore>((set, get) => ({
     setSelectedBlock: (block) => set({ selectedBlock: block }),
     setSidebarTab: (tab) => set({ sidebarTab: tab }),
     toggleAutoKeyframe: () => set((state) => ({ isAutoKeyframe: !state.isAutoKeyframe })),
+
+    // ── Actions — Human Supremacy ──
+    toggleNodeVisibility: (nodeId) => {
+        const { manager } = get();
+        const node = manager.getNode(nodeId);
+        if (!node) return;
+        const current = node.visible !== false;
+        manager.updateNode(nodeId, { visible: !current } as any);
+        get().evaluate();
+    },
+
+    toggleNodeLock: (nodeId) => {
+        set(s => {
+            const next = new Set(s.lockedNodes);
+            if (next.has(nodeId)) next.delete(nodeId);
+            else next.add(nodeId);
+            return { lockedNodes: next };
+        });
+    },
+
+    setNodeZIndex: (nodeId, newZ) => {
+        const { manager } = get();
+        manager.updateNode(nodeId, { zIndex: newZ } as any);
+        get().evaluate();
+    },
+
+    reorderNodesZ: (orderedNodeIds) => {
+        const { manager } = get();
+        // Assign ascending z-index based on array order
+        orderedNodeIds.forEach((id, idx) => {
+            manager.updateNode(id, { zIndex: (idx + 1) * 10 } as any);
+        });
+        get().evaluate();
+    },
+
+    soloNode: (nodeId) => {
+        const { manager, soloedNodeId } = get();
+        if (nodeId === soloedNodeId) {
+            // Un-solo: restore all visibility
+            const allNodes = Object.values(manager.graph.nodes);
+            allNodes.forEach(n => manager.updateNode(n.id, { visible: true } as any));
+            set({ soloedNodeId: null });
+        } else {
+            // Solo: hide all except target
+            const allNodes = Object.values(manager.graph.nodes);
+            allNodes.forEach(n => {
+                manager.updateNode(n.id, { visible: n.id === nodeId } as any);
+            });
+            set({ soloedNodeId: nodeId });
+        }
+        get().evaluate();
+    },
+
+    cyclePose: (nodeId, direction) => {
+        const state = get();
+        const { manager, selectedBlock } = state;
+        const node = manager.getNode(nodeId) as any;
+        if (!node || node.nodeType !== 'character') return;
+        const poses = node.availableLayers?.pose || [];
+        if (poses.length === 0) return;
+        
+        const idx = selectedBlock?.frameIndex;
+        let current = node.activeLayers?.pose || '';
+        if (idx !== undefined && node.frameSequence && node.frameSequence[idx]) {
+            current = node.frameSequence[idx].layers?.pose || current;
+        }
+        
+        const currentIdx = poses.indexOf(current);
+        const nextIdx = (currentIdx + direction + poses.length) % poses.length;
+        const nextPose = poses[nextIdx];
+
+        if (idx !== undefined && node.frameSequence && node.frameSequence[idx]) {
+            state.updateCharacterFrameLayers(nodeId, selectedBlock!.sceneId, idx, { pose: nextPose });
+        } else {
+            manager.updateNode(nodeId, { activeLayers: { ...node.activeLayers, pose: nextPose } });
+            state.evaluate();
+        }
+    },
+
+    cycleFace: (nodeId, direction) => {
+        const state = get();
+        const { manager, selectedBlock } = state;
+        const node = manager.getNode(nodeId) as any;
+        if (!node || node.nodeType !== 'character') return;
+        const faces = node.availableLayers?.face || [];
+        if (faces.length === 0) return;
+        
+        const idx = selectedBlock?.frameIndex;
+        let current = node.activeLayers?.face || '';
+        if (idx !== undefined && node.frameSequence && node.frameSequence[idx]) {
+            current = node.frameSequence[idx].layers?.face || current;
+        }
+        
+        const currentIdx = faces.indexOf(current);
+        const nextIdx = (currentIdx + direction + faces.length) % faces.length;
+        const nextFace = faces[nextIdx];
+
+        if (idx !== undefined && node.frameSequence && node.frameSequence[idx]) {
+            state.updateCharacterFrameLayers(nodeId, selectedBlock!.sceneId, idx, { face: nextFace });
+        } else {
+            manager.updateNode(nodeId, { activeLayers: { ...node.activeLayers, face: nextFace } });
+            state.evaluate();
+        }
+    },
+
+    flipCharacter: (nodeId) => {
+        const { manager } = get();
+        const node = manager.getNode(nodeId);
+        if (!node) return;
+        const currentScaleX = node.transform.scaleX || 1;
+        manager.updateTransform(nodeId, { scaleX: -currentScaleX });
+        get().evaluate();
+    },
 
     // ══════════════════════════════════════════════
     //  Playback (Multi-Scene Aware)

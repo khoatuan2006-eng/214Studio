@@ -40,8 +40,8 @@ export const SceneGraphTimeline: React.FC = () => {
     const sceneBoundaries = useSceneGraphStore(s => s.sceneBoundaries);
 
     // Keep reactivity tightly bound
-    useSceneGraphStore(s => s.sceneNodeIds);
-    useSceneGraphStore(s => s.snapshot);
+    const sceneNodeIds = useSceneGraphStore(s => s.sceneNodeIds);
+    const snapshot = useSceneGraphStore(s => s.snapshot);
 
     // Timeline internal state
     const [scale, setScale] = useState(2);
@@ -53,6 +53,18 @@ export const SceneGraphTimeline: React.FC = () => {
 
     // Context menu state
     const [contextMenu, setContextMenu] = useState<ContextMenuProps | null>(null);
+
+    // UI Local State: Track expanded character nodes
+    const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+
+    const toggleNodeExpansion = useCallback((nodeId: string) => {
+        setExpandedNodes(prev => {
+            const next = new Set(prev);
+            if (next.has(nodeId)) next.delete(nodeId);
+            else next.add(nodeId);
+            return next;
+        });
+    }, []);
 
     const isMultiScene = scenes.length > 1;
     const totalDur = isMultiScene ? Math.max(1, globalDuration) : Math.max(1, duration);
@@ -78,41 +90,75 @@ export const SceneGraphTimeline: React.FC = () => {
                 if (node.nodeType === 'character') {
                     const charNode = node as any;
                     const frames = charNode.frameSequence || [];
-                    
-                    if (frames.length > 0) {
-                        for (let i = 0; i < frames.length; i++) {
-                            const frame = frames[i];
-                            const nextFrame = frames[i + 1];
-                            
-                            const startObj = offset + frame.time;
-                            const endObj = offset + (nextFrame ? nextFrame.time : nodeDur);
-                            
-                            if (endObj <= startObj) continue;
+                    const isExpanded = expandedNodes.has(node.id);
 
-                            row.actions.push({
-                                id: `frame_${scene.id}_${node.id}_${i}`,
-                                start: startObj,
-                                end: endObj,
-                                effectId: "poseLayer",
-                                data: {
-                                    sceneId: scene.id,
-                                    nodeId: node.id,
-                                    frameIndex: i,
-                                    totalFrames: frames.length,
-                                    pose: frame.layers?.pose || '—',
-                                    face: frame.layers?.face || '—'
-                                }
+                    // Master Track (Always present)
+                    row.actions.push({
+                        id: `char_master_${scene.id}_${node.id}`,
+                        start: offset,
+                        end: offset + nodeDur,
+                        effectId: "characterMaster",
+                        data: { sceneId: scene.id, nodeId: node.id, isExpanded, name: node.name }
+                    } as any);
+
+                    // Sub-tracks when expanded
+                    if (isExpanded) {
+                        const poseTrackId = `↳ ${node.name || node.id} [Pose]`;
+                        const faceTrackId = `↳ ${node.name || node.id} [Face]`;
+
+                        rowsMap.set(poseTrackId, { id: poseTrackId, actions: [] });
+                        rowsMap.set(faceTrackId, { id: faceTrackId, actions: [] });
+
+                        const poseRow = rowsMap.get(poseTrackId)!;
+                        const faceRow = rowsMap.get(faceTrackId)!;
+
+                        if (frames.length > 0) {
+                            for (let i = 0; i < frames.length; i++) {
+                                const frame = frames[i];
+                                const nextFrame = frames[i + 1];
+                                
+                                const startObj = offset + frame.time;
+                                const endObj = offset + (nextFrame ? nextFrame.time : nodeDur);
+                                
+                                if (endObj <= startObj) continue;
+
+                                poseRow.actions.push({
+                                    id: `frame_pose_${scene.id}_${node.id}_${i}`,
+                                    start: startObj,
+                                    end: endObj,
+                                    effectId: "poseLayer",
+                                    data: {
+                                        sceneId: scene.id, nodeId: node.id, frameIndex: i, totalFrames: frames.length,
+                                        value: frame.layers?.pose || '—'
+                                    }
+                                } as any);
+
+                                faceRow.actions.push({
+                                    id: `frame_face_${scene.id}_${node.id}_${i}`,
+                                    start: startObj,
+                                    end: endObj,
+                                    effectId: "faceLayer",
+                                    data: {
+                                        sceneId: scene.id, nodeId: node.id, frameIndex: i, totalFrames: frames.length,
+                                        value: frame.layers?.face || '—'
+                                    }
+                                } as any);
+                            }
+                        } else {
+                            // If no frames exist yet, show a placeholder
+                            poseRow.actions.push({
+                                id: `frame_pose_empty_${scene.id}_${node.id}`,
+                                start: offset, end: offset + nodeDur, effectId: "staticExt",
+                                data: { sceneId: scene.id, nodeId: node.id }
+                            } as any);
+                            faceRow.actions.push({
+                                id: `frame_face_empty_${scene.id}_${node.id}`,
+                                start: offset, end: offset + nodeDur, effectId: "staticExt",
+                                data: { sceneId: scene.id, nodeId: node.id }
                             } as any);
                         }
-                    } else {
-                        row.actions.push({
-                             id: `static_${scene.id}_${node.id}`,
-                             start: offset,
-                             end: offset + nodeDur,
-                             effectId: "static",
-                             data: { sceneId: scene.id, nodeId: node.id }
-                        } as any);
                     }
+
                 } else if (node.nodeType === 'background_layer') {
                     row.actions.push({
                          id: `bg_${scene.id}_${node.id}`,
@@ -144,27 +190,30 @@ export const SceneGraphTimeline: React.FC = () => {
 
         const rows = Array.from(rowsMap.values());
         
+        // Sorting logic to keep sub-tracks immediately under their parent tracks
         rows.sort((a, b) => {
-            const hasBgA = a.actions.some(ac => ac.effectId === 'background');
-            const hasBgB = b.actions.some(ac => ac.effectId === 'background');
-            const hasCharA = a.actions.some(ac => ac.effectId === 'poseLayer');
-            const hasCharB = b.actions.some(ac => ac.effectId === 'poseLayer');
-            
-            if (hasCharA && !hasCharB) return -1;
-            if (!hasCharA && hasCharB) return 1;
-            
-            if (hasBgA && !hasBgB) return 1;
-            if (!hasBgA && hasBgB) return -1;
-            
+            const getParentId = (rt: string) => rt.startsWith('↳') ? rt.substring(2, rt.indexOf('[')).trim() : rt;
+            const parentA = getParentId(a.id);
+            const parentB = getParentId(b.id);
+
+            // Group by parent
+            if (parentA !== parentB) {
+                return parentA.localeCompare(parentB);
+            }
+
+            // Inside same group
+            if (a.id === parentA && b.id !== parentA) return -1; // Parent comes first
+            if (b.id === parentA && a.id !== parentA) return 1;
+
             return a.id.localeCompare(b.id);
         });
 
         return rows;
-    }, [scenes, sceneBoundaries, isMultiScene]);
+    }, [scenes, sceneBoundaries, isMultiScene, expandedNodes, sceneNodeIds]);
 
     // ── Handle drag updates ──
     const handleActionUpdate = (action: TimelineAction, row: TimelineRow) => {
-        if (action.id.startsWith('frame_')) {
+        if (action.id.startsWith('frame_pose_') || action.id.startsWith('frame_face_')) {
             const data = (action as any).data;
             if (data && data.frameIndex !== undefined && data.sceneId && data.nodeId) {
                 const scene = scenes.find(s => s.id === data.sceneId);
@@ -172,6 +221,7 @@ export const SceneGraphTimeline: React.FC = () => {
                     const boundary = sceneBoundaries.find(b => b.sceneIndex === scenes.indexOf(scene));
                     const offset = isMultiScene && boundary ? boundary.start : 0;
                     const newLocalTime = action.start - offset;
+                    // Updating one will implicitly update the other as they share the same frameIndex
                     scene.manager.updateCharacterFrameTime(data.nodeId, data.frameIndex, newLocalTime);
                 }
             }
@@ -201,7 +251,7 @@ export const SceneGraphTimeline: React.FC = () => {
         e.preventDefault();
         const { frameIndex, sceneId, nodeId, totalFrames } = parseActionData(action, row);
 
-        const isCharFrame = action.id.startsWith('frame_') && frameIndex !== undefined;
+        const isCharFrame = (action.id.startsWith('frame_pose_') || action.id.startsWith('frame_face_')) && frameIndex !== undefined;
 
         const items = buildActionMenuItems({
             onEdit: () => {
@@ -209,9 +259,7 @@ export const SceneGraphTimeline: React.FC = () => {
                 setSidebarTab('edit');
             },
             onDuplicate: () => {
-                if (isCharFrame) {
-                    duplicateCharacterFrame(nodeId, sceneId, frameIndex!);
-                }
+                if (isCharFrame) duplicateCharacterFrame(nodeId, sceneId, frameIndex!);
             },
             onDelete: () => {
                 if (isCharFrame) {
@@ -229,9 +277,7 @@ export const SceneGraphTimeline: React.FC = () => {
                     const newTime = parseFloat(input);
                     if (!isNaN(newTime) && newTime >= 0) {
                         const scene = scenes.find(s => s.id === sceneId);
-                        if (scene) {
-                            scene.manager.updateCharacterFrameTime(nodeId, frameIndex!, newTime);
-                        }
+                        if (scene) scene.manager.updateCharacterFrameTime(nodeId, frameIndex!, newTime);
                     }
                 }
             } : undefined,
@@ -245,16 +291,15 @@ export const SceneGraphTimeline: React.FC = () => {
     const handleContextMenuRow = useCallback((e: React.MouseEvent, { row, time }: { row: TimelineRow; time: number }) => {
         e.preventDefault();
 
-        // Find which scene/node this row belongs to
         const firstAction = row.actions[0];
         const data = firstAction ? (firstAction as any).data : null;
         const sceneId = data?.sceneId || scenes[activeSceneIndex]?.id;
-        const nodeId = data?.nodeId || row.id;
+        const nodeId = data?.nodeId || row.id.replace('↳ ', '').split(' [')[0];
 
-        // Check if we can add frames (character nodes only)
         const scene = scenes.find(s => s.id === sceneId);
         const node = scene?.manager.getNode(nodeId);
         const isChar = node?.nodeType === 'character';
+        const isSubTrack = row.id.startsWith('↳ ');
 
         const boundary = sceneBoundaries.find(b => scenes.indexOf(scene!) === b.sceneIndex);
         const offset = isMultiScene && boundary ? boundary.start : 0;
@@ -262,12 +307,10 @@ export const SceneGraphTimeline: React.FC = () => {
 
         const items = buildRowMenuItems({
             onAddFrame: () => {
-                if (isChar) {
-                    addCharacterFrame(nodeId, sceneId, localT);
-                }
+                if (isChar) addCharacterFrame(nodeId, sceneId, localT);
             },
             onRemoveTrack: () => {
-                if (confirm(`Remove "${row.id}" from scene?`)) {
+                if (!isSubTrack && confirm(`Remove "${node?.name || nodeId}" from scene?`)) {
                     removeFromScene(nodeId);
                     setSelectedBlock(null);
                 }
@@ -275,14 +318,24 @@ export const SceneGraphTimeline: React.FC = () => {
             trackName: row.id,
         });
 
-        // Disable "Add Frame" for non-character tracks
-        if (!isChar) {
-            items[0].disabled = true;
-            items[0].label = 'Add Frame (characters only)';
+        // Add Expansion Toggle Option
+        if (isChar && !isSubTrack) {
+            items.unshift({
+                label: expandedNodes.has(nodeId) ? '▼ Thu gọn Group' : '▶ Nhấn mở xem Poses/Faces',
+                onClick: () => toggleNodeExpansion(nodeId),
+            });
+        }
+
+        if (!isChar || isSubTrack) {
+            items.find(i => i.label.includes('Add Frame'))!.disabled = true;
+        }
+
+        if (isSubTrack) {
+            items.find(i => i.label.includes('Remove'))!.disabled = true;
         }
 
         setContextMenu({ x: e.clientX, y: e.clientY, items, onClose: () => setContextMenu(null) });
-    }, [scenes, activeSceneIndex, sceneBoundaries, isMultiScene, addCharacterFrame, removeFromScene, setSelectedBlock]);
+    }, [scenes, activeSceneIndex, sceneBoundaries, isMultiScene, addCharacterFrame, removeFromScene, setSelectedBlock, expandedNodes, toggleNodeExpansion]);
 
     // ── Toolbar actions ──
     const handleAddFrameAtCursor = useCallback(() => {
@@ -308,10 +361,19 @@ export const SceneGraphTimeline: React.FC = () => {
         duplicateCharacterFrame(selectedBlock.nodeId, selectedBlock.sceneId, selectedBlock.frameIndex);
     }, [selectedBlock, duplicateCharacterFrame]);
 
-    // ── Keyboard shortcuts ──
+    // ── Keyboard shortcuts (extended — Human Supremacy) ──
+    const cyclePose = useSceneGraphStore(s => s.cyclePose);
+    const cycleFace = useSceneGraphStore(s => s.cycleFace);
+    const flipCharacter = useSceneGraphStore(s => s.flipCharacter);
+    const toggleNodeVisibility = useSceneGraphStore(s => s.toggleNodeVisibility);
+    const toggleNodeLock = useSceneGraphStore(s => s.toggleNodeLock);
+    const setNodeZIndex = useSceneGraphStore(s => s.setNodeZIndex);
+
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+            
+            const nodeId = selectedBlock?.nodeId;
             
             if (e.key === 'Delete' && selectedBlock?.frameIndex !== undefined) {
                 e.preventDefault();
@@ -325,26 +387,40 @@ export const SceneGraphTimeline: React.FC = () => {
                 e.preventDefault();
                 togglePlay();
             }
+
+            // Human Supremacy shortcuts
+            if (nodeId) {
+                if (e.key === ']') { e.preventDefault(); cyclePose(nodeId, 1); }
+                if (e.key === '[') { e.preventDefault(); cyclePose(nodeId, -1); }
+                if (e.key === '}') { e.preventDefault(); cycleFace(nodeId, 1); }
+                if (e.key === '{') { e.preventDefault(); cycleFace(nodeId, -1); }
+                if (e.key === 'h' || e.key === 'H') { e.preventDefault(); toggleNodeVisibility(nodeId); }
+                if (e.key === 'l' || e.key === 'L') { e.preventDefault(); toggleNodeLock(nodeId); }
+                if (e.key === 'f' || e.key === 'F') { e.preventDefault(); flipCharacter(nodeId); }
+                if (e.key === 'PageUp') { e.preventDefault(); const z = snapshot[nodeId]?.zIndex ?? 0; setNodeZIndex(nodeId, z + 5); }
+                if (e.key === 'PageDown') { e.preventDefault(); const z = snapshot[nodeId]?.zIndex ?? 0; setNodeZIndex(nodeId, z - 5); }
+            }
         };
         window.addEventListener('keydown', handleKey);
         return () => window.removeEventListener('keydown', handleKey);
-    }, [selectedBlock, handleDeleteSelected, handleDuplicateSelected, togglePlay]);
+    }, [selectedBlock, handleDeleteSelected, handleDuplicateSelected, togglePlay, cyclePose, cycleFace, flipCharacter, toggleNodeVisibility, toggleNodeLock, setNodeZIndex, snapshot]);
 
     const effects = useMemo(() => ({
-        "poseLayer": { id: "poseLayer", name: "Pose Clip" },
-        "background": { id: "background", name: "Bg Clip" },
-        "text": { id: "text", name: "Subtitle" },
+        "poseLayer": { id: "poseLayer", name: "Pose" },
+        "faceLayer": { id: "faceLayer", name: "Face" },
+        "characterMaster": { id: "characterMaster", name: "Character Group" },
+        "background": { id: "background", name: "Bg" },
+        "text": { id: "text", name: "Text" },
         "static": { id: "static", name: "Static Asset" },
+        "staticExt": { id: "staticExt", name: "Empty Layer" }
     }), []);
 
-    // Sync external playhead changes back to timeline library
     useEffect(() => {
         if (timelineState.current) {
             timelineState.current.setTime(displayTime);
         }
     }, [displayTime]);
 
-    // Check if an action is currently selected
     const isActionSelected = useCallback((action: TimelineAction) => {
         if (!selectedBlock) return false;
         const data = (action as any).data;
@@ -360,7 +436,6 @@ export const SceneGraphTimeline: React.FC = () => {
 
             {/* Playback Controls + Toolbar */}
             <div className="h-10 flex items-center px-3 gap-2 bg-black/40 border-b border-white/5">
-                {/* Play/Pause */}
                 <button
                     onClick={togglePlay}
                     className="px-3 py-1 rounded-md text-[10px] font-bold uppercase transition shrink-0"
@@ -371,106 +446,33 @@ export const SceneGraphTimeline: React.FC = () => {
                 >
                     {isPlaying ? '⏸' : '▶'}
                 </button>
-
-                {/* Divider */}
                 <div className="w-px h-5 bg-white/10" />
-
-                {/* Zoom controls */}
                 <div className="flex gap-1 items-center shrink-0">
                     <button onClick={() => setScale(s => Math.max(1, s - 1))} className="w-5 h-5 flex items-center justify-center bg-white/5 rounded hover:bg-white/15 text-[10px]">−</button>
                     <span className="text-[9px] font-mono text-cyan-400 w-8 text-center">{scale}x</span>
                     <button onClick={() => setScale(s => Math.min(20, s + 1))} className="w-5 h-5 flex items-center justify-center bg-white/5 rounded hover:bg-white/15 text-[10px]">+</button>
                 </div>
-
-                {/* Divider */}
                 <div className="w-px h-5 bg-white/10" />
-
-                {/* Snap toggles */}
-                <button
-                    onClick={() => setGridSnap(v => !v)}
-                    className={`px-2 py-1 rounded text-[9px] font-bold transition ${gridSnap ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/40' : 'bg-white/5 text-neutral-500 hover:text-neutral-300'}`}
-                    title="Grid Snap"
-                >
-                    🔲 Grid
-                </button>
-                <button
-                    onClick={() => setDragLine(v => !v)}
-                    className={`px-2 py-1 rounded text-[9px] font-bold transition ${dragLine ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/40' : 'bg-white/5 text-neutral-500 hover:text-neutral-300'}`}
-                    title="Drag Line Snap"
-                >
-                    📏 Snap
-                </button>
-
-                {/* Divider */}
+                <button onClick={() => setGridSnap(v => !v)} className={`px-2 py-1 rounded text-[9px] font-bold transition ${gridSnap ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/40' : 'bg-white/5 text-neutral-500'}`}>🔲 Grid</button>
+                <button onClick={() => setDragLine(v => !v)} className={`px-2 py-1 rounded text-[9px] font-bold transition ${dragLine ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/40' : 'bg-white/5 text-neutral-500'}`}>📏 Snap</button>
                 <div className="w-px h-5 bg-white/10" />
-
-                {/* Auto Keyframe Toggle */}
-                <button
-                    onClick={toggleAutoKeyframe}
-                    className={`px-2 py-1 rounded text-[9px] font-bold transition flex items-center gap-1 ${
-                        isAutoKeyframe 
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.4)] animate-pulse' 
-                            : 'bg-white/5 text-neutral-500 hover:text-neutral-300'
-                    }`}
-                    title="Toggle Auto Keyframing (Canvas dragging records animation automatically)"
-                >
+                <button onClick={toggleAutoKeyframe} className={`px-2 py-1 rounded text-[9px] font-bold flex items-center gap-1 ${isAutoKeyframe ? 'bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse' : 'bg-white/5 text-neutral-500'}`}>
                     <span className="text-[10px]">{isAutoKeyframe ? '🔴 REC' : '⚪ Auto KF'}</span>
                 </button>
-
-                {/* Divider */}
                 <div className="w-px h-5 bg-white/10" />
-
-                {/* CRUD Toolbar */}
-                <button
-                    onClick={handleAddFrameAtCursor}
-                    disabled={!selectedBlock}
-                    className="px-2 py-1 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                    title="Add Frame at Cursor (selected track)"
-                >
-                    ➕ Add
-                </button>
-                <button
-                    onClick={handleDuplicateSelected}
-                    disabled={!selectedBlock || selectedBlock.frameIndex === undefined}
-                    className="px-2 py-1 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                    title="Duplicate Selected Frame (Ctrl+D)"
-                >
-                    📋 Dup
-                </button>
-                <button
-                    onClick={handleDeleteSelected}
-                    disabled={!selectedBlock || selectedBlock.frameIndex === undefined}
-                    className="px-2 py-1 rounded text-[9px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                    title="Delete Selected Frame (Del)"
-                >
-                    🗑️ Del
-                </button>
-
-                {/* Seek slider */}
-                <div className="flex-1 mx-2 flex items-center min-w-[60px]">
-                    <input
-                        type="range"
-                        min={0}
-                        max={totalDur}
-                        step={0.01}
-                        value={displayTime}
-                        onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            isMultiScene ? setGlobalTime(val) : setTime(val);
-                        }}
-                        className="w-full accent-cyan-500 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                        title="Seek Time"
-                    />
+                <button onClick={handleAddFrameAtCursor} disabled={!selectedBlock} className="px-2 py-1 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-30 transition">➕ Add</button>
+                <button onClick={handleDuplicateSelected} disabled={!selectedBlock || selectedBlock.frameIndex === undefined} className="px-2 py-1 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 disabled:opacity-30 transition">📋 Dup</button>
+                <button onClick={handleDeleteSelected} disabled={!selectedBlock || selectedBlock.frameIndex === undefined} className="px-2 py-1 rounded text-[9px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-30 transition">🗑️ Del</button>
+                <div className="flex-1 mx-2">
+                    <input type="range" min={0} max={totalDur} step={0.01} value={displayTime} 
+                        onChange={(e) => { isMultiScene ? setGlobalTime(parseFloat(e.target.value)) : setTime(parseFloat(e.target.value)) }}
+                        className="w-full accent-cyan-500 h-1 bg-white/10 rounded-lg cursor-pointer" />
                 </div>
-
-                {/* Time display */}
-                <div className="text-[10px] font-mono text-cyan-200 shrink-0">
-                    {displayTime.toFixed(2)} / {totalDur.toFixed(2)}s
-                </div>
+                <div className="text-[10px] font-mono text-cyan-200 shrink-0">{displayTime.toFixed(2)} / {totalDur.toFixed(2)}s</div>
             </div>
 
             {/* Timeline Editor */}
-            <div className="flex-1 relative overflow-hidden bg-black/40">
+            <div className="flex-1 relative overflow-hidden bg-black/40 timeline-wrapper">
                 <Timeline
                     ref={timelineState}
                     editorData={editorData}
@@ -480,91 +482,88 @@ export const SceneGraphTimeline: React.FC = () => {
                     autoScroll={isPlaying}
                     gridSnap={gridSnap}
                     dragLine={dragLine}
-                    onChange={(data) => {
-                        // Not rigorously implemented as it overwrites entire tree
-                    }}
+                    onChange={() => {}}
                     onActionResizing={({ action, row }) => handleActionUpdate(action, row)}
                     onActionResizeEnd={({ action, row }) => handleActionUpdate(action, row)}
                     onActionMoving={({ action, row }) => handleActionUpdate(action, row)}
                     onActionMoveEnd={({ action, row }) => handleActionUpdate(action, row)}
                     onClickAction={(e, { action, row }) => {
-                        const { frameIndex, sceneId, nodeId } = parseActionData(action, row);
-                        setSelectedBlock({ nodeId, frameIndex, sceneId });
-                        setSidebarTab('edit');
+                        if (action.effectId === 'characterMaster') {
+                            const data = (action as any).data;
+                            if (data && data.nodeId) toggleNodeExpansion(data.nodeId);
+                        } else {
+                            const { frameIndex, sceneId, nodeId } = parseActionData(action, row);
+                            if (frameIndex !== undefined) {
+                                setSelectedBlock({ nodeId, frameIndex, sceneId });
+                                setSidebarTab('edit');
+                            }
+                        }
                     }}
                     onDoubleClickAction={(e, { action, row }) => {
-                        const { frameIndex, sceneId, nodeId } = parseActionData(action, row);
-                        setSelectedBlock({ nodeId, frameIndex, sceneId });
-                        setSidebarTab('edit');
+                        const data = (action as any).data;
+                        if (data && data.nodeId) toggleNodeExpansion(data.nodeId);
                     }}
                     onContextMenuAction={handleContextMenuAction}
                     onContextMenuRow={handleContextMenuRow}
-                    onClickTimeArea={(t) => {
-                        isMultiScene ? setGlobalTime(t) : setTime(t);
-                    }}
-                    onCursorDrag={(t) => {
-                        isMultiScene ? setGlobalTime(t) : setTime(t);
-                    }}
+                    onClickTimeArea={(t) => { isMultiScene ? setGlobalTime(t) : setTime(t) }}
+                    onCursorDrag={(t) => { isMultiScene ? setGlobalTime(t) : setTime(t) }}
+                    
                     getActionRender={(action, row) => {
                         const effectId = action.effectId as string;
                         const selected = isActionSelected(action);
                         let bg = "bg-neutral-600";
                         let label = row.id;
 
-                        if (effectId === "poseLayer") {
-                            bg = selected
-                                ? "bg-indigo-400/90 border-2 border-white shadow-[0_0_12px_rgba(99,102,241,0.6)]"
-                                : "bg-indigo-500/80 border border-indigo-400";
-                            const d = (action as any).data;
-                            if (d) label = `[${d.pose}] ${d.face}`;
+                        if (effectId === "characterMaster") {
+                            const data = (action as any).data;
+                            const isExpanded = data?.isExpanded;
+                            bg = "bg-zinc-800 border border-zinc-600 text-zinc-300 shadow-[inset_0_1px_rgba(255,255,255,0.1)]";
+                            label = `${isExpanded ? '▼' : '▶'} ${data?.name || 'Character'} Block`;
+                        } else if (effectId === "poseLayer") {
+                            bg = selected ? "bg-indigo-500/90 border border-white" : "bg-indigo-600/80 border border-indigo-400 text-indigo-100";
+                            label = (action as any).data?.value || "—";
+                        } else if (effectId === "faceLayer") {
+                            bg = selected ? "bg-amber-500/90 border border-white" : "bg-amber-600/80 border border-amber-400 text-amber-100";
+                            label = (action as any).data?.value || "—";
                         } else if (effectId === "background") {
-                            bg = selected
-                                ? "bg-blue-700/70 border-2 border-white shadow-[0_0_12px_rgba(59,130,246,0.6)]"
-                                : "bg-blue-900/60 border border-blue-500 text-blue-300";
-                        } else if (effectId === "text") {
-                            bg = selected
-                                ? "bg-green-500/70 border-2 border-white shadow-[0_0_12px_rgba(34,197,94,0.6)]"
-                                : "bg-green-600/60 border border-green-500";
-                        } else if (selected) {
-                            bg = "bg-neutral-500 border-2 border-white shadow-[0_0_12px_rgba(255,255,255,0.4)]";
+                            bg = "bg-blue-900/60 border border-blue-500 text-blue-300";
+                        } else if (effectId === "staticExt") {
+                            bg = "bg-neutral-800 border border-dashed border-neutral-600 text-neutral-500";
+                            label = "Empty";
                         }
 
-                        const d = (action as any).data;
+                        // Render Keyframe Indicators for Master Block
                         let kfDots: React.ReactNode[] = [];
-
-                        if (d && d.nodeId && d.sceneId) {
-                            const sc = scenes.find(s => s.id === d.sceneId);
-                            const nd = sc?.manager.getNode(d.nodeId);
-                            if (nd && nd.keyframes) {
-                                const actionDur = action.end - action.start;
-                                const boundary = sceneBoundaries.find(b => b.sceneIndex === scenes.indexOf(sc!));
-                                const offset = isMultiScene && boundary ? boundary.start : 0;
-                                
-                                Object.entries(nd.keyframes).forEach(([prop, frameList]) => {
-                                    (frameList as any[]).forEach(kf => {
-                                        const globalT = kf.time + offset;
-                                        if (globalT >= action.start && globalT <= action.end) {
-                                            const pct = ((globalT - action.start) / actionDur) * 100;
-                                            kfDots.push(
-                                                <div 
-                                                    key={`${prop}_${kf.time}`}
-                                                    className="absolute w-2 h-2 bg-amber-400 border border-black rotate-45 transform -translate-y-1/2 -translate-x-1/2 shadow-sm"
-                                                    style={{ 
-                                                        left: `${Math.max(0, Math.min(100, pct))}%`, 
-                                                        top: '100%', 
-                                                        zIndex: 10 
-                                                    }}
-                                                    title={`Keyframe: ${prop} @ ${kf.time}s`}
-                                                />
-                                            );
-                                        }
+                        if (effectId === "characterMaster") {
+                            const d = (action as any).data;
+                            if (d && d.nodeId && d.sceneId) {
+                                const sc = scenes.find(s => s.id === d.sceneId);
+                                const nd = sc?.manager.getNode(d.nodeId);
+                                if (nd && nd.keyframes) {
+                                    const actionDur = action.end - action.start;
+                                    const boundary = sceneBoundaries.find(b => b.sceneIndex === scenes.indexOf(sc!));
+                                    const offset = isMultiScene && boundary ? boundary.start : 0;
+                                    
+                                    Object.entries(nd.keyframes).forEach(([prop, frameList]) => {
+                                        (frameList as any[]).forEach(kf => {
+                                            const globalT = kf.time + offset;
+                                            if (globalT >= action.start && globalT <= action.end) {
+                                                const pct = ((globalT - action.start) / actionDur) * 100;
+                                                kfDots.push(
+                                                    <div key={`${prop}_${kf.time}`}
+                                                        className="absolute w-2 h-2 bg-yellow-400 border border-black rotate-45 transform -translate-y-1/2 -translate-x-1/2 shadow-sm"
+                                                        style={{ left: `${Math.max(0, Math.min(100, pct))}%`, top: '100%', zIndex: 10 }}
+                                                        title={`Keyframe: ${prop} @ ${kf.time}s`} />
+                                                );
+                                            }
+                                        });
                                     });
-                                });
+                                }
                             }
                         }
 
                         return (
-                            <div className={`h-full w-full ${bg} rounded-sm px-2 text-[9px] overflow-hidden text-white font-mono shadow-md whitespace-nowrap flex items-center transition-all duration-150 relative`}>
+                            <div className={`h-full w-full ${bg} rounded px-2 overflow-hidden hover:brightness-110 font-bold shadow-md whitespace-nowrap text-[9px] flex items-center transition-all duration-150 relative cursor-pointer`}>
                                 {selected && <span className="mr-1 opacity-70">◆</span>}
                                 {label}
                                 {kfDots}
@@ -574,7 +573,6 @@ export const SceneGraphTimeline: React.FC = () => {
                 />
             </div>
 
-            {/* Context Menu Overlay */}
             {contextMenu && (
                 <TimelineContextMenu {...contextMenu} />
             )}

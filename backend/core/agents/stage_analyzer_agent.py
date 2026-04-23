@@ -61,12 +61,31 @@ class ElementInfo:
 
 
 @dataclass
+class StandingPoint:
+    """Semantic standing position suggested by Vision AI based on full composite view."""
+    x: float = 0.0
+    y: float = 0.0
+    z_index_target_layer: str = ""
+    description: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "x": self.x,
+            "y": self.y,
+            "z_index_target_layer": self.z_index_target_layer,
+            "description": self.description,
+        }
+
+@dataclass
 class StageAnalysisResult:
     """Result of analyzing all elements in a stage."""
     elements: list[ElementInfo] = field(default_factory=list)
-    scene_description: str = ""  # Overall scene description
-    scene_type: str = ""         # "interior", "exterior", "abstract"
-    mood: str = ""               # "warm", "cold", "dramatic", etc.
+    scene_description: str = ""
+    scene_type: str = "interior"
+    mood: str = "neutral"
+    ascii_map: list[str] = field(default_factory=list)
+    spatial_grid: dict = field(default_factory=dict)
+    standing_points: list[StandingPoint] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -74,6 +93,9 @@ class StageAnalysisResult:
             "scene_description": self.scene_description,
             "scene_type": self.scene_type,
             "mood": self.mood,
+            "ascii_map": self.ascii_map,
+            "spatial_grid": self.spatial_grid,
+            "standing_points": [p.to_dict() for p in self.standing_points],
         }
 
 
@@ -107,8 +129,36 @@ You MUST respond with valid JSON matching this schema:
   ],
   "scene_description": "Overall description of the scene/location",
   "scene_type": "interior or exterior or abstract",
-  "mood": "warm, cold, dramatic, cheerful, mysterious, etc."
+  "mood": "warm, cold, dramatic, cheerful, mysterious, etc.",
+  "ascii_map": [
+    "                   [BẦU TRỜI]                   ",
+    "      [CÂY TO]                     [NHÀ GỖ]     ",
+    "  [GHẾ ĐÁ]    ~~~ĐƯỜNG ĐẤT~~~    [BỤI CỎ]       "
+  ],
+  "spatial_grid": {
+    "regions": [
+      {"name": "Đường đi", "x_range": [3.0, 16.0], "z_index": 5, "can_stand": true},
+      {"name": "Gốc cây", "x_range": [0.0, 8.0], "z_index": 2, "can_stand": true}
+    ]
+  },
+  "standing_points": [
+    {
+      "x": 35.5,
+      "y": 70.0,
+      "z_index_target_layer": "element_4",
+      "description": "Logical standing position in the scene"
+    }
+  ]
 }
+
+Rules for ascii_map:
+- Create a visual ASCII text representation (width ~50 chars) of how all the elements are spatially arranged in the scene.
+- Use words wrapped in brackets [LIKE THIS] to represent elements.
+- This ASCII map will be used by text-only AI to "see" the 3D layout, so left-to-right (X-axis) and top-to-bottom (depth/Z-axis) must accurately reflect the image.
+
+Rules for spatial_grid:
+- Define 3-5 logical areas/regions in the scene.
+- Convert image X coordinates (0-100%) to Canvas X coordinates (0.0 to 19.2) where 0 is left, 19.2 is right edge. Center is 9.6.
 
 Rules for bbox (bounding box as percentage of image 0-100):
 - bbox_x: left edge position as % of image width
@@ -133,6 +183,12 @@ Rules for can_stand_on:
 Rules for can_sit_on:
 - Chairs, sofas, benches, beds, stools, desks (edge) → true
 - Everything else → false
+
+Rules for standing_points:
+- Look at the full composite frame (usually Image 0) to understand the perspective.
+- Identify 3 to 5 natural, well-spaced locations where characters could stand and converse (x, y as percentages 0-100).
+- x=0 is left, y=0 is top. The floor is usually y=60 to 95.
+- Identify the matching layer_id (e.g. 'element_4') that they are standing on so we know their Z-Index.
 
 Respond ONLY with the JSON, no extra text."""
 
@@ -337,6 +393,8 @@ def _parse_analysis_result(
         scene_description=data.get("scene_description", ""),
         scene_type=data.get("scene_type", ""),
         mood=data.get("mood", ""),
+        ascii_map=data.get("ascii_map", []),
+        spatial_grid=data.get("spatial_grid", {}),
     )
 
     elements = data.get("elements", [])
@@ -360,5 +418,15 @@ def _parse_analysis_result(
             bbox_w=el_data.get("bbox_w", 100.0),
             bbox_h=el_data.get("bbox_h", 100.0),
         ))
+
+    pts_data = data.get("standing_points", [])
+    if pts_data:
+        for p in pts_data:
+            result.standing_points.append(StandingPoint(
+                x=float(p.get("x", 50.0)),
+                y=float(p.get("y", 75.0)),
+                z_index_target_layer=p.get("z_index_target_layer", ""),
+                description=p.get("description", "")
+            ))
 
     return result

@@ -820,13 +820,14 @@ async def build_scene_from_script(
 
         # ── Smart Position: use stage analysis if available ──
         home_x = 9.6  # Default center
-        home_y = 7.5  # Default y
+        home_y = 9.6  # Default y (foreground floor plane)
         home_z = i * 10 # Default fallback z
 
         if char_name in negotiated_positions:
             np = negotiated_positions[char_name]
             home_x = float(np.get("start_x", np.get("x", 9.6)))
             home_z = float(np.get("z_index", i * 10))
+            home_y = float(np.get("y", 9.6))
             
             # Action Trajectory Memory
             target_x = float(np.get("target_x", home_x))
@@ -834,12 +835,13 @@ async def build_scene_from_script(
             effects = np.get("effects", [])
             char_states[char_name] = {"target_x": target_x, "action": action_type, "effects": effects}
             
-            logger.info(f"[Swarm] Placed '{char_name}' at x={home_x}, z={home_z} (Trajectory to {target_x})")
+            logger.info(f"[Swarm] Placed '{char_name}' at x={home_x}, y={home_y}, z={home_z} (Trajectory to {target_x})")
         elif world_memory and char_name in world_memory:
             # Revert to last known position
             home_x = float(world_memory[char_name].get("x", 9.6))
+            home_y = float(world_memory[char_name].get("y", 7.5))
             home_z = float(world_memory[char_name].get("z_index", i * 10))
-            logger.info(f"[Memory] Relocated '{char_name}' to x={home_x}, z={home_z}")
+            logger.info(f"[Memory] Relocated '{char_name}' to x={home_x}, y={home_y}, z={home_z}")
         elif standable_regions:
             # Thuật toán: So khớp Ngữ nghĩa giữa "position_hint" của kịch bản và "name" của Background
             char_hint = ""
@@ -925,6 +927,11 @@ async def build_scene_from_script(
             home_y = max(3.0, min(9.5, home_y))
 
             logger.info(f"Stage-aware: '{char_name}' final position ({home_x:.1f}, {home_y:.1f})")
+
+            # NOTE: Sit/Stand decision is now handled by ActorAgent AI.
+            # The ActorAgent receives stage_context (sittable regions info) and
+            # outputs initial_pose if the character should sit. This is applied
+            # after the ActorAgent plan is received (see CM1 section below).
         else:
             # Fallback: no analysis available — spread evenly
             if num_chars == 1:
@@ -950,6 +957,128 @@ async def build_scene_from_script(
             "z_index": home_z
         })
         char_states[char_name] = state
+
+    # ── Deterministic Anti-Overlap Resolver ──
+    # The AI (Swarm Negotiator/Critic) might fail to ensure minimum horizontal separation.
+    # We forcefully spread out any characters that are too close in either 'x' or 'target_x'.
+    min_separation = 3.0
+    for idx_a, char_a in enumerate(unique_chars):
+        for idx_b in range(idx_a + 1, len(unique_chars)):
+            char_b = unique_chars[idx_b]
+            st_a = char_states.get(char_a)
+            st_b = char_states.get(char_b)
+            if not st_a or not st_b:
+                continue
+
+            # Check overlap in starting X
+            if abs(st_a["x"] - st_b["x"]) < min_separation:
+                logger.info(f"[Anti-Overlap] Spreading starting X for '{char_a}' and '{char_b}'")
+                center = (st_a["x"] + st_b["x"]) / 2
+                st_a["x"] = max(1.0, center - min_separation / 2)
+                st_b["x"] = min(18.2, center + min_separation / 2)
+                st_a["home_x"] = st_a["x"]
+                st_b["home_x"] = st_b["x"]
+                char_home_x[char_a] = st_a["x"]
+                char_home_x[char_b] = st_b["x"]
+
+            # Check overlap in target X (trajectory)
+            ta = st_a.get("target_x", st_a["x"])
+            tb = st_b.get("target_x", st_b["x"])
+            if abs(ta - tb) < min_separation:
+                logger.info(f"[Anti-Overlap] Spreading target X for '{char_a}' and '{char_b}'")
+                t_center = (ta + tb) / 2
+                st_a["target_x"] = max(1.0, t_center - min_separation / 2)
+                st_b["target_x"] = min(18.2, t_center + min_separation / 2)
+
+    # ── End Anti-Overlap ──
+
+    # ── Obstacle-Aware Pathfinding ──
+    # Instead of pushing characters away from their destination, we build WAYPOINTS
+    # so the character walks AROUND obstacles (going behind them via Z-index change).
+    # The walk/run trajectory code will consume these waypoints to create smooth keyframes.
+    _obstacles = []
+    if stage_analysis:
+        for elem in stage_analysis.get("elements", []):
+            if not elem.get("can_stand_on", False) and not elem.get("can_sit_on", False):
+                layer_id = elem.get("layer_id", "")
+                z = layer_z_map.get(layer_id, 0)
+                cat = elem.get("category", "")
+                # Skip background-scale elements (walls, ceilings, floors, sky)
+                if cat in ("background", "wall", "ceiling", "sky", "floor", "lighting"):
+                    continue
+                canvas_w = elem.get("canvas_w", 0)
+                if canvas_w < 1.0:
+                    continue  # Too small to be a real obstacle
+                _obstacles.append({
+                    "name": elem.get("name_en", "obstacle"),
+                    "x_min": elem.get("canvas_cx", 9.6) - canvas_w / 2,
+                    "x_max": elem.get("canvas_cx", 9.6) + canvas_w / 2,
+                    "z_index": z,
+                })
+
+    def _build_waypoints(start_x: float, end_x: float, char_z: float) -> list[dict]:
+        """
+        Build a list of waypoints from start_x to end_x, routing around any
+        obstacles that the character would visually overlap with.
+        Each waypoint: {x, z_override (or None)}
+        """
+        if not _obstacles or abs(end_x - start_x) < 0.5:
+            return []  # No obstacles or not moving, no waypoints needed
+
+        direction = 1 if end_x > start_x else -1
+        margin = 0.8  # How far past the obstacle edge before resuming
+
+        # Collect obstacles that lie BETWEEN start and end on X axis
+        blocking = []
+        lo = min(start_x, end_x)
+        hi = max(start_x, end_x)
+        for obs in _obstacles:
+            # Obstacle overlaps the travel corridor?
+            if obs["x_max"] > lo and obs["x_min"] < hi:
+                # Only matters if character Z >= obstacle Z (would render on top)
+                if char_z >= obs["z_index"]:
+                    blocking.append(obs)
+
+        if not blocking:
+            return []  # Path is clear
+
+        # Sort obstacles by their position along the travel direction
+        blocking.sort(key=lambda o: o["x_min"] if direction > 0 else -o["x_max"])
+
+        waypoints = []
+        for obs in blocking:
+            # Waypoint 1: Just before the obstacle, drop Z behind it
+            approach_x = (obs["x_min"] - margin) if direction > 0 else (obs["x_max"] + margin)
+            approach_x = max(1.0, min(18.2, approach_x))
+            behind_z = obs["z_index"] - 5  # Go BEHIND the obstacle
+
+            # Waypoint 2: Just after the obstacle, restore Z
+            exit_x = (obs["x_max"] + margin) if direction > 0 else (obs["x_min"] - margin)
+            exit_x = max(1.0, min(18.2, exit_x))
+
+            waypoints.append({"x": approach_x, "z_override": behind_z, "obs_name": obs["name"]})
+            waypoints.append({"x": exit_x, "z_override": None, "obs_name": obs["name"]})  # Restore original Z
+
+        logger.info(f"[Pathfinding] Built {len(waypoints)} waypoints around {len(blocking)} obstacle(s)")
+        return waypoints
+
+    for cname, st in char_states.items():
+        target_x = st.get("target_x", st["x"])
+        if target_x != st["x"]:
+            waypoints = _build_waypoints(st["x"], target_x, st.get("z_index", 0))
+            if waypoints:
+                st["waypoints"] = waypoints
+                logger.info(f"[Pathfinding] '{cname}': {len(waypoints)} waypoints from x={st['x']:.1f} to x={target_x:.1f}")
+    # ── End Obstacle-Aware Pathfinding ──
+
+    for i, char_name in enumerate(unique_chars):
+        char_info = char_infos.get(char_name)
+        if not char_info:
+            continue
+        
+        home_x = char_states[char_name]["x"]
+        home_y = char_states[char_name]["y"]
+        initial_scale_x = char_states[char_name]["scale_x"]
 
         from backend.core.scene_graph.tools import SceneToolExecutor
         executor = SceneToolExecutor(graph, asset_registry=registry)
@@ -990,6 +1119,14 @@ async def build_scene_from_script(
                         logger.info(f"  [Swarm Skill] {char_name} triggered 'rain' effect")
                     if "dark_vignette" in effects:
                          graph.metadata["vignette"] = True
+
+                    # Apply initial_pose from context-aware sit/stand
+                    initial_pose = char_states[char_name].get("initial_pose")
+                    if initial_pose and isinstance(node, CharacterNode):
+                        node.set_pose(initial_pose)
+                        node.add_frame(0.0, {"pose": initial_pose})
+                        logger.info(f"  [AutoSit] {char_name} starts with pose '{initial_pose}'")
+
                 logger.info(f"Added character '{char_name}' at x={home_x:.1f}")
 
     # ── Step 2: Cinematic staging per line ──
@@ -1022,26 +1159,46 @@ async def build_scene_from_script(
     
     # Create one ActorAgent per character and plan performances in parallel
     actor_plans: dict[str, list[dict]] = {}  # char_name → performance plan
+    # Build blueprint and stage context once for the scene
+    blueprint_data = {}
+    stage_ctx_str = ""
+    if stage_analysis:
+        blueprint_data = {
+            "ascii_map": stage_analysis.get("ascii_map", []),
+            "spatial_grid": stage_analysis.get("spatial_grid", {})
+        }
+        # Build stage context with sittable/interactive info for AI reasoning
+        _sr = stage_analysis.get("standable_regions", [])
+        _ip = stage_analysis.get("interaction_points", [])
+        stage_parts = []
+        if _sr:
+            stage_parts.append("Vùng đứng/ngồi: " + ", ".join(
+                f"{r.get('name','?')} (can_sit={r.get('can_sit', r.get('can_sit_on', False))})" for r in _sr
+            ))
+        if _ip:
+            stage_parts.append("Điểm tương tác: " + ", ".join(p.get('name','?') for p in _ip))
+        stage_ctx_str = "\n".join(stage_parts)
+
     for cname in unique_chars:
         cinfo = char_infos.get(cname)
         if not cinfo:
             continue
-        blueprint_data = {}
-        if stage_analysis:
-            blueprint_data = {
-                "ascii_map": stage_analysis.get("ascii_map", []),
-                "spatial_grid": stage_analysis.get("spatial_grid", {})
-            }
-            
+        
         actor = ActorAgent(
             char_name=cname,
             available_poses=cinfo.pose_names,
             available_faces=cinfo.face_names,
             blueprint_context=json.dumps(blueprint_data, ensure_ascii=False, indent=2) if blueprint_data else "",
+            stage_context=stage_ctx_str,
         )
         plan = await actor.plan_performance(all_lines_dict)
         if plan:
             actor_plans[cname] = plan
+            # Extract AI-decided initial_pose for this character
+            ai_initial_pose = plan[0].get("__initial_pose__") if plan else None
+            if ai_initial_pose:
+                char_states.setdefault(cname, {})["initial_pose"] = ai_initial_pose
+                logger.info(f"[Actor:{cname}] AI decided initial_pose='{ai_initial_pose}'")
     
     logger.info(f"[CM1 ActorAgent] Planned performances for {len(actor_plans)} characters")
 
@@ -1050,7 +1207,7 @@ async def build_scene_from_script(
     blueprint_desc = json.dumps(blueprint_data, ensure_ascii=False, indent=2) if stage_analysis else ""
     camera_plan = await CameraDirectorAgent.generate_camera_plan(
         all_lines=all_lines_dict,
-        negotiated_positions=negotiated_positions,
+        negotiated_positions=char_states,  # <-- Pass corrected anti-overlap states
         blueprint_context=blueprint_desc
     )
     logger.info(f"[CM3 CameraDirectorAgent] Generated {len(camera_plan)} camera keyframes")
@@ -1088,13 +1245,19 @@ async def build_scene_from_script(
 
         # ── CM1: Use ActorAgent's pre-planned pose/face for THIS character ──
         speaker_plan = actor_plans.get(line.character, [])
+        sub_beats = []  # Multi-keyframe acting within a single line
+        bubble_style = "speech"  # Default bubble style
         if idx < len(speaker_plan):
             pose = speaker_plan[idx].get("pose", "站立")
             face = speaker_plan[idx].get("face", "微笑")
+            sub_beats = speaker_plan[idx].get("sub_beats", [])
+            bubble_style = speaker_plan[idx].get("bubble_style", "speech")
         else:
             # Fallback if plan is short
             pose = available_poses[idx % len(available_poses)] if available_poses else "站立"
             face = available_faces[idx % len(available_faces)] if available_faces else "微笑"
+            # Use _emotion_to_bubble only when AI plan is missing
+            bubble_style = _emotion_to_bubble(emotion)
 
         # ── Timing ──
         if tts_lines and idx < len(tts_lines):
@@ -1120,21 +1283,74 @@ async def build_scene_from_script(
 
             abs_scale = abs(st["scale_x"])
             
+            # Dynamic Z-Index Animation (Task 3.2)
+            current_z = st.get("z_index", 0)
+            if action in ["step_forward", "bước lên", "tiến tới"]:
+                node.add_keyframe("z_index", start_time - 0.2, current_z, "step")
+                node.add_keyframe("z_index", speak_start, current_z + 50, "step")
+                node.add_keyframe("z_index", end_time, current_z, "step")
+            elif action in ["step_back", "lùi lại", "bước lùi"]:
+                node.add_keyframe("z_index", start_time - 0.2, current_z, "step")
+                node.add_keyframe("z_index", speak_start, current_z - 30, "step")
+                node.add_keyframe("z_index", end_time, current_z, "step")
+            
             # Apply Swarm movement logic (Action Trajectories)
             action_type = st.get("action", "stand")
             target_x = st.get("target_x", st["x"])
+            waypoints = st.get("waypoints", [])
             
             if action_type == "walk" and target_x != st["x"]:
-                # Pathfinding Trajectory - Walk
+                # Pathfinding Trajectory - Walk (with obstacle avoidance)
                 pose = _pick_available("走路", available_poses)
-                node.add_keyframe("x", start_time - 0.5, st["x"], "linear")
-                node.add_keyframe("x", start_time + 1.5, target_x, "linear")
+                walk_start = start_time - 0.5
+                walk_duration = 2.0  # Total time budget for walk
+                
+                if waypoints:
+                    # Distribute time across waypoints + final destination
+                    segments = len(waypoints) + 1
+                    seg_time = walk_duration / segments
+                    t = walk_start
+                    node.add_keyframe("x", t, st["x"], "linear")
+                    for wp in waypoints:
+                        t += seg_time
+                        node.add_keyframe("x", t, wp["x"], "linear")
+                        if wp.get("z_override") is not None:
+                            node.add_keyframe("z_index", t, wp["z_override"], "step")
+                            logger.info(f"    [Pathfind] {line.character} ducks behind '{wp.get('obs_name', '?')}' at x={wp['x']:.1f}")
+                        else:
+                            node.add_keyframe("z_index", t, current_z, "step")
+                    t += seg_time
+                    node.add_keyframe("x", t, target_x, "linear")
+                    node.add_keyframe("z_index", t, current_z, "step")  # Restore Z
+                else:
+                    node.add_keyframe("x", walk_start, st["x"], "linear")
+                    node.add_keyframe("x", walk_start + walk_duration, target_x, "linear")
                 st["x"] = target_x
+                
             elif action_type == "run" and target_x != st["x"]:
-                # Pathfinding Trajectory - Run
+                # Pathfinding Trajectory - Run (with obstacle avoidance)
                 pose = _pick_available("逃跑", available_poses)
-                node.add_keyframe("x", start_time - 0.5, st["x"], "linear")
-                node.add_keyframe("x", start_time + 0.8, target_x, "ease_out")
+                run_start = start_time - 0.5
+                run_duration = 1.0
+                
+                if waypoints:
+                    segments = len(waypoints) + 1
+                    seg_time = run_duration / segments
+                    t = run_start
+                    node.add_keyframe("x", t, st["x"], "linear")
+                    for wp in waypoints:
+                        t += seg_time
+                        node.add_keyframe("x", t, wp["x"], "ease_out")
+                        if wp.get("z_override") is not None:
+                            node.add_keyframe("z_index", t, wp["z_override"], "step")
+                        else:
+                            node.add_keyframe("z_index", t, current_z, "step")
+                    t += seg_time
+                    node.add_keyframe("x", t, target_x, "ease_out")
+                    node.add_keyframe("z_index", t, current_z, "step")
+                else:
+                    node.add_keyframe("x", run_start, st["x"], "linear")
+                    node.add_keyframe("x", run_start + run_duration, target_x, "ease_out")
                 st["x"] = target_x
             else:
                 if num_chars > 1:
@@ -1226,9 +1442,7 @@ async def build_scene_from_script(
         camera_node.add_keyframe("scale_y", speak_start, cam_scale, "easeOut")
 
         # ── Speech Bubble: Create comic-style bubble attached to speaking character ──
-        # Uses bubble_style based on emotion for manga/comic visual identity.
-        # The bubble follows the character's position via bubble_target_id.
-        bubble_style = _emotion_to_bubble(emotion)
+        # bubble_style is decided by ActorAgent AI (or fallback heuristic)
         bubble_node_id = char_nodes.get(line.character, "")
         
         # Position above the speaking character's head
@@ -1260,8 +1474,23 @@ async def build_scene_from_script(
         graph.add_node(line_sub)
 
         if isinstance(node, CharacterNode):
-            # Set speaking pose + face
+            # Set speaking pose + face — initial keyframe
             node.add_frame(speak_start, {"pose": pose, "face": face})
+
+            # ── Multi-Keyframe Acting: inject sub_beats for mid-sentence changes ──
+            if sub_beats:
+                line_duration = end_time - speak_start
+                for sb in sub_beats:
+                    sb_time = speak_start + sb.get("offset", 0)
+                    # Only inject if within the speaking window
+                    if sb_time < end_time - 0.2:
+                        sb_pose = sb.get("pose", pose)
+                        sb_face = sb.get("face", face)
+                        # Validate against available assets
+                        sb_pose = _pick_available(sb_pose, available_poses)
+                        sb_face = _pick_available(sb_face, available_faces, "微笑")
+                        node.add_frame(sb_time, {"pose": sb_pose, "face": sb_face})
+                logger.debug(f"  [SubBeats] {line.character}: {len(sub_beats)} mid-sentence changes")
 
             # Lip-sync during speaking (disabled by default for chibi/comic style)
             # Set enable_lipsync=True in metadata to re-enable for anime style

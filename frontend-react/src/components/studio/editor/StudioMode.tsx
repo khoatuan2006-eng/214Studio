@@ -17,6 +17,9 @@ import { SceneTabs } from '@/components/SceneTabs';
 import { SceneGraphTimeline } from './SceneGraphTimeline';
 import SceneGraphPropertiesPanel from './SceneGraphPropertiesPanel';
 import { SceneGraphTransformer } from './SceneGraphTransformer';
+import NodeInspector from './NodeInspector';
+import { QuickActionsBar } from './QuickActionsBar';
+import { API_BASE_URL } from '@/config/api';
 
 // ═══════════════════════════════════════════════════════════
 // Stage Canvas — renders layers onto a 1920×1080 virtual viewport
@@ -500,7 +503,7 @@ const SceneGraphSidebar: React.FC = () => {
             {/* Tab Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {activeTab === 'auto' && <AutoVideoPanel />}
-                {activeTab === 'nodes' && <SceneNodeList />}
+                {activeTab === 'nodes' && <NodeInspector />}
                 {activeTab === 'chat' && <AIChatPanel />}
                 {activeTab === 'script' && <ScriptImport />}
                 {activeTab === 'edit' && <SceneGraphPropertiesPanel />}
@@ -522,9 +525,117 @@ const StudioMode: React.FC = () => {
 
     const [currentFrame, setCurrentFrame] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isReviewing, setIsReviewing] = useState(false);
+    const [lastUndoData, setLastUndoData] = useState<{sceneId: string, oldTransforms: Record<string, any>} | null>(null);
+
     const fps = 30;
     const rafRef = useRef<number | null>(null);
     const lastTimeRef = useRef<number>(0);
+
+    const handleUndoAI = () => {
+        if (!lastUndoData) return;
+        const activeSceneIndex = useSceneGraphStore.getState().activeSceneIndex;
+        const scene = useSceneGraphStore.getState().scenes[activeSceneIndex];
+        if (!scene || scene.id !== lastUndoData.sceneId) {
+            alert("❌ Không thể hoàn tác do đã chuyển cảnh khác!");
+            return;
+        }
+        Object.entries(lastUndoData.oldTransforms).forEach(([nodeId, t]) => {
+            scene.manager.updateTransform(nodeId, t as any);
+        });
+        setLastUndoData(null);
+        useSceneGraphStore.getState().setSidebarTab('auto'); // Force UI refresh
+    };
+
+    const handleReviewAndFix = async () => {
+        if (mode !== 'scene') {
+            alert('Tính năng AI Đạo diễn Kiểm duyệt chỉ hỗ trợ ở chế độ Scene Graph!');
+            return;
+        }
+        setIsReviewing(true);
+        try {
+            const canvas = document.querySelector('canvas');
+            let screenshot_base64 = null;
+            if (canvas) {
+                const dataUrl = canvas.toDataURL('image/png');
+                screenshot_base64 = dataUrl.split(',')[1] || null;
+            }
+
+            const activeSceneIndex = useSceneGraphStore.getState().activeSceneIndex;
+            const scenes = useSceneGraphStore.getState().scenes;
+            const scene = scenes[activeSceneIndex];
+            if (!scene) throw new Error("Không có cảnh quay hiện tại.");
+
+            const nodesArray = Object.values(scene.manager.graph.nodes);
+            const edgesArray = []; // Or anything required by API
+
+            const res = await fetch(`${API_BASE_URL}/api/ai/review-scene`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    original_prompt: "Tối ưu hóa vị trí đứng và kích thước nhân vật (AI Reviewer Pass)",
+                    screenshot_base64,
+                    nodes: nodesArray,
+                    edges: edgesArray,
+                    review_round: 1
+                })
+            });
+
+            if (!res.ok) throw new Error(`HTTP Lỗi ${res.status}`);
+            const result = await res.json();
+
+            if (result.corrections && result.corrections.length > 0) {
+                let fixCount = 0;
+                const previousTransforms: Record<string, any> = {};
+
+                result.corrections.forEach((c: any) => {
+                    if (!c.node_id || !c.action || c.intensity === undefined) return;
+                    
+                    const node = scene.manager.graph.nodes[c.node_id];
+                    if (!node) return;
+                    
+                    const t = node.transform || { x:0, y:0, scaleX:1, scaleY:1, zIndex:1 };
+                    
+                    // Lữu dữ liệu Undo
+                    if (!previousTransforms[c.node_id]) {
+                        previousTransforms[c.node_id] = { ...t };
+                    }
+                    
+                    let newT = { ...t };
+                    const amt = c.intensity; // scale 1-10
+                    
+                    switch(c.action) {
+                        case 'nudge_left':   newT.x -= (amt * 0.2); break;
+                        case 'nudge_right':  newT.x += (amt * 0.2); break;
+                        case 'nudge_up':     newT.y -= (amt * 0.2); break;
+                        case 'nudge_down':   newT.y += (amt * 0.2); break;
+                        case 'scale_up':     newT.scaleX += (amt * 0.05); newT.scaleY += (amt * 0.05); break;
+                        case 'scale_down':   newT.scaleX -= (amt * 0.05); newT.scaleY -= (amt * 0.05); break;
+                        case 'bring_to_front': newT.zIndex += amt; break;
+                        case 'send_to_back': newT.zIndex -= amt; break;
+                    }
+                    
+                    scene.manager.updateTransform(c.node_id, newT);
+                    fixCount++;
+                });
+                
+                // Lưu state Undo
+                if (fixCount > 0) {
+                    setLastUndoData({ sceneId: scene.id, oldTransforms: previousTransforms });
+                }
+                useSceneGraphStore.getState().setSidebarTab('auto'); // A harmless hack to force state refresh if UI missed it
+                
+                alert(`✨ AI Đạo diễn đã phát hiện và tinh chỉnh ${fixCount} lỗi bố cục trên Canvas!`);
+            } else {
+                alert(`👌 AI Đạo diễn xác nhận: Bố cục cảnh quay đã hoàn hảo (${result.score || 10}/10)!`);
+            }
+        } catch (e: any) {
+            console.error("AI Review error:", e);
+            alert("❌ Lỗi AI Review: " + e.message);
+        } finally {
+            setIsReviewing(false);
+        }
+    };
 
     // Playback loop (legacy mode only)
     useEffect(() => {
@@ -599,6 +710,22 @@ const StudioMode: React.FC = () => {
                             : `Scene Graph Mode`
                         }
                     </span>
+                    {lastUndoData && (
+                        <button 
+                            onClick={handleUndoAI} 
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors text-amber-300 bg-amber-900/40 border border-amber-500/30 hover:bg-amber-800/60"
+                        >
+                            ↩ Hoàn Tác AI
+                        </button>
+                    )}
+                    <button 
+                        onClick={handleReviewAndFix} 
+                        disabled={isReviewing}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                        style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 12px rgba(16,185,129,0.2)' }}>
+                        <Wand2 className="w-3.5 h-3.5" />
+                        {isReviewing ? 'AI Đang Rà Soát...' : 'Bình Duyệt Chỉnh Lỗi (AI)'}
+                    </button>
                     <button onClick={() => setShowExport(true)} className="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors"
                         style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 2px 12px rgba(99,102,241,0.3)' }}>
                         Render Video
@@ -644,7 +771,12 @@ const StudioMode: React.FC = () => {
 
             {/* Bottom Timeline & Playback */}
             {mode === 'legacy'
-                ? <BottomTimeline />
+                ? <BottomTimeline 
+                    currentFrame={currentFrame}
+                    onFrameChange={setCurrentFrame}
+                    isPlaying={isPlaying}
+                    onPlayingChange={setIsPlaying}
+                />
                 : <SceneGraphTimeline />
             }
 

@@ -82,63 +82,63 @@
 
 ### 🏁 Milestone 2: "Talking Film" (+2 tuần)
 
-> Video có tiếng nói (TTS), miệng khớp thoại, và phụ đề.
+> Video có tiếng nói (TTS đa dạng), miệng khớp thoại, phụ đề tự động (Whisper/Edge TTS), lấy cảm hứng từ **MoneyPrinterTurbo**.
 
 **Tasks:**
 
 | Task | Chi tiết | File |
 |------|----------|------|
 | M2.1 | Audio timeline playback (play TTS audio sync với animation) | `SceneRenderer.tsx`, stores |
-| M2.2 | TTS auto-generate trong pipeline | `automation.py` + `tts.py` |
+| M2.2 | Đa dạng hóa TTS Providers (Edge TTS, Azure, OpenAI) + Auto-sync Subs (Whisper) | `automation.py` + `tts.py` |
 | M2.3 | Lip-sync cải tiến (audio-driven thay vì timing heuristic) | `automation.py` |
 | M2.4 | Subtitle render (TextNode → PixiJS Text overlay) | `SceneRenderer.tsx` |
-| M2.5 | Audio in video export (merge canvas + audio → MP4) | `VideoExporter.ts` |
+| M2.5 | Audio in video export (merge canvas + audio + BGM → MP4) | `VideoExporter.ts` |
 
-**Kết quả**: Video xuất ra có giọng nói, lip-sync, và phụ đề — như phim hoạt hình thật.
+**Kết quả**: Video xuất ra có giọng nói, lip-sync, và phụ đề — như phim hoạt hình thật, áp dụng mô hình auto-gen của MoneyPrinterTurbo.
 
 ---
 
 ### 🏁 Milestone 3: "AI Director" (+3 tuần)
 
-> AI tự viết kịch bản, chọn nhân vật, chọn bối cảnh — user chỉ input ý tưởng.
+> AI tự viết kịch bản, tự phân rã trường đoạn (Storyboarding như **MangaGen**), chọn nhân vật, chọn bối cảnh — user chỉ input ý tưởng.
 
 **Tasks:**
 
 | Task | Chi tiết | File mới |
 |------|----------|----------|
-| M3.1 | AI Script Writer Agent (input: idea → output: full script) | `agents/script_writer.py` |
-| M3.2 | AI Scene Planner Agent (chọn characters, background, camera style) | `agents/scene_planner.py` |
+| M3.1 | AI Script Writer & Storyboarder (chia Script thành Sequences/Timeline Nodes) | `agents/script_writer.py` |
+| M3.2 | AI Scene Planner Agent (chọn characters, background, auto camera layout) | `agents/scene_planner.py` |
 | M3.3 | Stage Scanner (scan toàn bộ stages/ → registry giống AssetRegistry) | `scene_graph/stage_scanner.py` |
 | M3.4 | One-Click API: `/api/auto-video/generate` | `routers/auto_video.py` |
 | M3.5 | AutoVideoPanel UI (textarea + style options + generate button) | `AutoVideoPanel.tsx` |
 
 **Pipeline:**
 ```
-User idea → Script Writer → Scene Planner → build_scene_from_script() 
-    → TTS → Lip-sync → Subtitle → SceneGraph JSON
+User idea → Script Writer & Storyboarder (chia Sequences) → Scene Planner → build_scene_from_script() 
+    → Multi-Provider TTS → Lip-sync → Subtitle → Gộp BGM → SceneGraph JSON
 ```
 
-**Kết quả**: User nhập 1 câu mô tả → AI sản xuất ra video hoàn chỉnh.
+**Kết quả**: User nhập 1 câu mô tả → AI đóng vai trò Đạo diễn + Storyboarder sản xuất ra video hoàn chỉnh.
 
 ---
 
-### 🏁 Milestone 4: "Professional Studio" (+5 tuần)
+### 🏁 Milestone 4: "Professional Studio & Swarm Reality" (+5 tuần)
 
-> Multi-scene video, camera cuts, BGM, transitions — chất lượng YouTube.
+> Swarm Intelligence (**MiroFish**), Multi-scene video, camera cuts, BGM, transitions — chất lượng YouTube.
 
 **Tasks:**
 
 | Task | Chi tiết |
 |------|----------|
-| M4.1 | Multi-scene project (VideoProject class) |
-| M4.2 | Scene transitions (cut, fade, dissolve) |
-| M4.3 | BGM library + auto-selection based on mood |
-| M4.4 | Advanced camera (dolly, tracking shot, rack focus) |
-| M4.5 | Resolution selector (720p, 1080p, 4K) |
+| M4.1 | Swarm Intelligence & GraphRAG Negotiation (Các Agents tương tác để chốt tọa độ X, Y, Z) |
+| M4.2 | Multi-scene project (VideoProject class tích hợp Sequences) |
+| M4.3 | Scene transitions (cut, fade, dissolve) |
+| M4.4 | Auto BGM mix dựa trên mood phân cảnh ("One-Click Filmmaking") |
+| M4.5 | Advanced camera (dolly, tracking shot, rack focus) |
 | M4.6 | Server-side render (FFmpeg backend, batch export) |
 | M4.7 | SFX library (footsteps, door open, ambient) |
 
-**Kết quả**: Video chất lượng chuyên nghiệp, nhiều cảnh, nhạc nền, hiệu ứng camera.
+**Kết quả**: Video chất lượng chuyên nghiệp; môi trường mô phỏng nơi AI actors có thể tự thương lượng dàn cảnh.
 
 ---
 

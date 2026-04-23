@@ -84,7 +84,7 @@ class CharacterDisplayObject {
                 this.container.removeChild(this.poseSprite);
             }
             this.poseSprite = new PIXI.Sprite(texture);
-            this.poseSprite.anchor.set(0.5, 0.85);
+            this.poseSprite.anchor.set(0.5, 1.0);
             this.poseSprite.zIndex = 0;
             this.container.addChild(this.poseSprite);
         } catch (err) {
@@ -104,7 +104,7 @@ class CharacterDisplayObject {
                 this.container.removeChild(this.faceSprite);
             }
             this.faceSprite = new PIXI.Sprite(texture);
-            this.faceSprite.anchor.set(0.5, 0.85);
+            this.faceSprite.anchor.set(0.5, 1.0);
             this.faceSprite.zIndex = 1; // On top of pose
             this.container.addChild(this.faceSprite);
         } catch (err) {
@@ -200,23 +200,40 @@ class BackgroundDisplayObject {
         this.container.zIndex = snap.zIndex;
 
         if (cameraSnap) {
-            // Use parallaxSpeed as a modifier (default 1 = fully coupled to camera)
+            // Since this container is now inside 'sceneContainer' (which is already transformed by the camera),
+            // applying the camera again causes double-movement. We must compute a local RELATIVE transform
+            // that counteracts the parent to achieve the desired parallax effect.
             const p = snap.parallaxSpeed !== undefined ? snap.parallaxSpeed : 1;
-            const cX = cameraSnap.x * ppu;
-            const cY = cameraSnap.y * ppu;
-            const cS = cameraSnap.scaleX || 1;
-
-            const effS = 1 + (cS - 1) * p;
-            this.container.pivot.set(cX, cY);
-
-            const pX = cX + ((CANVAS_W / 2) - cX) * p;
-            const pY = cY + ((CANVAS_H / 2) - cY) * p;
-
-            this.container.position.set(pX, pY);
-            this.container.scale.set(effS);
             
-            const effR = -(cameraSnap.rotation || 0) * Math.PI / 180 * p;
-            this.container.rotation = effR;
+            if (Math.abs(p - 1.0) < 0.001) {
+                // Normal layer (moves 1:1 with characters). No local counter-movement needed.
+                this.container.pivot.set(0, 0);
+                this.container.position.set(0, 0);
+                this.container.scale.set(1);
+                this.container.rotation = 0;
+            } else {
+                // Distant layer (moves slower than actors). Evaluate counter-offsets.
+                const cX = cameraSnap.x * ppu;
+                const cY = cameraSnap.y * ppu;
+                const cS = cameraSnap.scaleX || 1;
+                
+                // Offset needed to cancel out (1 - p) of the parent's translation
+                const shiftX = (cX - CANVAS_W / 2) * (1 - p);
+                const shiftY = (cY - CANVAS_H / 2) * (1 - p);
+                
+                this.container.pivot.set(CANVAS_W / 2, CANVAS_H / 2);
+                this.container.position.set(CANVAS_W / 2 + shiftX, CANVAS_H / 2 + shiftY);
+                
+                // Offset needed to cancel out (1 - p) of the parent's scale
+                const targetScale = 1 + (cS - 1) * p;
+                const localScale = targetScale / cS;
+                this.container.scale.set(localScale);
+                
+                // Offset needed to cancel out (1 - p) of the parent's rotation
+                const cR = -(cameraSnap.rotation || 0) * Math.PI / 180;
+                const targetR = cR * p;
+                this.container.rotation = targetR - cR;
+            }
         } else {
             this.container.pivot.set(0, 0);
             this.container.position.set(0, 0);
@@ -604,18 +621,14 @@ export const SceneRenderer: React.FC = () => {
             app.stage.addChild(bgPlaceholder);
             placeholderBgRef.current = bgPlaceholder;
 
-            // Layer 2: Background container (parallax, responds to camera)
-            const bgContainer = new PIXI.Container();
-            bgContainer.sortableChildren = true;
-            bgContainer.zIndex = -1000;
-            app.stage.addChild(bgContainer);
-            bgContainerRef.current = bgContainer;
-
-            // Layer 3: Scene container (characters — affected by camera)
+            // Layer 2: Scene container (Backgrounds + Characters — affected by camera)
             const container = new PIXI.Container();
             container.sortableChildren = true;
             app.stage.addChild(container);
             sceneContainerRef.current = container;
+            
+            // We use the same container for both so Z-Index sorting can interleave them
+            bgContainerRef.current = container;
 
             // Layer 4: Subtitle container (NOT affected by camera)
             const subtitleContainer = new PIXI.Container();
