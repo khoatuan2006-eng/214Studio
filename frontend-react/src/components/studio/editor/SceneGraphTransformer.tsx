@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import Moveable from 'react-moveable';
 import { useSceneGraphStore } from '@/stores/useSceneGraphStore';
 
 const PPU = 100;
@@ -10,103 +11,197 @@ export const SceneGraphTransformer: React.FC<{ scale: number }> = ({ scale }) =>
     const localTime = useSceneGraphStore(s => s.localTime);
     const snapshot = useSceneGraphStore(s => s.snapshot);
 
+    const targetRef = useRef<HTMLDivElement>(null);
     const isDragging = useRef(false);
-    const startPos = useRef({ x: 0, y: 0 });
-    const startNodePos = useRef({ x: 0, y: 0 });
-
-    if (!selectedBlock) return null;
-
-    const scene = scenes.find(s => s.id === selectedBlock.sceneId);
-    if (!scene) return null;
-
-    const snap = snapshot[selectedBlock.nodeId];
-    if (!snap) return null;
-
-    // Use current snapshot bounds if available (camera parallax might mess this up, 
-    // but for simple characters it works well enough, or we fallback to pure transform)
-    const px = snap.x * PPU;
-    const py = snap.y * PPU;
     
-    // Approximate bounds for character or text
-    let w = 200;
-    let h = 200;
-    if (snap.nodeType === 'text') {
-        w = 400; h = 100;
-    } else if (snap.nodeType === 'character') {
-        w = 300 * Math.abs(snap.scaleX || 1);
-        h = 500 * Math.abs(snap.scaleY || 1);
-    }
+    // Internal accumulator to avoid React state lag during rapid dragging
+    const trRef = useRef({ x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0 });
 
-    const handlePointerDown = (e: React.PointerEvent) => {
-        if (e.button !== 0) return; // Only left click
-        e.stopPropagation();
-        e.preventDefault();
-        
-        isDragging.current = true;
-        // The coordinates are in the 1920x1080 space because this component is inside the scaled div,
-        // but clientX/Y are screen space. We need to divide by the viewer's scale to get local movement.
-        startPos.current = { x: e.clientX, y: e.clientY };
-        startNodePos.current = { x: snap.x, y: snap.y };
-        
-        const handlePointerMove = (ev: PointerEvent) => {
-            if (!isDragging.current) return;
-            ev.preventDefault();
+    const scene = selectedBlock ? scenes.find(s => s.id === selectedBlock.sceneId) : null;
+    const snap = selectedBlock ? snapshot[selectedBlock.nodeId] : null;
+    const lockedNodes = useSceneGraphStore(s => s.lockedNodes);
+    const isLocked = selectedBlock ? lockedNodes.has(selectedBlock.nodeId) : false;
 
-            const dx = (ev.clientX - startPos.current.x) / scale / PPU;
-            const dy = (ev.clientY - startPos.current.y) / scale / PPU;
+    // Sync from store when NOT dragging
+    useEffect(() => {
+        if (!isDragging.current && snap) {
+            trRef.current = {
+                x: snap.x,
+                y: snap.y,
+                scaleX: snap.scaleX ?? 1,
+                scaleY: snap.scaleY ?? 1,
+                rotation: snap.rotation ?? 0
+            };
+        }
+    }, [snap?.x, snap?.y, snap?.scaleX, snap?.scaleY, snap?.rotation]);
 
-            const newX = startNodePos.current.x + dx;
-            const newY = startNodePos.current.y + dy;
+    if (!selectedBlock || !scene || !snap) return null;
 
-            if (isAutoKeyframe) {
-                // Auto keyframe creates continuous keyframes
-                scene.manager.addKeyframe(selectedBlock.nodeId, 'x', { time: localTime, value: newX, easing: 'linear' });
-                scene.manager.addKeyframe(selectedBlock.nodeId, 'y', { time: localTime, value: newY, easing: 'linear' });
-                useSceneGraphStore.getState().evaluate(); // Trigger reactivity
-            } else {
-                // Modify base transform
-                scene.manager.updateTransform(selectedBlock.nodeId, { x: newX, y: newY });
+    // Handle updates based on Auto-Keyframe check
+    const handleUpdate = (patch: any) => {
+        if (isAutoKeyframe) {
+            if (patch.x !== undefined) scene.manager.addKeyframe(selectedBlock.nodeId, 'x', { time: localTime, value: patch.x, easing: 'linear' });
+            if (patch.y !== undefined) scene.manager.addKeyframe(selectedBlock.nodeId, 'y', { time: localTime, value: patch.y, easing: 'linear' });
+            if (patch.scaleX !== undefined) {
+                scene.manager.addKeyframe(selectedBlock.nodeId, 'scale_x', { time: localTime, value: patch.scaleX, easing: 'linear' });
             }
-        };
-
-        const handlePointerUp = (ev: PointerEvent) => {
-            isDragging.current = false;
-            document.removeEventListener('pointermove', handlePointerMove);
-            document.removeEventListener('pointerup', handlePointerUp);
-        };
-
-        document.addEventListener('pointermove', handlePointerMove);
-        document.addEventListener('pointerup', handlePointerUp);
+            if (patch.scaleY !== undefined) {
+                scene.manager.addKeyframe(selectedBlock.nodeId, 'scale_y', { time: localTime, value: patch.scaleY, easing: 'linear' });
+            }
+            if (patch.rotation !== undefined) {
+                scene.manager.addKeyframe(selectedBlock.nodeId, 'rotation', { time: localTime, value: patch.rotation, easing: 'linear' });
+            }
+            useSceneGraphStore.getState().evaluate(); // Trigger reactivity
+        } else {
+            scene.manager.updateTransform(selectedBlock.nodeId, patch);
+        }
     };
 
+    // Calculate dimensions
+    const px = trRef.current.x * PPU;
+    const py = trRef.current.y * PPU;
+    
+    // Base dimensions before scale
+    let w = 200;
+    let h = 200;
+    let anchorY = 0.5;
+
+    if (snap.nodeType === 'text') {
+        w = 400; 
+        h = 100;
+        anchorY = 1.0; // Text is usually bottom anchored
+    } else if (snap.nodeType === 'character') {
+        w = 300; 
+        h = 600;
+        anchorY = 0.85; // SceneRenderer character anchor is 0.85
+    }
+
     return (
-        <div
-            style={{
-                position: 'absolute',
-                left: px,
-                top: py,
-                width: w,
-                height: h,
-                transform: `translate(-50%, -100%)`, // Characters are bottom-anchored usually, but SceneRenderer uses pivot 0,0 ? Wait. SceneRenderer sets `app.stage` or characters... Actually Characters in SceneRenderer don't change anchor.
-                pointerEvents: 'auto',
-                cursor: 'move',
-            }}
-            onPointerDown={handlePointerDown}
-        >
-            <div className="absolute inset-0 border-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]">
-                {/* 4 Corner Handles */}
-                <div className="absolute w-3 h-3 bg-white border-2 border-indigo-500 pointer-events-none" style={{ top: -6, left: -6 }} />
-                <div className="absolute w-3 h-3 bg-white border-2 border-indigo-500 pointer-events-none" style={{ top: -6, right: -6 }} />
-                <div className="absolute w-3 h-3 bg-white border-2 border-indigo-500 pointer-events-none" style={{ bottom: -6, left: -6 }} />
-                <div className="absolute w-3 h-3 bg-white border-2 border-indigo-500 pointer-events-none" style={{ bottom: -6, right: -6 }} />
-            </div>
+        <>
+            {/* Global Styles for Moveable */}
+            <style>{`
+                .moveable-control-box {
+                    --moveable-color: #6366f1 !important; /* premium indigo */
+                    z-index: 100 !important;
+                }
+                .moveable-line {
+                    background: #6366f1 !important;
+                    box-shadow: 0 0 10px rgba(99,102,241,0.5);
+                }
+                .moveable-control {
+                    background: white !important;
+                    border: 2px solid #6366f1 !important;
+                    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+                }
+            `}</style>
+
+            {/* Phantom Target for Moveable to attach to */}
+            <div
+                ref={targetRef}
+                style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: `${w}px`,
+                    height: `${h}px`,
+                    transformOrigin: `50% ${anchorY * 100}%`,
+                    transform: `translate(${px - w/2}px, ${py - h * anchorY}px) rotate(${trRef.current.rotation}deg) scale(${trRef.current.scaleX}, ${trRef.current.scaleY})`,
+                    // Make it invisible, Moveable will draw the interactive lines
+                    opacity: 0, 
+                    pointerEvents: 'none'
+                }}
+            />
+
+            <Moveable
+                target={targetRef}
+                zoom={1 / scale}
+                
+                // Allow Drag (disabled when locked)
+                draggable={!isLocked}
+                onDragStart={() => isDragging.current = true}
+                onDrag={({ delta }) => {
+                    trRef.current.x += delta[0] / PPU;
+                    trRef.current.y += delta[1] / PPU;
+                    handleUpdate({ x: trRef.current.x, y: trRef.current.y });
+                }}
+                onDragEnd={() => isDragging.current = false}
+
+                // Allow Scale (disabled when locked)
+                resizable={false}
+                scalable={!isLocked}
+                keepRatio={false}
+                onScaleStart={() => isDragging.current = true}
+                onScale={({ delta, drag }) => {
+                    trRef.current.scaleX *= delta[0];
+                    trRef.current.scaleY *= delta[1];
+                    
+                    if (drag.delta[0] || drag.delta[1]) {
+                        trRef.current.x += drag.delta[0] / PPU;
+                        trRef.current.y += drag.delta[1] / PPU;
+                    }
+
+                    handleUpdate({ 
+                        scaleX: trRef.current.scaleX, 
+                        scaleY: trRef.current.scaleY,
+                        x: trRef.current.x,
+                        y: trRef.current.y
+                    });
+                }}
+                onScaleEnd={() => isDragging.current = false}
+
+                // Allow Rotate (disabled when locked)
+                rotatable={!isLocked}
+                onRotateStart={() => isDragging.current = true}
+                onRotate={({ delta, drag }) => {
+                    trRef.current.rotation += delta;
+                    
+                    if (drag.delta[0] || drag.delta[1]) {
+                        trRef.current.x += drag.delta[0] / PPU;
+                        trRef.current.y += drag.delta[1] / PPU;
+                    }
+
+                    handleUpdate({ 
+                        rotation: trRef.current.rotation,
+                        x: trRef.current.x,
+                        y: trRef.current.y
+                    });
+                }}
+                onRotateEnd={() => isDragging.current = false}
+
+                /* Visual Configuration */
+                renderDirections={isLocked ? [] : ["nw","n","ne","w","e","sw","s","se"]}
+                edge={false}
+            />
             
-            {/* Auto Keyframe glowing indicator */}
-            {isAutoKeyframe && (
-                <div className="absolute -top-6 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-bold whitespace-nowrap shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse">
-                    🔴 Auto-KF ON
+            {/* Locked indicator */}
+            {isLocked && (
+                <div 
+                    className="absolute text-white text-[10px] px-2 py-0.5 rounded font-bold whitespace-nowrap shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                    style={{
+                        left: px,
+                        top: py - (h * anchorY) - 30,
+                        transform: 'translateX(-50%)',
+                        background: 'linear-gradient(90deg, #f59e0b, #d97706)'
+                    }}
+                >
+                    🔒 LOCKED
                 </div>
             )}
-        </div>
+
+            {/* Auto Keyframe glowing indicator */}
+            {isAutoKeyframe && !isLocked && (
+                <div 
+                    className="absolute text-white text-[10px] px-2 py-0.5 rounded font-bold whitespace-nowrap shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse"
+                    style={{
+                        left: px,
+                        top: py - (h * anchorY) - 30,
+                        transform: 'translateX(-50%)',
+                        background: 'linear-gradient(90deg, #ef4444, #b91c1c)'
+                    }}
+                >
+                    🔴 AUTO-KEYFRAME BINDING
+                </div>
+            )}
+        </>
     );
 };

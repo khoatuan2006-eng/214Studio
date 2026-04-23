@@ -145,8 +145,8 @@ export const AutoVideoPanel: React.FC<{ onClose?: () => void }> = ({ onClose }) 
             const data = await res.json();
             setPreflightData(data);
             
-            // Render mappings
-            setCharMap({});
+            // Render mappings with AI suggestions
+            setCharMap(data.suggested_mapping || {});
             setBgMap({});
             setCurrentStep('');
         } catch (err: any) {
@@ -174,6 +174,7 @@ export const AutoVideoPanel: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                     auto_select_background: false,
                     character_map: charMap,
                     background_map: bgMap,
+                    use_ai_storyboard: true,
                 }),
             });
 

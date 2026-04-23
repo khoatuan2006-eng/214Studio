@@ -133,7 +133,7 @@ export interface PropNodeData extends SceneNodeData {
   interactive: boolean;
 }
 
-/** Text overlay node. */
+/** Text overlay node — supports both subtitles and comic speech bubbles. */
 export interface TextNodeData extends SceneNodeData {
   nodeType: "text";
   content: string;
@@ -141,6 +141,12 @@ export interface TextNodeData extends SceneNodeData {
   fontSize: number;
   color: string;
   textAlign: "left" | "center" | "right";
+  /** Speech bubble style: "none" = plain subtitle, "speech" | "shout" | "thought" | "whisper" */
+  bubbleStyle?: "none" | "speech" | "shout" | "thought" | "whisper";
+  /** CharacterNode ID this bubble is attached to (follows character position) */
+  bubbleTargetId?: string;
+  /** Name of the speaking character */
+  speakerName?: string;
 }
 
 /** Audio track node. */

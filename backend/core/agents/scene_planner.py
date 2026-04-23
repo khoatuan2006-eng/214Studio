@@ -82,20 +82,13 @@ class ScenePlannerAgent:
             f"--- KỊCH BẢN YÊU CẦU ---\n{json.dumps(script_data, ensure_ascii=False, indent=2)}\n"
         )
         
-        max_attempts = config.total_keys if config.total_keys > 0 else 1
+        max_attempts = max(1, config.total_keys) * 4
         for attempt in range(max_attempts):
             try:
                 client = genai.Client(api_key=config.api_key)
-                
-                available_models = [m.name.split('/')[-1] for m in client.models.list() if "generateContent" in str(getattr(m, "supported_generation_methods", [])) or "generateContent" in str(getattr(m, "supported_actions", []))]
-                target_model = None
-                for candidate in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"]:
-                    if candidate in available_models or f"models/{candidate}" in [m.name for m in client.models.list()]:
-                        target_model = candidate
-                        break
-                        
-                if not target_model:
-                    target_model = available_models[0] if available_models else "gemini-2.0-flash"
+                # Rotate models dynamically from user's API Key supported list
+                target_model = config.get_rotated_model(attempt)
+                logger.info(f"Using model: {target_model} (attempt {attempt})")
 
                 response = client.models.generate_content(
                     model=target_model,
@@ -109,8 +102,20 @@ class ScenePlannerAgent:
                 return json.loads(response.text)
             except Exception as e:
                 msg = str(e).lower()
-                if "429" in msg or "quota" in msg or "resource_exhausted" in msg:
-                    if config.rotate_key() and attempt < max_attempts - 1:
+                if any(k in msg for k in ["429", "quota", "resource_exhausted", "503", "unavailable", "ssl", "eof", "connection", "timeout", "protocol"]):
+                    import re, time
+                    delay = 35.0 if ("429" in msg or "quota" in msg or "resource_exhausted" in msg) else 5.0
+                    m = re.search(r'retry in (\d+\.?\d*)s', msg)
+                    if m:
+                        delay = float(m.group(1)) + 1.0
+
+                    if config.rotate_key():
+                        logger.warning(f"Key rate limited/unavailable/network error. Rotating... Next attempt: {attempt + 1}")
+                        time.sleep(1)
+                        continue
+                    else:
+                        logger.warning(f"All keys exhausted or network error. Sleeping {delay:.1f}s before retrying for ScenePlannerAgent...")
+                        time.sleep(delay)
                         continue
                 logger.error(f"ScenePlannerAgent failed on attempt {attempt}: {e}")
                 return None

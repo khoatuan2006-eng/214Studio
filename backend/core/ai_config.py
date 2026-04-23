@@ -10,6 +10,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,8 @@ def _save_to_disk(config: AIConfig):
             "max_review_rounds": config.max_review_rounds,
             "temperature": config.temperature,
             "api_keys": config.api_keys,
+            "ollama_url": config.ollama_url,
+            "local_model": config.local_model,
         }
         with open(_CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
@@ -77,10 +80,64 @@ class AIConfig:
     vision_model: str = "gemini-2.0-flash"  # vision model
     max_review_rounds: int = 3
     temperature: float = 0.7
+    
+    # Local AI (Ollama) support
+    ollama_url: str = "http://localhost:11434"
+    local_model: str = "qwen2.5:7b"  # Default local model
 
     # Multi-key support: list of API keys for auto-fallback
     api_keys: list[str] = field(default_factory=list)
     _current_key_index: int = 0
+    _quota_exhausted_until: float = 0.0
+    _supported_models_cache: dict = field(default_factory=dict)
+
+    def get_rotated_model(self, attempt: int) -> str:
+        """Dynamically fetch supported models for the current API key and rotate them based on attempt."""
+        current_key = self.api_key
+        if not current_key:
+            return self.model
+            
+        if current_key not in self._supported_models_cache:
+            try:
+                from google import genai
+                client = genai.Client(api_key=current_key)
+                models = [m.name.split('/')[-1] for m in client.models.list() 
+                         if "generateContent" in str(getattr(m, "supported_generation_methods", [])) 
+                         or "generateContent" in str(getattr(m, "supported_actions", []))]
+                
+                # Priority list based on latest 2026 models
+                priority = [
+                    "gemini-3.1-pro-preview",
+                    "gemini-3.1-flash",
+                    "gemini-3-pro",
+                    "gemini-3-flash",
+                    "gemini-2.5-flash", 
+                    "gemini-2.5-pro",
+                    "gemini-2.0-flash", 
+                    "gemini-1.5-pro", 
+                    "gemini-2.0-flash-lite"
+                ]
+                
+                supported = []
+                for p in priority:
+                    for m in models:
+                        if p in m and m not in supported and "image" not in m and "tts" not in m:
+                            supported.append(m)
+                            
+                # Extra fallback if priority didn't catch anything
+                if not supported:
+                    supported = [m for m in models if "gemini" in m and "tts" not in m and "image" not in m][:4]
+                if not supported:
+                    supported = ["gemini-2.5-flash", "gemini-2.0-flash"]
+                    
+                self._supported_models_cache[current_key] = supported
+                logger.info(f"[AIConfig] Cached {len(supported)} models for {self.current_key_label}: {supported}")
+            except Exception as e:
+                logger.warning(f"[AIConfig] Failed to list models for {self.current_key_label}: {e}")
+                self._supported_models_cache[current_key] = ["gemini-2.5-flash", "gemini-2.0-flash"]
+
+        candidates = self._supported_models_cache[current_key]
+        return candidates[attempt % len(candidates)]
 
     def __post_init__(self):
         # Load persisted config from disk first
@@ -101,6 +158,10 @@ class AIConfig:
                 self.max_review_rounds = saved["max_review_rounds"]
             if saved.get("temperature") is not None:
                 self.temperature = saved["temperature"]
+            if saved.get("ollama_url"):
+                self.ollama_url = saved["ollama_url"]
+            if saved.get("local_model"):
+                self.local_model = saved["local_model"]
 
         # Fallback: load keys from environment if still no keys
         if not self.api_keys:
@@ -133,6 +194,13 @@ class AIConfig:
         return len(self.api_keys) > 0 and any(k for k in self.api_keys)
 
     @property
+    def has_valid_quota(self) -> bool:
+        import time
+        if time.time() < self._quota_exhausted_until:
+            return False
+        return self.has_api_key
+
+    @property
     def total_keys(self) -> int:
         return len(self.api_keys)
 
@@ -146,12 +214,21 @@ class AIConfig:
         masked = f"{key[:4]}...{key[-3:]}" if len(key) > 7 else "***"
         return f"Key {idx + 1}/{len(self.api_keys)} ({masked})"
 
-    def rotate_key(self) -> bool:
+    def rotate_key(self, force_exhaust_all: bool = False) -> bool:
         """Switch to the next API key. Returns True if there are more keys to try."""
+        import time
         if len(self.api_keys) <= 1:
+            self._quota_exhausted_until = time.time() + 60.0
             return False
+        
         self._current_key_index = (self._current_key_index + 1) % len(self.api_keys)
         logger.info(f"[AIConfig] Rotated to {self.current_key_label}")
+        
+        if force_exhaust_all or self._current_key_index == 0:
+            # We looped through all keys and still failed, or explicitly exhausted
+            self._quota_exhausted_until = time.time() + 60.0
+            return False
+            
         return True
 
     def add_key(self, key: str):
@@ -221,3 +298,26 @@ def update_ai_config(
         _config.temperature = temperature
     _save_to_disk(_config)
     return _config
+
+
+async def call_local_llm(self, prompt: str, system_prompt: str = "", json_mode: bool = False) -> str:
+        """Calls local Ollama instance as a fallback or for specific tasks."""
+        import httpx
+        try:
+            payload = {
+                "model": self.local_model,
+                "prompt": prompt,
+                "system": system_prompt,
+                "stream": False,
+                "options": {"temperature": 0.2}
+            }
+            if json_mode:
+                payload["format"] = "json"
+
+            async with httpx.AsyncClient(timeout=60.0, headers={"ngrok-skip-browser-warning": "true"}) as client:
+                response = await client.post(f"{self.ollama_url}/api/generate", json=payload)
+                if response.status_code == 200:
+                    return response.json().get("response", "").strip()
+        except Exception as e:
+            logger.warning(f"[AIConfig] Local LLM call failed: {e}")
+        return ""
